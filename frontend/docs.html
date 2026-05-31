@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChainPe Documentation — AI Agent Marketplace on Algorand</title>
+  <meta name="description" content="Complete documentation for ChainPe — the AI Agent Marketplace on Algorand using the x402 payment protocol.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #ffffff;
+      --text-primary: #111827;
+      --text-secondary: #4b5563;
+      --text-muted: #9ca3af;
+      --border: #e5e7eb;
+      --border-light: #f3f4f6;
+      --surface: #f9fafb;
+      --accent: #111827;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a0a0b;
+      --text-primary: #e5e7eb;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --border: #1f2937;
+      --border-light: #1a1a2e;
+      --surface: #111114;
+      --accent: #e5e7eb;
+      --code-bg: #0d0d12;
+      --code-text: #cdd6f4;
+    }
+
+    [data-theme="dark"] .callout-info {
+      background: #0c1929;
+      border-color: #2563eb;
+      color: #93c5fd;
+    }
+
+    [data-theme="dark"] .callout-warning {
+      background: #1a1504;
+      border-color: #ca8a04;
+      color: #fde68a;
+    }
+
+    [data-theme="dark"] .callout-tip {
+      background: #052e16;
+      border-color: #16a34a;
+      color: #86efac;
+    }
+
+    [data-theme="dark"] .flow-step {
+      background: var(--surface);
+    }
+
+    [data-theme="dark"] .sidebar-link.active {
+      background: #e5e7eb;
+      color: #0a0a0b;
+    }
+
+    [data-theme="dark"] pre {
+      border-color: #1f2937;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text-primary);
+      background: var(--bg);
+    }
+
+    a { color: var(--accent); }
+    a:hover { text-decoration: underline; }
+
+    /* === LAYOUT === */
+    .docs-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 100vh;
+    }
+
+    /* === SIDEBAR === */
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      padding: 32px 20px;
+      background: var(--surface);
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-primary);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-logo span { color: var(--text-muted); }
+
+    .sidebar-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 32px;
+      display: block;
+    }
+
+    .sidebar-section {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 12px;
+    }
+
+    .sidebar-link {
+      display: block;
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+      margin-bottom: 2px;
+      font-weight: 400;
+    }
+
+    .sidebar-link:hover {
+      background: var(--border-light);
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .sidebar-link.active {
+      background: var(--text-primary);
+      color: white;
+      font-weight: 500;
+    }
+
+    .sidebar-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-bottom: 24px;
+      transition: color 0.15s;
+    }
+
+    .sidebar-back:hover {
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    /* === MAIN CONTENT === */
+    .docs-content {
+      padding: 48px 64px 96px;
+      max-width: 800px;
+    }
+
+    .docs-header {
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .docs-header h1 {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      margin-bottom: 12px;
+      line-height: 1.1;
+    }
+
+    .docs-header p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      font-weight: 300;
+      line-height: 1.7;
+    }
+
+    .docs-version {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 3px 10px;
+      border-radius: 4px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+
+    /* === HEADINGS === */
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 56px 0 16px;
+      letter-spacing: -0.5px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+    }
+
+    h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 24px 0 8px;
+      color: var(--text-secondary);
+    }
+
+    p {
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+      font-weight: 300;
+    }
+
+    /* === CODE === */
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 20px 24px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 16px 0 24px;
+      font-size: 13px;
+      line-height: 1.6;
+      border: 1px solid #2a2a3e;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    p code, li code {
+      background: var(--surface);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    /* === LISTS === */
+    ul, ol {
+      margin: 12px 0 20px 24px;
+      color: var(--text-secondary);
+    }
+
+    li {
+      margin-bottom: 8px;
+      font-weight: 300;
+    }
+
+    li strong {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* === TABLES === */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      font-weight: 600;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+    }
+
+    td {
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-weight: 300;
+    }
+
+    /* === CALLOUTS === */
+    .callout {
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-size: 13px;
+      line-height: 1.6;
+      border-left: 3px solid;
+    }
+
+    .callout-info {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1e40af;
+    }
+
+    .callout-warning {
+      background: #fefce8;
+      border-color: #eab308;
+      color: #854d0e;
+    }
+
+    .callout-tip {
+      background: #f0fdf4;
+      border-color: #22c55e;
+      color: #166534;
+    }
+
+    .callout strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* === FLOW DIAGRAM === */
+    .flow-diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 32px 24px;
+      margin: 20px 0 28px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .flow-steps {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .flow-step {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-weight: 500;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .flow-arrow {
+      color: var(--text-muted);
+      font-size: 18px;
+    }
+
+    /* === PRINT / PDF === */
+    @media print {
+      .sidebar { display: none; }
+      .docs-layout { grid-template-columns: 1fr; }
+      .docs-content { padding: 24px; max-width: 100%; }
+      pre { break-inside: avoid; }
+      h2, h3 { break-after: avoid; }
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+      .docs-layout { grid-template-columns: 1fr; }
+      .sidebar {
+        position: relative;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 20px;
+      }
+      .docs-content { padding: 32px 20px 64px; }
+      .docs-header h1 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    // Sync theme with landing page via localStorage
+    const savedTheme = localStorage.getItem('chainpe-theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else if (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  </script>
+  <div class="docs-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <a href="index.html" class="sidebar-back">&larr; Back to home</a>
+      <a href="#" class="sidebar-logo">chain<span>pe</span></a>
+      <span class="sidebar-subtitle">Documentation</span>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Getting Started</div>
+        <a href="#overview" class="sidebar-link active">Overview</a>
+        <a href="#quick-start" class="sidebar-link">Quick Start</a>
+        <a href="#installation" class="sidebar-link">Installation</a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Core Concepts</div>
+        <a href="#x402-protocol" class="sidebar-link">x402 Protocol</a>
+        <a href="#how-it-works" class="sidebar-link">How It Works</a>
+        <a href="#architecture" class="sidebar-link">Architecture</a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">SDK Reference</div>
+        <a href="#agent-sdk" class="sidebar-link">Agent SDK</a>
+        <a href="#configuration" class="sidebar-link">Configuration</a>
+        <a href="#api-reference" class="sidebar-link">API Reference</a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Guides</div>
+        <a href="#providers" class="sidebar-link">For API Providers</a>
+        <a href="#use-cases" class="sidebar-link">Use Cases</a>
+        <a href="#security" class="sidebar-link">Security</a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Reference</div>
+        <a href="#faq" class="sidebar-link">FAQ</a>
+        <a href="#glossary" class="sidebar-link">Glossary</a>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="docs-content">
+      <div class="docs-header">
+        <span class="docs-version">v0.1.0-beta &middot; Algorand Testnet</span>
+        <h1>ChainPe Documentation</h1>
+        <p>The complete guide to building, deploying, and using AI agent micropayments on Algorand with the x402 payment protocol.</p>
+      </div>
+
+      <!-- ============================== -->
+      <!-- OVERVIEW -->
+      <!-- ============================== -->
+      <h2 id="overview">Overview</h2>
+      <p>
+        <strong>ChainPe</strong> is an AI Agent Marketplace built on the <strong>Algorand</strong> blockchain. It enables AI agents to autonomously discover API services, pay for them with native ALGO micropayments, and receive results &mdash; all without human intervention.
+      </p>
+      <p>
+        ChainPe implements the <strong>x402 payment protocol</strong>, based on the HTTP 402 "Payment Required" status code. This is how the web was originally designed to handle payments &mdash; ChainPe finally brings it to life with blockchain-backed micropayments.
+      </p>
+
+      <div class="callout callout-info">
+        <strong>One-Liner</strong>
+        ChainPe lets AI agents pay for APIs autonomously using Algorand micropayments &mdash; no human approval, no subscriptions, just pay-per-request with native ALGO.
+      </div>
+
+      <h3>Key Features</h3>
+      <ul>
+        <li><strong>x402 Protocol</strong> &mdash; Real HTTP 402 "Payment Required" implementation</li>
+        <li><strong>Native ALGO Payments</strong> &mdash; No wrapped tokens, no bridges, pure native payments</li>
+        <li><strong>4-Second Finality</strong> &mdash; Algorand confirms transactions in ~4 seconds</li>
+        <li><strong>Near-Zero Fees</strong> &mdash; Transaction fees of ~0.001 ALGO make micropayments viable</li>
+        <li><strong>AI SDK Integration</strong> &mdash; Built on Vercel AI SDK, works with any LLM provider</li>
+        <li><strong>Direct Settlement</strong> &mdash; Providers receive ALGO directly to their wallet</li>
+        <li><strong>Developer-Friendly</strong> &mdash; <code>npm install @chainpe/agent</code> and start paying for APIs</li>
+      </ul>
+
+      <!-- ============================== -->
+      <!-- QUICK START -->
+      <!-- ============================== -->
+      <h2 id="quick-start">Quick Start</h2>
+      <p>Get up and running with ChainPe in under 5 minutes.</p>
+
+      <h3>1. Install the SDK</h3>
+<pre>npm install @chainpe/agent</pre>
+
+      <h3>2. Configure your agent</h3>
+<pre>// chainpe.config.js
+import { createChainPeAgent } from '@chainpe/agent';
+
+const agent = createChainPeAgent({
+  // Your Algorand wallet mnemonic (testnet)
+  mnemonic: process.env.ALGO_MNEMONIC,
+
+  // Network configuration
+  network: 'testnet',
+
+  // Safety limits
+  maxPricePerRequest: 0.1,  // max ALGO per single request
+  maxTotalSpend: 5.0,       // max ALGO total budget
+
+  // AI provider (optional, for autonomous discovery)
+  aiProvider: {
+    model: 'gpt-4',
+    apiKey: process.env.OPENAI_API_KEY,
+  }
+});</pre>
+
+      <h3>3. Make your first paid API call</h3>
+<pre>// Discover and pay for a weather service
+const result = await agent.run(
+  'Get the current weather for London'
+);
+
+console.log(result);
+// {
+//   data: { city: 'London', temp: '12°C', ... },
+//   payment: {
+//     txId: 'ALGO_TX_ABC123...',
+//     amount: 0.05,
+//     currency: 'ALGO'
+//   }
+// }</pre>
+
+      <h3>4. Verify on-chain</h3>
+      <p>Every payment creates a real transaction on the Algorand blockchain. You can verify any transaction on the <a href="https://testnet.explorer.perawallet.app/" target="_blank">Algorand Explorer</a>.</p>
+
+      <!-- ============================== -->
+      <!-- INSTALLATION -->
+      <!-- ============================== -->
+      <h2 id="installation">Installation</h2>
+
+      <h3>Prerequisites</h3>
+      <ul>
+        <li><strong>Node.js</strong> &ge; 18.0</li>
+        <li><strong>npm</strong>, <strong>yarn</strong>, or <strong>pnpm</strong></li>
+        <li>An <strong>Algorand wallet</strong> with testnet ALGO (use the <a href="https://bank.testnet.algorand.network/" target="_blank">Algorand Faucet</a>)</li>
+      </ul>
+
+      <h3>Package Managers</h3>
+      <table>
+        <tr><th>Manager</th><th>Command</th></tr>
+        <tr><td>npm</td><td><code>npm install @chainpe/agent</code></td></tr>
+        <tr><td>yarn</td><td><code>yarn add @chainpe/agent</code></td></tr>
+        <tr><td>pnpm</td><td><code>pnpm add @chainpe/agent</code></td></tr>
+      </table>
+
+      <h3>Environment Variables</h3>
+<pre># .env
+ALGO_MNEMONIC="your 25-word algorand mnemonic here"
+OPENAI_API_KEY="sk-..."           # Optional: for AI-powered discovery
+CHAINPE_NETWORK="testnet"         # testnet | mainnet
+CHAINPE_MAX_SPEND="5.0"           # Maximum ALGO budget</pre>
+
+      <!-- ============================== -->
+      <!-- x402 PROTOCOL -->
+      <!-- ============================== -->
+      <h2 id="x402-protocol">The x402 Protocol</h2>
+      <p>
+        HTTP 402 "Payment Required" has been in the HTTP specification since HTTP/1.1 (1997), but was "reserved for future use." ChainPe implements the <strong>x402</strong> extension of this standard, enabling machine-to-machine payments over HTTP.
+      </p>
+
+      <h3>How x402 Works</h3>
+      <div class="flow-diagram">
+        <div class="flow-steps">
+          <div class="flow-step">Agent sends<br>API request</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">Server returns<br>HTTP 402</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">Agent signs<br>ALGO payment</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">Proxy verifies<br>on-chain</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">Server returns<br>API response</div>
+        </div>
+      </div>
+
+      <h3>The x402 Response</h3>
+      <p>When a service requires payment, it responds with HTTP status 402 and a payment requirement header:</p>
+<pre>HTTP/1.1 402 Payment Required
+X-Payment-Required: {
+  "network": "algorand",
+  "receiver": "ALGO_ADDRESS_HERE",
+  "amount": 0.05,
+  "asset": "ALGO",
+  "memo": "weather-api-request-12345"
+}</pre>
+
+      <h3>Why x402 over alternatives?</h3>
+      <table>
+        <tr><th>Approach</th><th>Latency</th><th>Min. Payment</th><th>Human Required</th></tr>
+        <tr><td><strong>x402 + Algorand</strong></td><td>~4 seconds</td><td>$0.001</td><td>No</td></tr>
+        <tr><td>Stripe</td><td>1-3 seconds</td><td>$0.50</td><td>Yes (merchant setup)</td></tr>
+        <tr><td>Bitcoin Lightning</td><td>1-5 seconds</td><td>$0.01</td><td>No</td></tr>
+        <tr><td>Ethereum L1</td><td>12+ seconds</td><td>$5+ (gas)</td><td>No</td></tr>
+      </table>
+
+      <!-- ============================== -->
+      <!-- HOW IT WORKS -->
+      <!-- ============================== -->
+      <h2 id="how-it-works">How It Works</h2>
+
+      <h3>Step 1: Service Discovery</h3>
+      <p>AI agents discover available services in the ChainPe marketplace. Each service has a listing that includes:</p>
+      <ul>
+        <li><strong>Endpoint URL</strong> &mdash; The API endpoint to call</li>
+        <li><strong>Price</strong> &mdash; Cost per request in ALGO</li>
+        <li><strong>Description</strong> &mdash; What the service provides</li>
+        <li><strong>Provider wallet</strong> &mdash; The Algorand address to pay</li>
+      </ul>
+
+      <h3>Step 2: Autonomous Payment</h3>
+      <p>When the agent makes a request, the x402 proxy intercepts the 402 response and handles payment automatically:</p>
+<pre>// This happens automatically inside the SDK
+const payment = await algoSdk.makePaymentTxn(
+  agentWallet.address,        // sender
+  serviceProvider.address,     // receiver
+  0.05 * 1e6,                 // amount in microALGO
+  undefined,                   // close remainder to
+  'chainpe:weather:req-123'   // memo/note
+);
+
+const signedTxn = payment.signTxn(agentWallet.sk);
+const txResult = await algodClient.sendRawTransaction(signedTxn).do();</pre>
+
+      <h3>Step 3: Verification & Response</h3>
+      <p>The x402 proxy verifies the payment landed on-chain before forwarding the request to the API provider. The provider's server only processes requests with confirmed payments.</p>
+
+      <div class="callout callout-tip">
+        <strong>Zero Intermediary Risk</strong>
+        ChainPe never holds funds. Payments go directly from the agent's wallet to the provider's wallet. The proxy only verifies &mdash; it never touches the money.
+      </div>
+
+      <!-- ============================== -->
+      <!-- ARCHITECTURE -->
+      <!-- ============================== -->
+      <h2 id="architecture">Architecture</h2>
+
+      <h3>System Components</h3>
+      <table>
+        <tr><th>Component</th><th>Description</th></tr>
+        <tr><td><strong>@chainpe/agent</strong></td><td>Client SDK for AI agents. Handles discovery, payment signing, and response parsing.</td></tr>
+        <tr><td><strong>x402 Proxy</strong></td><td>Middleware that intercepts 402 responses, coordinates payments, and verifies on-chain settlement.</td></tr>
+        <tr><td><strong>Service Registry</strong></td><td>Directory of available paid APIs with pricing, endpoints, and provider wallets.</td></tr>
+        <tr><td><strong>Algorand Network</strong></td><td>The settlement layer. All payments are native ALGO transactions on Algorand.</td></tr>
+      </table>
+
+      <h3>Technology Stack</h3>
+      <ul>
+        <li><strong>Blockchain</strong> &mdash; Algorand (testnet / mainnet)</li>
+        <li><strong>Payment Protocol</strong> &mdash; x402 (HTTP 402 extension)</li>
+        <li><strong>AI Framework</strong> &mdash; Vercel AI SDK</li>
+        <li><strong>Runtime</strong> &mdash; Node.js &ge; 18</li>
+        <li><strong>Language</strong> &mdash; TypeScript</li>
+        <li><strong>LLM Support</strong> &mdash; OpenAI, Anthropic, Google Gemini, and any Models.dev provider</li>
+      </ul>
+
+      <!-- ============================== -->
+      <!-- AGENT SDK -->
+      <!-- ============================== -->
+      <h2 id="agent-sdk">Agent SDK</h2>
+      <p>The <code>@chainpe/agent</code> SDK provides a high-level interface for AI agents to interact with paid APIs.</p>
+
+      <h3>createChainPeAgent(config)</h3>
+      <p>Creates a new ChainPe agent instance with the given configuration.</p>
+<pre>import { createChainPeAgent } from '@chainpe/agent';
+
+const agent = createChainPeAgent({
+  mnemonic: string,            // Algorand wallet mnemonic
+  network: 'testnet' | 'mainnet',
+  maxPricePerRequest: number,  // Max ALGO per request
+  maxTotalSpend: number,       // Budget cap in ALGO
+  aiProvider?: {
+    model: string,             // LLM model name
+    apiKey: string,            // Provider API key
+  }
+});</pre>
+
+      <h3>agent.run(prompt, options?)</h3>
+      <p>Sends a natural language prompt to the agent. The agent discovers relevant services, pays for them, and returns the result.</p>
+<pre>const result = await agent.run(
+  'Get weather for London, Paris, and Tokyo',
+  {
+    provider: 'Weather',       // Optional: specific service
+    maxRetries: 3,             // Retry on failure
+  }
+);
+
+// result.data    → API response data
+// result.payment → { txId, amount, currency }
+// result.cost    → Total ALGO spent</pre>
+
+      <h3>agent.getBalance()</h3>
+      <p>Returns the current ALGO balance of the agent's wallet.</p>
+<pre>const balance = await agent.getBalance();
+// { available: 4.75, spent: 0.25, unit: 'ALGO' }</pre>
+
+      <h3>agent.getTransactions()</h3>
+      <p>Returns a list of all transactions made by the agent.</p>
+<pre>const txns = await agent.getTransactions();
+// [
+//   { txId: 'ABC...', amount: 0.05, service: 'Weather', timestamp: ... },
+//   { txId: 'DEF...', amount: 0.05, service: 'Weather', timestamp: ... },
+// ]</pre>
+
+      <!-- ============================== -->
+      <!-- CONFIGURATION -->
+      <!-- ============================== -->
+      <h2 id="configuration">Configuration</h2>
+
+      <h3>Full Configuration Reference</h3>
+      <table>
+        <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+        <tr><td><code>mnemonic</code></td><td>string</td><td>&mdash;</td><td>25-word Algorand mnemonic (required)</td></tr>
+        <tr><td><code>network</code></td><td>string</td><td>testnet</td><td>Algorand network: testnet or mainnet</td></tr>
+        <tr><td><code>maxPricePerRequest</code></td><td>number</td><td>0.1</td><td>Maximum ALGO per single API request</td></tr>
+        <tr><td><code>maxTotalSpend</code></td><td>number</td><td>10.0</td><td>Total ALGO budget for the agent session</td></tr>
+        <tr><td><code>autoDiscover</code></td><td>boolean</td><td>true</td><td>Enable automatic service discovery</td></tr>
+        <tr><td><code>confirmBlocks</code></td><td>number</td><td>1</td><td>Number of block confirmations before proceeding</td></tr>
+        <tr><td><code>timeout</code></td><td>number</td><td>30000</td><td>Request timeout in milliseconds</td></tr>
+        <tr><td><code>retries</code></td><td>number</td><td>3</td><td>Number of retry attempts on failure</td></tr>
+      </table>
+
+      <!-- ============================== -->
+      <!-- API REFERENCE -->
+      <!-- ============================== -->
+      <h2 id="api-reference">API Reference</h2>
+
+      <h3>CLI Usage</h3>
+      <p>ChainPe includes a CLI for quick testing and demos:</p>
+<pre># Run a single query
+./dist/cli.js run "Get weather for London" --provider Weather
+
+# Run multiple queries
+./dist/cli.js run "Get weather for London, Paris, Tokyo, New York, Dubai" \
+  --provider Weather
+
+# Check wallet balance
+./dist/cli.js balance
+
+# List available services
+./dist/cli.js services
+
+# View transaction history
+./dist/cli.js history</pre>
+
+      <h3>CLI Flags</h3>
+      <table>
+        <tr><th>Flag</th><th>Description</th></tr>
+        <tr><td><code>--provider &lt;name&gt;</code></td><td>Target a specific service provider</td></tr>
+        <tr><td><code>--max-price &lt;algo&gt;</code></td><td>Override max price per request</td></tr>
+        <tr><td><code>--network &lt;net&gt;</code></td><td>Specify network (testnet/mainnet)</td></tr>
+        <tr><td><code>--verbose</code></td><td>Enable detailed logging</td></tr>
+        <tr><td><code>--dry-run</code></td><td>Simulate without making real payments</td></tr>
+      </table>
+
+      <!-- ============================== -->
+      <!-- FOR PROVIDERS -->
+      <!-- ============================== -->
+      <h2 id="providers">For API Providers</h2>
+      <p>Any API can become a paid service on ChainPe. Here's how to onboard your API:</p>
+
+      <h3>1. Register your service</h3>
+<pre>// Register with the ChainPe marketplace
+const service = await chainpe.registerService({
+  name: 'Weather API',
+  description: 'Real-time weather data for any city',
+  endpoint: 'https://api.yourservice.com/weather',
+  price: 0.05,               // ALGO per request
+  wallet: 'YOUR_ALGO_ADDRESS',
+  category: 'data',
+});</pre>
+
+      <h3>2. Add x402 payment middleware</h3>
+<pre>import { x402Middleware } from '@chainpe/provider';
+
+// Express.js example
+app.use('/api/weather', x402Middleware({
+  price: 0.05,
+  wallet: 'YOUR_ALGO_ADDRESS',
+  network: 'testnet',
+}));
+
+app.get('/api/weather', (req, res) => {
+  // Only reached after verified payment
+  const city = req.query.city;
+  res.json({ city, temp: '12°C', humidity: '65%' });
+});</pre>
+
+      <h3>3. Receive payments</h3>
+      <p>Payments are received <strong>directly</strong> to your Algorand wallet. No intermediary holds funds. The x402 proxy verifies the payment hit the blockchain before forwarding requests to your API.</p>
+
+      <div class="callout callout-info">
+        <strong>Revenue Model</strong>
+        You set your own price per request. ChainPe takes zero commission during beta. All ALGO goes directly to your wallet.
+      </div>
+
+      <!-- ============================== -->
+      <!-- USE CASES -->
+      <!-- ============================== -->
+      <h2 id="use-cases">Use Cases</h2>
+
+      <table>
+        <tr><th>Use Case</th><th>How ChainPe Enables It</th><th>Cost Model</th></tr>
+        <tr><td><strong>AI Research Agents</strong></td><td>Agent needs 1000 academic paper summaries</td><td>Pay per paper, not $500/month</td></tr>
+        <tr><td><strong>Trading Bots</strong></td><td>Bot needs real-time price feeds from 5 providers</td><td>Pay each provider per request</td></tr>
+        <tr><td><strong>Customer Service AI</strong></td><td>Agent needs to verify user identity via KYC</td><td>Pay only when needed</td></tr>
+        <tr><td><strong>Content Generation</strong></td><td>Agent needs stock photos for articles</td><td>Pay per image, not monthly subscription</td></tr>
+        <tr><td><strong>IoT / Smart Devices</strong></td><td>Autonomous car needs traffic data</td><td>Pay per mile of coverage</td></tr>
+        <tr><td><strong>Multi-Agent Systems</strong></td><td>Agents trading services with each other</td><td>Inter-agent micropayments</td></tr>
+      </table>
+
+      <h3>Example: Multi-City Weather Agent</h3>
+<pre>// Real demo: 5 cities, 5 payments, 0.25 ALGO total
+const result = await agent.run(
+  'Get weather for London, Paris, Tokyo, New York, and Dubai',
+  { provider: 'Weather' }
+);
+
+// Output:
+// ✓ London  → 12°C, Cloudy   (paid 0.05 ALGO, tx: ABC...)
+// ✓ Paris   → 15°C, Sunny    (paid 0.05 ALGO, tx: DEF...)
+// ✓ Tokyo   → 22°C, Clear    (paid 0.05 ALGO, tx: GHI...)
+// ✓ New York → 8°C, Rainy    (paid 0.05 ALGO, tx: JKL...)
+// ✓ Dubai   → 35°C, Sunny    (paid 0.05 ALGO, tx: MNO...)
+// Total: 0.25 ALGO | All transactions verified on Algorand testnet</pre>
+
+      <!-- ============================== -->
+      <!-- SECURITY -->
+      <!-- ============================== -->
+      <h2 id="security">Security</h2>
+
+      <h3>Spending Controls</h3>
+      <ul>
+        <li><strong>maxPricePerRequest</strong> &mdash; Caps the maximum ALGO an agent can spend per single API request</li>
+        <li><strong>maxTotalSpend</strong> &mdash; Sets a total budget. When exhausted, payments fail gracefully</li>
+        <li><strong>Balance limits</strong> &mdash; Agent wallets have a finite balance. When empty, all requests stop</li>
+        <li><strong>Dry-run mode</strong> &mdash; Test your agent without making real payments</li>
+      </ul>
+
+      <h3>Wallet Security</h3>
+      <div class="callout callout-warning">
+        <strong>Important</strong>
+        Never commit your mnemonic to version control. Always use environment variables or a secrets manager. For production, use a dedicated agent wallet with limited funds.
+      </div>
+
+      <h3>On-Chain Verification</h3>
+      <p>Every payment is verifiable on the Algorand blockchain. The x402 proxy checks:</p>
+      <ol>
+        <li>Transaction exists on-chain</li>
+        <li>Correct amount was sent to the correct receiver</li>
+        <li>Transaction memo matches the request ID</li>
+        <li>Transaction is confirmed (finality reached)</li>
+      </ol>
+
+      <!-- ============================== -->
+      <!-- FAQ -->
+      <!-- ============================== -->
+      <h2 id="faq">FAQ</h2>
+
+      <h3>Why not just use Stripe?</h3>
+      <p>Stripe requires merchant accounts, human verification, and charges 2.9% + $0.30 per transaction. A $0.05 micropayment would cost more in fees ($0.30 minimum) than the payment itself. Algorand transaction fees are ~0.001 ALGO (~$0.0002).</p>
+
+      <h3>Why Algorand specifically?</h3>
+      <p>Speed and cost. AI agents need instant settlement &mdash; Algorand confirms in 4 seconds. The fees are low enough that even $0.01 payments make economic sense. No other Layer-1 provides this combination for micropayments.</p>
+
+      <h3>How do providers get paid?</h3>
+      <p>Directly to their Algorand wallet. No intermediary holds funds. The x402 proxy only <em>verifies</em> that the payment hit the chain before forwarding the API request.</p>
+
+      <h3>What prevents agents from overspending?</h3>
+      <p>Multiple safeguards: wallet balance limits, <code>maxPricePerRequest</code> caps, <code>maxTotalSpend</code> budget limits, and graceful failure when funds are exhausted.</p>
+
+      <h3>Is ChainPe open source?</h3>
+      <p>Yes. The SDK, proxy, and agent are all open source. View the code on <a href="https://github.com/" target="_blank">GitHub</a>.</p>
+
+      <h3>Can I use mainnet?</h3>
+      <p>ChainPe currently runs on Algorand testnet. Mainnet support is coming soon. The configuration switch is a single line change: <code>network: 'mainnet'</code>.</p>
+
+      <!-- ============================== -->
+      <!-- GLOSSARY -->
+      <!-- ============================== -->
+      <h2 id="glossary">Glossary</h2>
+      <table>
+        <tr><th>Term</th><th>Definition</th></tr>
+        <tr><td><strong>x402</strong></td><td>Payment protocol based on HTTP 402, enabling machine-to-machine payments over HTTP.</td></tr>
+        <tr><td><strong>ALGO</strong></td><td>The native cryptocurrency of the Algorand blockchain.</td></tr>
+        <tr><td><strong>Micropayment</strong></td><td>A very small payment, typically under $1, made programmatically.</td></tr>
+        <tr><td><strong>Agent</strong></td><td>An autonomous AI program that can discover services, make decisions, and execute payments.</td></tr>
+        <tr><td><strong>Provider</strong></td><td>An API service registered on ChainPe that accepts ALGO payments per request.</td></tr>
+        <tr><td><strong>Proxy</strong></td><td>The x402 middleware that intercepts payment-required responses and coordinates blockchain payments.</td></tr>
+        <tr><td><strong>Mnemonic</strong></td><td>A 25-word recovery phrase for an Algorand wallet.</td></tr>
+        <tr><td><strong>Finality</strong></td><td>The point at which a blockchain transaction is irreversible. Algorand achieves this in ~4 seconds.</td></tr>
+        <tr><td><strong>Testnet</strong></td><td>A test version of the Algorand blockchain for development, using free test ALGO.</td></tr>
+      </table>
+
+      <div style="margin-top: 64px; padding-top: 32px; border-top: 1px solid var(--border); text-align: center; color: var(--text-muted); font-size: 12px;">
+        &copy; 2026 ChainPe &middot; Built on Algorand &middot; <a href="index.html" style="color: var(--text-muted);">Back to home</a>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Highlight active sidebar link on scroll
+    const sections = document.querySelectorAll('h2[id]');
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          sidebarLinks.forEach(link => link.classList.remove('active'));
+          const activeLink = document.querySelector(`.sidebar-link[href="#${entry.target.id}"]`);
+          if (activeLink) activeLink.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>

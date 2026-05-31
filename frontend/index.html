@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChainPe | AI Agent Marketplace on Algorand</title>
+  <meta name="description" content="ChainPe lets AI agents pay for APIs autonomously using Algorand micropayments — no human approval, no subscriptions, just pay-per-request with native ALGO.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ===== HEADER / NAV ===== -->
+  <header class="header" id="header">
+    <div class="header-inner">
+      <a href="#" class="logo">chain<span class="logo-accent">pe</span></a>
+      <nav class="nav" id="nav">
+        <a href="#problem" class="nav-link">Problem</a>
+        <a href="#solution" class="nav-link">Solution</a>
+        <a href="docs.html" class="nav-link" target="_blank">Docs</a>
+        <a href="#use-cases" class="nav-link">Use Cases</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+      </nav>
+      <div class="header-actions">
+        <a href="https://github.com/" class="nav-link github-link">GitHub</a>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <a href="#get-started" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          Get Started
+        </a>
+      </div>
+      <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero-badge">
+        <span class="badge-new">New</span>
+        <span class="badge-text">Built on Algorand with the x402 payment protocol.</span>
+      </div>
+      <h1 class="hero-title">
+        The payment rail for<br>the <span class="highlight">AI economy</span>
+      </h1>
+      <p class="hero-subtitle">
+        AI agents discover services, pay in native ALGO, and get results &mdash; all in one autonomous flow. No human in the loop. No subscriptions. Pay only for what you use.
+      </p>
+      <div class="hero-install">
+        <div class="install-tabs">
+          <button class="install-tab active" data-tab="npm">npm</button>
+          <button class="install-tab" data-tab="yarn">yarn</button>
+          <button class="install-tab" data-tab="pnpm">pnpm</button>
+        </div>
+        <div class="install-code">
+          <code id="install-command">npm install @chainpe/agent</code>
+          <button class="copy-btn" id="copy-btn" aria-label="Copy to clipboard">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== VIDEO DEMO SECTION ===== -->
+  <section class="section section-demo" id="demo">
+    <div class="container">
+      <div class="video-wrapper">
+        <video autoplay loop muted playsinline id="demo-video">
+          <source src="IMG_8555.MOV" type="video/quicktime">
+          <source src="IMG_8555.MOV" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== THE PROBLEM ===== -->
+  <section class="section" id="problem">
+    <div class="container">
+      <h2 class="section-title">The Problem</h2>
+      <p class="section-description">
+        AI agents are getting smarter, but they can't pay for anything. When an agent needs weather data, stock prices, or any paid API &mdash; it's stuck. Current payment systems require human approval, credit cards, or monthly subscriptions. That doesn't work for autonomous agents making thousands of micro-requests.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===== THE SOLUTION: WHAT IS CHAINPE ===== -->
+  <section class="section" id="solution">
+    <div class="container">
+      <h2 class="section-title">What is ChainPe?</h2>
+      <p class="section-description">
+        ChainPe is an AI Agent Marketplace on Algorand using the x402 payment protocol. Agents discover services, pay in native ALGO, and get results &mdash; all in one autonomous flow.
+      </p>
+      <div class="features-list">
+        <div class="feature-item">
+          <span class="feature-star">[&star;]</span>
+          <div>
+            <strong>x402 Protocol</strong>
+            <span class="feature-desc">Real HTTP 402 &ldquo;Payment Required&rdquo; implementation &mdash; how the web was designed to handle payments</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-star">[&star;]</span>
+          <div>
+            <strong>Native ALGO</strong>
+            <span class="feature-desc">Pure native payments, no wrapped tokens or bridges. Near-zero fees make micropayments viable</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-star">[&star;]</span>
+          <div>
+            <strong>4-Second Finality</strong>
+            <span class="feature-desc">Algorand confirms in 4 seconds. Agents can't wait 10 minutes for Bitcoin confirmations</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-star">[&star;]</span>
+          <div>
+            <strong>AI SDK Integration</strong>
+            <span class="feature-desc">Built on Vercel AI SDK, works with any LLM. npm install and you're paying for APIs</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-star">[&star;]</span>
+          <div>
+            <strong>Direct Settlement</strong>
+            <span class="feature-desc">Providers get paid directly to their Algorand wallet. No intermediary holds funds</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-star">[&star;]</span>
+          <div>
+            <strong>Safe by Design</strong>
+            <span class="feature-desc">Agent wallets have balance limits. Set maxPricePerRequest caps. Payments fail gracefully when empty</span>
+          </div>
+        </div>
+      </div>
+      <a href="#" class="inline-link">Read docs &rarr;</a>
+    </div>
+  </section>
+
+  <!-- ===== STATS ===== -->
+  <section class="section section-stats" id="stats">
+    <div class="container">
+      <h2 class="section-title">Why Algorand + x402</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-visual stat-visual-1"></div>
+          <div class="stat-info">
+            <span class="stat-number">4s</span>
+            <span class="stat-label">Block Finality</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-visual stat-visual-2"></div>
+          <div class="stat-info">
+            <span class="stat-number">~0.001</span>
+            <span class="stat-label">ALGO per Tx Fee</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-visual stat-visual-3"></div>
+          <div class="stat-info">
+            <span class="stat-number">$0.05</span>
+            <span class="stat-label">Per API Request</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== VS STRIPE SECTION ===== -->
+  <section class="section" id="vs-stripe">
+    <div class="container">
+      <h2 class="section-title">Why not just use Stripe?</h2>
+      <p class="section-description">
+        Stripe requires merchant accounts, human verification, and charges 2.9% + $0.30 per transaction. A $0.05 micropayment would cost more in fees than the payment itself. Algorand transactions cost ~0.001 ALGO.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===== USE CASES ===== -->
+  <section class="section" id="use-cases">
+    <div class="container">
+      <h2 class="section-title">Real-World Applications</h2>
+      <p class="section-description">
+        Any API can become a paid service. Any AI agent can become a paying customer. ChainPe is the marketplace connecting them.
+      </p>
+      <div class="use-cases-grid">
+        <div class="use-case-card">
+          <div class="use-case-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <h3>AI Research Agents</h3>
+          <p>Agent needs 1000 academic paper summaries &mdash; pays per paper, not a $500/month subscription</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          </div>
+          <h3>Trading Bots</h3>
+          <p>Bot needs real-time price feeds from 5 providers &mdash; pays each per request, picks the best</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3>Customer Service AI</h3>
+          <p>Agent needs to verify user identity &mdash; pays KYC service only when needed</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <h3>Content Generation</h3>
+          <p>Agent needs stock photos &mdash; pays per image, not monthly Getty subscription</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+          </div>
+          <h3>IoT / Smart Devices</h3>
+          <p>Autonomous car needs traffic data &mdash; pays per mile of coverage</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <h3>Any API, Any Agent</h3>
+          <p>Turn any API into a paid service. Turn any AI agent into a paying customer. Powered by ALGO.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FAQ ===== -->
+  <section class="section" id="faq">
+    <div class="container">
+      <h2 class="section-title">FAQ</h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary class="faq-question">What is ChainPe?</summary>
+          <p class="faq-answer">ChainPe is an AI Agent Marketplace on Algorand that uses the x402 payment protocol. It enables AI agents to autonomously discover services, pay for them with native ALGO micropayments, and receive results — all without human intervention.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-question">Why not just use Stripe?</summary>
+          <p class="faq-answer">Stripe requires merchant accounts, human verification, and charges 2.9% + $0.30 per transaction. A $0.05 micropayment would cost more in fees than the payment itself. Algorand transactions cost ~0.001 ALGO, making true micropayments economically viable.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-question">Why Algorand specifically?</summary>
+          <p class="faq-answer">Speed and cost. Agents need instant settlement — Algorand confirms in 4 seconds. The fees are low enough that even $0.01 payments make economic sense. No other chain provides this combination for micropayments.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-question">How do providers get paid?</summary>
+          <p class="faq-answer">Directly to their Algorand wallet. No intermediary holds funds. The x402 proxy verifies the payment hit the chain before forwarding the API request to the provider.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-question">What prevents agents from overspending?</summary>
+          <p class="faq-answer">Agent wallets have a balance limit. When it's empty, payments fail gracefully. Developers can also set maxPricePerRequest caps in the config to control spending per request.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-question">What is the x402 protocol?</summary>
+          <p class="faq-answer">x402 is based on HTTP 402 "Payment Required" — a status code that's been in the HTTP spec since the beginning but was never widely used. It's how the web was designed to handle payments. ChainPe finally puts it to use with blockchain-backed micropayments.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-question">How do I get started?</summary>
+          <p class="faq-answer">Install the SDK with <code>npm install @chainpe/agent</code> and you're ready to go. The SDK integrates with the Vercel AI SDK and works with any LLM provider. Check our docs for a 5-minute quickstart guide.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA / WAITLIST ===== -->
+  <section class="section section-cta" id="get-started">
+    <div class="container">
+      <h2 class="section-title">Be the first to know when we launch</h2>
+      <p class="section-description">
+        We've built the SDK, the proxy, and the agent. The x402 flow works with real ALGO. We're ready to onboard API providers and agent developers.
+      </p>
+      <form class="waitlist-form" id="waitlist-form">
+        <input type="email" class="waitlist-input" placeholder="you@email.com" required aria-label="Email address">
+        <button type="submit" class="btn btn-primary">Join Waitlist</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer" id="footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="https://github.com/" class="footer-link">GitHub</a>
+        <a href="#" class="footer-link">Docs</a>
+        <a href="#" class="footer-link">Changelog</a>
+        <a href="#" class="footer-link">Discord</a>
+        <a href="#" class="footer-link">X</a>
+      </div>
+      <div class="footer-brand">
+        <a href="#" class="logo logo-small">chain<span class="logo-accent">pe</span></a>
+        <span class="footer-copy">&copy; 2026 ChainPe</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
