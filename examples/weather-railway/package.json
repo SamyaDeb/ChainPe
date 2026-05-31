@@ -1,0 +1,12 @@
+{
+  "name": "chainpe-weather-api",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "ChainPe Weather API backend — no external deps, pure Node.js http",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
