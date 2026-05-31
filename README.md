@@ -1,93 +1,191 @@
 # ChainPe
 
-<img width="1470" height="814" alt="Screenshot 2026-03-22 at 12 41 45 PM" src="https://github.com/user-attachments/assets/828580bd-7a5c-44b7-9a07-621e5696b731" />
+<img width="1470" height="814" alt="ChainPe — Decentralized API Marketplace on Algorand" src="https://github.com/user-attachments/assets/828580bd-7a5c-44b7-9a07-621e5696b731" />
 
-**Decentralized AI Agent Marketplace on Algorand — Monetize any API with x402 micropayments**
+**Monetize any HTTP API with blockchain micropayments. Consume paid APIs directly from Claude and other AI tools — no accounts, no API keys.**
 
-ChainPe enables developers to publish, discover, and monetize HTTP APIs through an on‑chain service registry on Algorand. Every API call is gated by the [x402 protocol](https://www.x402.org/), enforcing trustless pay‑per‑request micropayments in native ALGO (or USDC).
+ChainPe is a decentralized API marketplace built on Algorand. API developers publish their services to an on-chain registry and gate every request with the [x402 protocol](https://www.x402.org/) — trustless, pay-per-request micropayments in ALGO or USDC. Consumers discover and call those services by installing the ChainPe MCP extension into Claude Desktop or any MCP-compatible AI tool.
+
+---
+
+## How It Works
 
 ```
-Consumer Agent                ChainPe Proxy (x402)            Backend API
-      │                              │                            │
-      │  GET /trending               │                            │
-      │─────────────────────────────>│                            │
-      │  402 PAYMENT-REQUIRED        │                            │
-      │<─────────────────────────────│                            │
-      │                              │                            │
-      │  Signs ALGO payment txn      │                            │
-      │                              │                            │
-      │  GET /trending               │  verify payment            │
-      │  + PAYMENT header            │──────────┐                 │
-      │─────────────────────────────>│          │                 │
-      │                              │<─────────┘                 │
-      │                              │  proxy to backend          │
-      │                              │───────────────────────────>│
-      │  200 + JSON data             │  200 + JSON data           │
-      │<─────────────────────────────│<───────────────────────────│
-      │                              │                            │
-      │                              │  settle on-chain (atomic)  │
-      │                              │──> Algorand txn            │
+LLM (Claude)              ChainPe Proxy (x402)            Your Backend API
+     │                           │                               │
+     │  GET /endpoint            │                               │
+     │──────────────────────────>│                               │
+     │  402 PAYMENT-REQUIRED     │                               │
+     │<──────────────────────────│                               │
+     │                           │                               │
+     │  Signs ALGO/USDC payment  │                               │
+     │                           │                               │
+     │  GET /endpoint            │  verify payment on-chain      │
+     │  + PAYMENT-SIGNATURE      │──────────┐                    │
+     │──────────────────────────>│          │                    │
+     │                           │<─────────┘                    │
+     │                           │  forward to backend           │
+     │                           │──────────────────────────────>│
+     │  200 + data               │  200 + data                   │
+     │<──────────────────────────│<──────────────────────────────│
+     │                           │                               │
+     │                           │  settle on-chain              │
+     │                           │──> Algorand transaction       │
 ```
 
 ---
 
-## On‑Chain Proof of Work
+## For API Developers — Publish & Monetize
 
-### Registry Smart Contract (Algorand Testnet)
+Register any existing HTTP API in two commands. No changes to your backend required.
 
-| Item                    | Value                                                                                                                                              |
-|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Registry App ID**     | `757478481`                                                                                                                                        |
-| **Explorer Link**       | [View on Allo.info (Testnet)](https://app.dappflow.org/explorer/application/757478481/transactions)                                                |
-| **Contract Standard**   | ARC‑4 (ABI‑compatible)                                                                                                                             |
-| **Registration Fee**    | 1 ALGO per service                                                                                                                                 |
-| **Storage**             | ARC‑54 BoxMap — `developer_address + ":" + service_name`                                                                                           |
+### Install
 
-### Registered Services (on‑chain)
+```bash
+npm install -g @chainpe/chainpe
+```
 
-| Service          | Provider Wallet                                            | Price/Request | Token | Network  |
-|------------------|------------------------------------------------------------|---------------|-------|----------|
-| Weather News     | `HLJHLCKB3TRSM3TYLT5XRFX3XHFBZ6A67QAIXCABFC5V5IHK3ESZEMJWMU` | 0.01 ALGO     | ALGO  | Testnet  |
-| Hacker News API  | `EZDWPOTBKBWCBQ4M6QXWF4Z3PJB5Q6XN6XAGL5KPR3ESC3HF33JAAN57A4` | 0.01 ALGO     | ALGO  | Testnet  |
+### 1. Configure your service
 
-### Consumer Agent Wallet
+```bash
+chainpe init
+```
 
-| Item              | Value                                                                  |
-|-------------------|------------------------------------------------------------------------|
-| **Agent Wallet**  | `HMPG7YLTESN4FQXIGCAHQOXDEIDUIFBOINJDGQ7WUFBTYMOIKDIN6CITPM`         |
-| **Mnemonic Storage** | OS Keychain (secure, never stored in plaintext)                      |
+The interactive prompt collects:
+
+```
+Service name        › Weather API
+Description         › Real-time weather and forecast data
+Tags                › weather, forecast, data
+Backend URL         › http://localhost:3001
+Price per request   › 0.01
+Payment token       › ALGO
+Your wallet address › EZDWPOTBKBWCBQ4M6QXWF4Z3PJB5Q6XN6XAGL5KPR3ESC3HF33J...
+Proxy port          › 4402
+Network             › testnet
+```
+
+Your wallet address is all you need — the proxy verifies payments and forwards them directly to your wallet on-chain. It never holds your funds or needs your private key.
+
+### 2. Start the payment gateway
+
+```bash
+chainpe start
+```
+
+This launches an x402 reverse proxy in front of your backend. Every incoming request must carry a valid Algorand payment or it gets a `402 Payment Required` response.
+
+```
+ChainPe proxy started
+  Service   Weather API
+  Target    http://localhost:3001
+  Price     0.01 ALGO per request
+  Wallet    EZDWPOTB...57A4
+  Network   testnet
+  Listening http://localhost:4402
+```
+
+### 3. Register on-chain
+
+```bash
+chainpe register
+```
+
+This publishes your service to the `ChainPeRegistry` smart contract on Algorand (costs 1 ALGO). Once registered, any consumer with the ChainPe MCP extension can discover and call your API immediately.
+
+### CLI Reference
+
+| Command | What it does |
+|---|---|
+| `chainpe init` | Interactive setup — creates `~/.chainpe/config.json` |
+| `chainpe start` | Start the x402 payment proxy |
+| `chainpe register` | Publish service to the Algorand registry |
+| `chainpe list` | List all services registered on-chain |
+| `chainpe deregister` | Remove your service from the registry |
+
+### Config file (`~/.chainpe/config.json`)
+
+| Field | Description |
+|---|---|
+| `serviceName` | Display name for your service |
+| `serviceDescription` | Short description shown to consumers |
+| `tags` | Comma-separated keywords for discovery |
+| `targetUrl` | Your backend API URL |
+| `pricePerRequest` | Price in ALGO or USDC |
+| `paymentToken` | `"ALGO"` or `"USDC"` |
+| `walletAddress` | Your Algorand wallet address (receives payments) |
+| `proxyPort` | Port the x402 proxy listens on |
+| `network` | `"testnet"` or `"mainnet"` |
 
 ---
 
-## Features
+## For Consumers — Use Paid APIs from Claude
 
-- **On‑chain service registry** — ARC‑4 smart contract on Algorand stores API metadata, enabling trust‑less, permissionless discovery.
-- **x402 pay‑per‑request** — Every API call requires an ALGO (or USDC) micropayment. No API keys, no subscriptions.
-- **AI Agent SDK** — LLM‑driven agents autonomously discover services, pay, and fetch data using `discoverService` and `callPaidApi` tools.
-- **Zero backend changes** — Reverse proxy pattern wraps any existing HTTP API with a paywall.
-- **Secure wallet management** — Mnemonics stored in the OS Keychain, never in config files.
-- **Optimistic proxying** — Verify payment locally, proxy immediately, settle on‑chain asynchronously.
-- **Dual example APIs** — Weather API and Kaggle Hacker News dataset API included as ready‑to‑use demos.
+Install the ChainPe MCP extension into Claude Desktop. Claude gets an Algorand wallet, can discover services registered on-chain, and pays for them automatically within your configured budget.
+
+### Install in Claude Desktop
+
+1. Download `chainpe.mcpb` from [Releases](https://github.com/SamyaDeb/ChainPe/releases)
+2. Double-click the `.mcpb` file — Claude Desktop installs it automatically
+3. Open Claude Desktop → Settings → Extensions → ChainPe
+4. Fill in your Algorand wallet mnemonic (25 words) and set spending limits
+
+| Config field | Default | Description |
+|---|---|---|
+| Algorand Mnemonic | — | 25-word seed phrase, stored in OS Keychain |
+| Network | `algorand-testnet` | `algorand` or `algorand-testnet` |
+| Max per payment | `0.10 USDC` | Hard cap per single API call |
+| Max per day | `20.00 USDC` | Daily spending limit |
+| Registry App ID | `757478481` | Leave as-is unless running a custom registry |
+
+### What Claude can do once installed
+
+| Tool | Description |
+|---|---|
+| `search_bazaar` | Discover services registered on the ChainPe Algorand registry |
+| `x402_fetch` | Call a service URL — auto-handles 402, signs payment, retries |
+| `check_balance` | View wallet balance and address |
+| `pay` | Sign an x402 payment authorization |
+| `transfer_usdc` | Send USDC to any Algorand address |
+| `transfer_algo` | Send ALGO (for gas) |
+| `spending_report` | Review today's spend against limits |
+| `request_funding` | Generate a Pera Wallet top-up link |
+| `tinyman_swap` | Swap tokens via TinyMan DEX |
+| `create_token` | Create a new Algorand Standard Asset |
+
+### Example
+
+Ask Claude:
+
+> *"Find me trending tech news and summarize the top stories."*
+
+Claude will:
+1. Call `search_bazaar` → find the Hacker News API registered on Algorand
+2. Call `x402_fetch` → get a `402`, sign a USDC payment, retry
+3. Receive the data and summarize it in the chat
+
+No API keys. No subscriptions. The payment settles on Algorand in under 5 seconds.
 
 ---
 
-## Tech Stack
+## On-Chain Deployment
 
-| Component             | Technology                                                      |
-|-----------------------|-----------------------------------------------------------------|
-| **Runtime & Language** | Node.js 22 / TypeScript (ESM)                                  |
-| **Web Framework**     | Express.js                                                      |
-| **Blockchain**        | Algorand (Testnet / Mainnet)                                    |
-| **Smart Contract**    | TEALScript → TEAL (ARC‑4 compliant)                            |
-| **Payment Protocol**  | x402‑AVM (Algorand Virtual Machine)                             |
-| **Payment SDK**       | `@x402-avm/express`, `@x402-avm/core`                          |
-| **Algorand SDK**      | `algosdk`                                                       |
-| **AI/ML Integration** | Vercel AI SDK v4 + LLM providers (OpenAI, Anthropic, Groq, etc.)|
-| **CLI Tooling**       | Commander, @clack/prompts, Chalk, Gradient‑string, Ora          |
-| **Security**          | OS Keychain for mnemonic storage                                |
-| **Data Handling**     | RFC 4180 CSV parser, Kaggle dataset integration                 |
-| **Package Manager**   | npm workspaces (monorepo)                                       |
-| **Build Tool**        | tsup                                                            |
+### Registry Contract (Algorand Testnet)
+
+| | |
+|---|---|
+| **App ID** | `757478481` |
+| **Explorer** | [View on DappFlow](https://app.dappflow.org/explorer/application/757478481/transactions) |
+| **Standard** | ARC-4 (ABI-compatible) |
+| **Registration fee** | 1 ALGO per service |
+| **Storage** | ARC-54 BoxMap keyed by `developer_address:service_name` |
+
+### Live Registered Services
+
+| Service | Price | Token | Network |
+|---|---|---|---|
+| Weather News | 0.01 | ALGO | Testnet |
+| Hacker News API | 0.01 | ALGO | Testnet |
 
 ---
 
@@ -97,187 +195,109 @@ Consumer Agent                ChainPe Proxy (x402)            Backend API
 chainpe/
 ├── contracts/
 │   └── src/
-│       └── ChainPeRegistry.algo.ts        # On-chain AI service registry (ARC-4)
+│       └── ChainPeRegistry.algo.ts     # ARC-4 on-chain service registry
+│
 ├── packages/
-│   ├── chainpe/                            # Provider SDK & CLI
+│   ├── chainpe/                        # Provider SDK & CLI
 │   │   └── src/
-│   │       ├── cli.ts                      # CLI: init, start, register, list
+│   │       ├── cli.ts                  # chainpe init / start / register / list
 │   │       ├── proxy/
-│   │       │   ├── server.ts               # x402 payment proxy server
-│   │       │   └── routeConfig.ts          # Per-route pricing config
-│   │       ├── registry.ts                 # On-chain registry client
+│   │       │   ├── server.ts           # x402 reverse proxy (Express)
+│   │       │   ├── routeConfig.ts      # per-route pricing
+│   │       │   └── analytics.ts        # payment logs and stats
+│   │       ├── registry.ts             # on-chain registry client
+│   │       ├── facilitator/            # payment verification modes
 │   │       └── x402/algo/
-│   │           └── server-scheme.ts        # ALGO native payment scheme
-│   └── chainpe-agent/                      # Consumer Agent SDK & CLI
-│       └── src/
-│           ├── agent.ts                    # LLM agent with payment tools
-│           ├── cli.ts                      # CLI: init, run, status
-│           ├── payment.ts                  # x402 payment client
-│           ├── wallet.ts                   # Secure wallet management
-│           └── tools/
-│               ├── callPaidApi.ts          # Tool: call paid APIs
-│               └── discoverService.ts      # Tool: discover services
+│   │           └── server-scheme.ts    # ALGO native payment scheme
+│   │
+│   └── chainpe-wallet/                 # MCP extension for Claude Desktop
+│       ├── src/
+│       │   ├── server.ts               # MCP server (stdio JSON-RPC)
+│       │   ├── chainpe-registry.ts     # standalone registry reader
+│       │   ├── spending.ts             # budget enforcement
+│       │   └── tools/
+│       │       ├── x402-fetch.ts       # auto-pay on 402
+│       │       ├── bazaar-search.ts    # on-chain service discovery
+│       │       ├── check-balance.ts
+│       │       ├── pay.ts
+│       │       ├── transfer-algo.ts
+│       │       ├── transfer-usdc.ts
+│       │       └── tinyman-swap.ts
+│       ├── manifest.json               # MCP extension manifest
+│       └── chainpe.mcpb                # installable Claude Desktop bundle
+│
 ├── examples/
-│   ├── weather-api.mjs                     # Weather API (mock data, 0.01 ALGO/req)
-│   ├── kaggle-api.mjs                      # HN Tech Trends API (9,999 posts, 0.05 ALGO/req)
-│   └── hn_tech_trends.csv                  # Kaggle dataset
-└── package.json                            # npm workspaces monorepo root
+│   ├── weather-api.mjs                 # example provider: weather data
+│   ├── btc-api.mjs                     # example provider: Bitcoin price
+│   └── weather-railway/                # Railway deploy config
+│
+└── frontend/
+    ├── index.html                      # landing page
+    └── docs.html                       # API documentation page
 ```
-
----
-
-## Quick Start
-
-### Prerequisites
-
-- **Node.js** ≥ 18
-- **Algorand TestNet wallet** with ALGO (get from [Algorand Faucet](https://bank.testnet.algorand.network/))
-
-### Install & Build
-
-```bash
-git clone https://github.com/AnomalyFi/chainpe.git
-cd chainpe
-npm install
-npm run build
-npm link
-```
-
-### 1. Start a Backend API (Provider)
-
-```bash
-# Weather API on port 3001
-node examples/weather-api.mjs
-
-# OR Kaggle HN Dataset API on port 3002
-node examples/kaggle-api.mjs
-```
-
-### 2. Initialize the Provider
-
-```bash
-chainpe init
-# → Service name, target URL, price, wallet address, proxy port
-```
-
-### 3. Start the x402 Proxy
-
-```bash
-chainpe start
-# Proxy runs on port 4403 — wraps your API with ALGO payment enforcement
-```
-
-### 4. Register On‑Chain
-
-```bash
-chainpe register
-# Publishes the service to the Algorand registry (costs ~1 ALGO)
-```
-
-### 5. Test from Consumer Agent
-
-```bash
-# Initialize the consumer agent
-chainpe-agent init
-
-# Run a task — the agent discovers, pays, and fetches data automatically
-chainpe-agent run "Show me trending news about OpenAI"
-```
-
----
-
-## Example APIs
-
-### Weather API (`examples/weather-api.mjs`)
-
-| Endpoint               | Description                    | Price        |
-|------------------------|--------------------------------|--------------|
-| `GET /health`          | Health check                   | Free         |
-| `GET /weather?city=X`  | Current weather for a city     | 0.01 ALGO    |
-| `GET /forecast?city=X` | 3‑day forecast                 | 0.01 ALGO    |
-| `GET /cities`          | Popular cities list            | 0.01 ALGO    |
-
-### Kaggle HN Dataset API (`examples/kaggle-api.mjs`)
-
-Serves 9,999 Hacker News posts from the Kaggle dataset *kanchana1990/hacker-news-tech-trend-velocity-and-nlp*.
-
-| Endpoint                      | Description                              | Price        |
-|-------------------------------|------------------------------------------|--------------|
-| `GET /health`                 | Health check                             | Free         |
-| `GET /`                       | API documentation & endpoint listing     | 0.05 ALGO    |
-| `GET /trending?limit=10`      | Top posts by Score_Velocity              | 0.05 ALGO    |
-| `GET /search?q=openai`        | Full‑text search on titles               | 0.05 ALGO    |
-| `GET /news`                   | Alias for /trending                      | 0.05 ALGO    |
-| `GET /viral`                  | Viral posts (Is_Viral=1)                 | 0.05 ALGO    |
-| `GET /stats`                  | Aggregate dataset statistics             | 0.05 ALGO    |
-| `GET /posts?page=1&limit=20`  | Paginated post listing                   | 0.05 ALGO    |
-| `GET /posts/:id`              | Single post by ID                        | 0.05 ALGO    |
-| `GET /by-type?type=Ask_HN`    | Filter by post type                      | 0.05 ALGO    |
 
 ---
 
 ## Smart Contract Methods
 
-The `ChainPeRegistry` contract (ARC‑4) exposes the following methods:
+The `ChainPeRegistry` ARC-4 contract on Algorand exposes:
 
-| Method            | Description                                                 |
-|-------------------|-------------------------------------------------------------|
-| `register()`      | Register a new service (requires 1 ALGO payment)            |
-| `update()`        | Update an existing service's metadata                       |
-| `deregister()`    | Remove a service from the registry                          |
-| `getService()`    | Query a service's full metadata by developer + name         |
-| `hasService()`    | Check if a service exists                                   |
-| `getAdmin()`      | Get the contract admin address                              |
-| `getRegistrationFee()` | Get the current registration fee (1 ALGO)              |
-
----
-
-## How It Works
-
-### Provider Flow
-1. Developer creates an HTTP API (weather, datasets, ML models, etc.).
-2. Runs `chainpe init` to configure pricing and wallet.
-3. Runs `chainpe start` to launch the x402 proxy.
-4. Runs `chainpe register` to publish the service on Algorand.
-
-### Consumer Flow
-1. AI agent runs `discoverService("weather")` → queries the on‑chain registry.
-2. Agent finds the service endpoint and pricing info.
-3. Agent calls `callPaidApi("Weather News", "/weather?city=Mumbai")`.
-4. The SDK automatically signs an ALGO payment transaction and attaches it to the request.
-5. The proxy verifies the payment, forwards the request, and returns the data.
-
-### Payment Flow
-1. Consumer sends a request to the proxy.
-2. Proxy returns `402 Payment Required` with payment requirements.
-3. Consumer signs an Algorand payment transaction and retries with the `PAYMENT` header.
-4. Proxy verifies the transaction, forwards to backend, and settles on‑chain.
+| Method | Description |
+|---|---|
+| `register()` | Register a service (requires 1 ALGO fee) |
+| `update()` | Update metadata — only callable by the original developer |
+| `deregister()` | Remove a service from the registry |
+| `getService(developer, name)` | Fetch full service metadata |
+| `hasService(developer, name)` | Check if a service exists |
+| `getAdmin()` | Return the contract admin address |
+| `getRegistrationFee()` | Return current registration fee |
 
 ---
 
-## Key Design Decisions
+## Tech Stack
 
-1. **Reverse proxy pattern** — `http-proxy-middleware` wraps any HTTP service. Zero backend code changes required.
-2. **Algorand ARC‑4 registry** — On‑chain, ABI‑compatible smart contract for decentralized, permissionless service discovery.
-3. **x402‑AVM protocol** — HTTP 402 payment challenges with Algorand native payments. Clients pay in ALGO, no need for gas tokens.
-4. **OS Keychain storage** — Wallet mnemonics are stored in macOS Keychain / Linux Secret Service, never in plaintext config files.
-5. **Service‑level payment cache** — Prevents duplicate payments when the AI agent calls multiple endpoints on the same service within a session.
-6. **RFC 4180 CSV parser** — Handles quoted fields with embedded commas for reliable dataset parsing.
-
----
-
-## Challenges Faced
-
-- **CSV parsing** — Titles with commas broke the naïve parser; implemented a full RFC 4180‑compliant quoted‑field parser.
-- **x402 payment headers** — Service description lived in `resource.description` (v2 format), not in `accepts[0]`; fixed the payment client to read it correctly.
-- **Double payments** — The agent paid separately for `/` (docs) and `/search`; added a service‑level cache to reuse payments across paths.
-- **Secure wallet storage** — Migrated from plaintext config to OS Keychain with a `migrate-keychain` command for existing users.
+| Layer | Technology |
+|---|---|
+| Language | TypeScript (ESM), Node.js 22 |
+| Web framework | Express.js |
+| Blockchain | Algorand Testnet / Mainnet |
+| Smart contracts | TEALScript → TEAL (ARC-4) |
+| Payment protocol | x402-AVM |
+| Payment SDK | `@x402-avm/express`, `@x402-avm/core` |
+| Algorand SDK | `algosdk` v3 |
+| MCP protocol | `@modelcontextprotocol/sdk` v1 |
+| CLI tooling | Commander, `@clack/prompts`, Chalk |
+| Security | OS Keychain for mnemonic storage |
+| Build | tsup, npm workspaces |
 
 ---
 
-## The Problem It Solves
+## Local Development
 
-Traditional API marketplaces rely on centralized platforms with high fees, opaque pricing, and restrictive access controls. ChainPe creates a decentralized, pay‑per‑use marketplace where developers register APIs on Algorand's blockchain and gate access through x402 micropayments. AI agents can autonomously discover, pay for, and consume these APIs without manual credential management—lowering barriers for data providers, ensuring transparent compensation, and enabling composable AI‑driven workflows that scale across the decentralized web.
+```bash
+git clone https://github.com/SamyaDeb/ChainPe.git
+cd ChainPe
+npm install
+npm run build
+
+# Start an example backend
+node examples/weather-api.mjs
+
+# In a second terminal — start the proxy
+chainpe init   # configure service
+chainpe start  # launch x402 gateway on :4402
+
+# Register on Algorand testnet
+chainpe register
+```
+
+To build the MCP extension bundle:
+
+```bash
+cd packages/chainpe-wallet
+npm run build        # compiles TypeScript
+npm run build:mcpb   # produces chainpe.mcpb
+```
 
 ---
 
