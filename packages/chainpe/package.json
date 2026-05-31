@@ -1,0 +1,91 @@
+{
+  "name": "@chainpe/cli",
+  "version": "1.0.0",
+  "description": "ChainPe Provider CLI — Monetize any API with x402 micropayments on Algorand",
+  "type": "module",
+  "bin": {
+    "chainpe": "./dist/cli.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnomalyFi/chainpe.git",
+    "directory": "packages/chainpe"
+  },
+  "bugs": {
+    "url": "https://github.com/AnomalyFi/chainpe/issues"
+  },
+  "homepage": "https://github.com/AnomalyFi/chainpe#readme",
+  "author": "AnomalyFi",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "x402",
+    "algorand",
+    "proxy",
+    "micropayments",
+    "pay-per-request",
+    "http-402",
+    "blockchain",
+    "usdc",
+    "algo",
+    "api-monetization",
+    "reverse-proxy",
+    "ai-agents"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.9.1",
+    "@perawallet/connect": "^1.5.1",
+    "@walletconnect/client": "^1.8.0",
+    "@x402-avm/avm": "^2.6.1",
+    "@x402-avm/core": "^2.6.1",
+    "@x402-avm/express": "^2.6.1",
+    "@x402-avm/paywall": "^2.6.1",
+    "algosdk": "^3.5.2",
+    "chalk": "^5.4.1",
+    "commander": "^14.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "gradient-string": "^3.0.0",
+    "http-proxy-middleware": "^3.0.5",
+    "open": "^11.0.0",
+    "ora": "^8.2.0",
+    "picocolors": "^1.1.1",
+    "qrcode-terminal": "^0.12.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/gradient-string": "^1.1.6",
+    "@types/node": "^22.15.21",
+    "@types/qrcode-terminal": "^0.12.2",
+    "tsup": "^8.5.0",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}
