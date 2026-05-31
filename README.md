@@ -2,6 +2,7 @@
 
 <img width="1255" height="699" alt="Landing" src="https://github.com/user-attachments/assets/2493bee3-5a24-4687-9003-ece3ac941683" />
 
+
 **Monetize any HTTP API with blockchain micropayments. Consume paid APIs directly from Claude and other AI tools — no accounts, no API keys.**
 
 ChainPe is a decentralized API marketplace built on Algorand. API developers publish their services to an on-chain registry and gate every request with the [x402 protocol](https://www.x402.org/) — trustless, pay-per-request micropayments in ALGO or USDC. Consumers discover and call those services by installing the ChainPe MCP extension into Claude Desktop or any MCP-compatible AI tool.
