@@ -1,6 +1,6 @@
 # ChainPe
 
-<img width="1470" height="814" alt="ChainPe — Decentralized API Marketplace on Algorand" src="https://github.com/user-attachments/assets/828580bd-7a5c-44b7-9a07-621e5696b731" />
+<img width="1255" height="699" alt="Landing" src="https://github.com/user-attachments/assets/2493bee3-5a24-4687-9003-ece3ac941683" />
 
 **Monetize any HTTP API with blockchain micropayments. Consume paid APIs directly from Claude and other AI tools — no accounts, no API keys.**
 
@@ -119,9 +119,9 @@ This publishes your service to the `ChainPeRegistry` smart contract on Algorand 
 
 ---
 
-## For Consumers — Use Paid APIs from Claude
+## For Consumers — Use Paid APIs from LLMs
 
-Install the ChainPe MCP extension into Claude Desktop. Claude gets an Algorand wallet, can discover services registered on-chain, and pays for them automatically within your configured budget.
+Install the ChainPe MCP extension into Claude Desktop, OpenAI, Antigravity pr whatever you want. LLMs gets an Algorand wallet, can discover services registered on-chain, and pays for them automatically within your configured budget.
 
 ### Install in Claude Desktop
 
@@ -174,8 +174,7 @@ No API keys. No subscriptions. The payment settles on Algorand in under 5 second
 
 | | |
 |---|---|
-| **App ID** | `757478481` |
-| **Explorer** | [View on DappFlow](https://app.dappflow.org/explorer/application/757478481/transactions) |
+| **Deployed App ID** | `757478481` |
 | **Standard** | ARC-4 (ABI-compatible) |
 | **Registration fee** | 1 ALGO per service |
 | **Storage** | ARC-54 BoxMap keyed by `developer_address:service_name` |
