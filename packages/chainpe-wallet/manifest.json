@@ -1,0 +1,112 @@
+{
+  "manifest_version": "0.3",
+  "name": "chainpe-wallet",
+  "display_name": "ChainPe — Algorand Wallet for AI Agents",
+  "version": "0.2.0",
+  "icon": "chainpe-logo.png",
+  "description": "Algorand wallet for Claude. Discover ChainPe services on-chain and pay for them with x402 — no API keys, no accounts.",
+  "long_description": "Give Claude an Algorand wallet wired into the ChainPe marketplace. ChainPe adds tools for:\n\n- **search_bazaar** — Discover x402-gated services from the ChainPe on-chain registry\n- **x402_fetch** — Fetch a service URL with automatic x402 payment handling\n- **check_balance** — View your USDC balance and wallet address\n- **pay** — Sign an x402 payment authorization (USDC on Algorand)\n- **transfer_usdc** — Send USDC to any Algorand address\n- **transfer_algo** — Send ALGO for gas fees\n- **spending_report** — Review what the agent has spent today\n- **request_funding** — Generate a Pera Wallet top-up link\n- **tinyman_swap** / **create_token** — Optional DeFi helpers\n\nUse your 25-word mnemonic to pay with USDC on Algorand Testnet or Mainnet.\n\nBudget limits protect your funds: set max per call and max per day.",
+  "author": {
+    "name": "ChainPe",
+    "url": "https://github.com/soumyacodes007/Pixa"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soumyacodes007/Pixa"
+  },
+  "homepage": "https://github.com/soumyacodes007/Pixa",
+  "keywords": [
+    "x402",
+    "wallet",
+    "usdc",
+    "payments",
+    "algorand",
+    "chainpe",
+    "agent-commerce"
+  ],
+
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"],
+      "env": {
+        "ALGORAND_MNEMONIC": "${user_config.algorand_mnemonic}",
+        "NETWORK": "${user_config.network}",
+        "MAX_PER_CALL": "${user_config.max_per_call}",
+        "MAX_PER_DAY": "${user_config.max_per_day}",
+        "CHAINPE_REGISTRY_APP_ID": "${user_config.chainpe_registry_app_id}"
+      }
+    }
+  },
+
+  "user_config": {
+    "algorand_mnemonic": {
+      "type": "string",
+      "title": "Algorand Mnemonic (25 words)",
+      "description": "Your Algorand wallet 25-word seed phrase. Used to sign x402 payments on Algorand Testnet or Mainnet. Stored securely in your OS keychain.",
+      "required": false,
+      "sensitive": true
+    },
+    "network": {
+      "type": "string",
+      "title": "Default Network",
+      "description": "Payment network: algorand or algorand-testnet.",
+      "required": false,
+      "default": "algorand-testnet"
+    },
+    "max_per_call": {
+      "type": "string",
+      "title": "Max USDC per Payment",
+      "description": "Maximum USDC allowed per single payment. Safety limit.",
+      "required": false,
+      "default": "0.10"
+    },
+    "max_per_day": {
+      "type": "string",
+      "title": "Max USDC per Day",
+      "description": "Maximum total USDC allowed per calendar day.",
+      "required": false,
+      "default": "20.00"
+    },
+    "chainpe_registry_app_id": {
+      "type": "string",
+      "title": "ChainPe Registry App ID",
+      "description": "Algorand application ID of the ChainPe service registry. Leave as default unless you run your own registry.",
+      "required": false,
+      "default": "757478481"
+    }
+  },
+
+  "tools": [
+    {
+      "name": "search_bazaar",
+      "description": "Discover x402-gated services on the ChainPe on-chain registry. Returns name, price, tags, and endpoint."
+    },
+    {
+      "name": "x402_fetch",
+      "description": "Fetch a service URL with automatic x402 payment. Handles 402 responses by signing the payment and retrying."
+    },
+    {
+      "name": "check_balance",
+      "description": "Check USDC balance and wallet address on the configured network."
+    },
+    {
+      "name": "pay",
+      "description": "Sign an x402 USDC payment authorization. Returns the payment header value."
+    },
+    {
+      "name": "spending_report",
+      "description": "Show how much USDC the agent has spent today and the configured limits."
+    }
+  ],
+
+  "compatibility": {
+    "platforms": ["darwin", "win32"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  }
+}
