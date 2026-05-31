@@ -1,0 +1,848 @@
+#pragma version 11
+#pragma typetrack false
+
+// @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
+main:
+    intcblock 0 2 1 32
+    bytecblock "svc:" ":" 0x0040 0x151f7c75
+    // src/ChainPeRegistry.algo.ts:60
+    // export class ChainPeRegistry extends arc4.Contract {
+    txn OnCompletion
+    !
+    assert // OnCompletion must be NoOp
+    txn ApplicationID
+    bz main_create_NoOp@11
+    pushbytess 0xd0f5334a 0xa1ef8d9a 0x8e4db8b8 0x0a7871fd 0x090c10bd 0x89505fa8 0xd9ceb361 // method "register(pay,string,string,string,string,string,string,string,string)void", method "update(pay,string,string,string,string,string,string,string,string)void", method "deregister(string)void", method "getService(address,string)(string,string,string,string,string,string,string,string,address,uint64,uint64)", method "hasService(address,string)bool", method "getAdmin()string", method "getRegistrationFee()uint64"
+    txna ApplicationArgs 0
+    match register update deregister getService hasService main_getAdmin_route@8 main_getRegistrationFee_route@9
+    err
+
+main_getRegistrationFee_route@9:
+    // src/ChainPeRegistry.algo.ts:233
+    // @abimethod({ readonly: true })
+    pushbytes 0x151f7c7500000000000f4240
+    log
+    intc_2 // 1
+    return
+
+main_getAdmin_route@8:
+    // src/ChainPeRegistry.algo.ts:225
+    // @abimethod({ readonly: true })
+    pushbytes 0x151f7c75003a4349515a5036493733513535323751575a485a4c5a424944534f485656354c4d50354945514e5159565258594f5a545153594237583537504245
+    log
+    intc_2 // 1
+    return
+
+main_create_NoOp@11:
+    // src/ChainPeRegistry.algo.ts:60
+    // export class ChainPeRegistry extends arc4.Contract {
+    pushbytes 0xb8447b36 // method "createApplication()void"
+    txna ApplicationArgs 0
+    match main_createApplication_route@12
+    err
+
+main_createApplication_route@12:
+    // src/ChainPeRegistry.algo.ts:71
+    // @abimethod({ onCreate: "require" })
+    intc_2 // 1
+    return
+
+
+// src/ChainPeRegistry.algo.ts::ChainPeRegistry.register[routing]() -> void:
+register:
+    // src/ChainPeRegistry.algo.ts:86
+    // @abimethod()
+    txn GroupIndex
+    intc_2 // 1
+    -
+    dup
+    gtxns TypeEnum
+    intc_2 // pay
+    ==
+    assert // transaction type is pay
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 4
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 5
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 6
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 7
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 8
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    // src/ChainPeRegistry.algo.ts:98
+    // this.verifyPayment(payTx);
+    uncover 15
+    callsub verifyPayment
+    // src/ChainPeRegistry.algo.ts:100
+    // const boxKey = this.makeKey(name);
+    dig 14
+    callsub makeKey
+    // src/ChainPeRegistry.algo.ts:65
+    // services = BoxMap<bytes, ServiceData>({ keyPrefix: "svc:" });
+    bytec_0 // "svc:"
+    swap
+    concat
+    // src/ChainPeRegistry.algo.ts:101
+    // assert(!this.services(boxKey).exists, "Service already registered; use update()");
+    dup
+    box_len
+    bury 1
+    !
+    assert // Service already registered; use update()
+    // src/ChainPeRegistry.algo.ts:114
+    // developer: new arc4.Address(Txn.sender),
+    txn Sender
+    // src/ChainPeRegistry.algo.ts:103
+    // const now = Global.latestTimestamp;
+    global LatestTimestamp
+    // src/ChainPeRegistry.algo.ts:115
+    // createdAt: new arc4.Uint64(now),
+    itob
+    // src/ChainPeRegistry.algo.ts:105-117
+    // this.services(boxKey).value = new ServiceData({
+    //   name: name,
+    //   description: description,
+    //   tags: tags,
+    //   endpoint: endpoint,
+    //   pricePerRequest: pricePerRequest,
+    //   paymentToken: paymentToken,
+    //   walletAddress: walletAddress,
+    //   network: network,
+    //   developer: new arc4.Address(Txn.sender),
+    //   createdAt: new arc4.Uint64(now),
+    //   updatedAt: new arc4.Uint64(now),
+    // });
+    pushint 64 // 64
+    uncover 17
+    +
+    dup
+    itob
+    extract 6 2
+    bytec_2 // 0x0040
+    swap
+    concat
+    swap
+    uncover 16
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    swap
+    uncover 14
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    swap
+    uncover 12
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    swap
+    uncover 10
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    swap
+    uncover 8
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    swap
+    uncover 6
+    +
+    itob
+    extract 6 2
+    concat
+    uncover 2
+    concat
+    dig 1
+    concat
+    swap
+    concat
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    dig 1
+    box_del
+    pop
+    box_put
+    // src/ChainPeRegistry.algo.ts:86
+    // @abimethod()
+    intc_2 // 1
+    return
+
+
+// src/ChainPeRegistry.algo.ts::ChainPeRegistry.update[routing]() -> void:
+update:
+    // src/ChainPeRegistry.algo.ts:128
+    // @abimethod()
+    txn GroupIndex
+    intc_2 // 1
+    -
+    dup
+    gtxns TypeEnum
+    intc_2 // pay
+    ==
+    assert // transaction type is pay
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 4
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 5
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 6
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 7
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 8
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    // src/ChainPeRegistry.algo.ts:140
+    // this.verifyPayment(payTx);
+    uncover 15
+    callsub verifyPayment
+    // src/ChainPeRegistry.algo.ts:142
+    // const boxKey = this.makeKey(name);
+    dig 14
+    callsub makeKey
+    // src/ChainPeRegistry.algo.ts:65
+    // services = BoxMap<bytes, ServiceData>({ keyPrefix: "svc:" });
+    bytec_0 // "svc:"
+    swap
+    concat
+    // src/ChainPeRegistry.algo.ts:143
+    // assert(this.services(boxKey).exists, "Service not found; use register() first");
+    dup
+    box_len
+    bury 1
+    assert // Service not found; use register() first
+    // src/ChainPeRegistry.algo.ts:145-146
+    // const existing = clone(this.services(boxKey).value);
+    // assert(existing.developer.native === Txn.sender, "Only the original developer can update");
+    dup
+    pushint 16 // 16
+    intc_3 // 32
+    box_extract
+    // src/ChainPeRegistry.algo.ts:146
+    // assert(existing.developer.native === Txn.sender, "Only the original developer can update");
+    dup
+    txn Sender
+    ==
+    assert // Only the original developer can update
+    // src/ChainPeRegistry.algo.ts:148
+    // const now = Global.latestTimestamp;
+    global LatestTimestamp
+    // src/ChainPeRegistry.algo.ts:160
+    // createdAt: existing.createdAt,
+    dig 2
+    pushints 48 8 // 48, 8
+    box_extract
+    // src/ChainPeRegistry.algo.ts:161
+    // updatedAt: new arc4.Uint64(now),
+    swap
+    itob
+    // src/ChainPeRegistry.algo.ts:150-162
+    // this.services(boxKey).value = new ServiceData({
+    //   name: name,
+    //   description: description,
+    //   tags: tags,
+    //   endpoint: endpoint,
+    //   pricePerRequest: pricePerRequest,
+    //   paymentToken: paymentToken,
+    //   walletAddress: walletAddress,
+    //   network: network,
+    //   developer: existing.developer,
+    //   createdAt: existing.createdAt,
+    //   updatedAt: new arc4.Uint64(now),
+    // });
+    pushint 64 // 64
+    uncover 18
+    +
+    dup
+    itob
+    extract 6 2
+    bytec_2 // 0x0040
+    swap
+    concat
+    swap
+    uncover 17
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    swap
+    uncover 15
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    swap
+    uncover 13
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    swap
+    uncover 11
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    swap
+    uncover 9
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    swap
+    uncover 7
+    +
+    itob
+    extract 6 2
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    dig 1
+    box_del
+    pop
+    box_put
+    // src/ChainPeRegistry.algo.ts:128
+    // @abimethod()
+    intc_2 // 1
+    return
+
+
+// src/ChainPeRegistry.algo.ts::ChainPeRegistry.deregister[routing]() -> void:
+deregister:
+    // src/ChainPeRegistry.algo.ts:173
+    // @abimethod()
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    // src/ChainPeRegistry.algo.ts:175
+    // const boxKey = this.makeKey(name);
+    callsub makeKey
+    // src/ChainPeRegistry.algo.ts:65
+    // services = BoxMap<bytes, ServiceData>({ keyPrefix: "svc:" });
+    bytec_0 // "svc:"
+    swap
+    concat
+    // src/ChainPeRegistry.algo.ts:176
+    // assert(this.services(boxKey).exists, "Service not found");
+    dup
+    box_len
+    bury 1
+    assert // Service not found
+    // src/ChainPeRegistry.algo.ts:178-179
+    // const existing = clone(this.services(boxKey).value);
+    // assert(existing.developer.native === Txn.sender, "Only the original developer can deregister");
+    dup
+    pushint 16 // 16
+    intc_3 // 32
+    box_extract
+    // src/ChainPeRegistry.algo.ts:179
+    // assert(existing.developer.native === Txn.sender, "Only the original developer can deregister");
+    txn Sender
+    ==
+    assert // Only the original developer can deregister
+    // src/ChainPeRegistry.algo.ts:181
+    // this.services(boxKey).delete();
+    box_del
+    pop
+    // src/ChainPeRegistry.algo.ts:184
+    // const balance = Global.currentApplicationAddress.balance;
+    global CurrentApplicationAddress
+    acct_params_get AcctBalance
+    swap
+    dup
+    uncover 2
+    assert // account funded
+    // src/ChainPeRegistry.algo.ts:185
+    // const minBal = Global.currentApplicationAddress.minBalance;
+    global CurrentApplicationAddress
+    acct_params_get AcctMinBalance
+    swap
+    dup
+    cover 2
+    cover 3
+    assert // account funded
+    // src/ChainPeRegistry.algo.ts:186
+    // if (balance > minBal) {
+    >
+    bz deregister_after_if_else@4
+    // src/ChainPeRegistry.algo.ts:187-193
+    // itxn
+    //   .payment({
+    //     receiver: Txn.sender,
+    //     amount: balance - minBal,
+    //     fee: 0,
+    //   })
+    //   .submit();
+    itxn_begin
+    // src/ChainPeRegistry.algo.ts:189
+    // receiver: Txn.sender,
+    txn Sender
+    // src/ChainPeRegistry.algo.ts:190
+    // amount: balance - minBal,
+    dig 2
+    dig 2
+    -
+    itxn_field Amount
+    itxn_field Receiver
+    // src/ChainPeRegistry.algo.ts:187-192
+    // itxn
+    //   .payment({
+    //     receiver: Txn.sender,
+    //     amount: balance - minBal,
+    //     fee: 0,
+    //   })
+    intc_2 // 1
+    itxn_field TypeEnum
+    // src/ChainPeRegistry.algo.ts:191
+    // fee: 0,
+    intc_0 // 0
+    itxn_field Fee
+    // src/ChainPeRegistry.algo.ts:187-193
+    // itxn
+    //   .payment({
+    //     receiver: Txn.sender,
+    //     amount: balance - minBal,
+    //     fee: 0,
+    //   })
+    //   .submit();
+    itxn_submit
+
+deregister_after_if_else@4:
+    // src/ChainPeRegistry.algo.ts:173
+    // @abimethod()
+    intc_2 // 1
+    return
+
+
+// src/ChainPeRegistry.algo.ts::ChainPeRegistry.getService[routing]() -> void:
+getService:
+    // src/ChainPeRegistry.algo.ts:206
+    // @abimethod({ readonly: true })
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    // src/ChainPeRegistry.algo.ts:254
+    // return developer.native.bytes.concat(":").concat(name.native);
+    swap
+    bytec_1 // ":"
+    concat
+    swap
+    extract 2 0
+    concat
+    // src/ChainPeRegistry.algo.ts:65
+    // services = BoxMap<bytes, ServiceData>({ keyPrefix: "svc:" });
+    bytec_0 // "svc:"
+    swap
+    concat
+    // src/ChainPeRegistry.algo.ts:209
+    // assert(this.services(boxKey).exists, "Service not found");
+    dup
+    box_len
+    bury 1
+    assert // Service not found
+    // src/ChainPeRegistry.algo.ts:210
+    // return this.services(boxKey).value;
+    box_get
+    pop
+    // src/ChainPeRegistry.algo.ts:206
+    // @abimethod({ readonly: true })
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// src/ChainPeRegistry.algo.ts::ChainPeRegistry.hasService[routing]() -> void:
+hasService:
+    // src/ChainPeRegistry.algo.ts:216
+    // @abimethod({ readonly: true })
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    // src/ChainPeRegistry.algo.ts:254
+    // return developer.native.bytes.concat(":").concat(name.native);
+    swap
+    bytec_1 // ":"
+    concat
+    swap
+    extract 2 0
+    concat
+    // src/ChainPeRegistry.algo.ts:65
+    // services = BoxMap<bytes, ServiceData>({ keyPrefix: "svc:" });
+    bytec_0 // "svc:"
+    swap
+    concat
+    // src/ChainPeRegistry.algo.ts:219
+    // return new arc4.Bool(this.services(boxKey).exists);
+    box_len
+    bury 1
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    // src/ChainPeRegistry.algo.ts:216
+    // @abimethod({ readonly: true })
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// src/ChainPeRegistry.algo.ts::ChainPeRegistry.makeKey(name: bytes) -> bytes:
+makeKey:
+    // src/ChainPeRegistry.algo.ts:246
+    // private makeKey(name: arc4.Str): bytes {
+    proto 1 1
+    // src/ChainPeRegistry.algo.ts:247
+    // return Txn.sender.bytes.concat(":").concat(name.native);
+    txn Sender
+    bytec_1 // ":"
+    concat
+    frame_dig -1
+    extract 2 0
+    concat
+    retsub
+
+
+// src/ChainPeRegistry.algo.ts::ChainPeRegistry.verifyPayment(payTx: uint64) -> void:
+verifyPayment:
+    // src/ChainPeRegistry.algo.ts:260
+    // private verifyPayment(payTx: gtxn.PaymentTxn): void {
+    proto 1 0
+    // src/ChainPeRegistry.algo.ts:261-269
+    // assertMatch(
+    //   payTx,
+    //   {
+    //     sender: Txn.sender,
+    //     receiver: new arc4.Address(ADMIN_ADDRESS).native,
+    //     amount: { greaterThanEq: REGISTRATION_FEE },
+    //   },
+    //   "Payment must be >= 1 ALGO from sender to admin wallet"
+    // );
+    frame_dig -1
+    gtxns Sender
+    // src/ChainPeRegistry.algo.ts:264
+    // sender: Txn.sender,
+    txn Sender
+    // src/ChainPeRegistry.algo.ts:261-269
+    // assertMatch(
+    //   payTx,
+    //   {
+    //     sender: Txn.sender,
+    //     receiver: new arc4.Address(ADMIN_ADDRESS).native,
+    //     amount: { greaterThanEq: REGISTRATION_FEE },
+    //   },
+    //   "Payment must be >= 1 ALGO from sender to admin wallet"
+    // );
+    ==
+    frame_dig -1
+    gtxns Receiver
+    // src/ChainPeRegistry.algo.ts:265
+    // receiver: new arc4.Address(ADMIN_ADDRESS).native,
+    pushbytes base32(CIQZP6I73Q5527QWZHZLZBIDSOHVV5LMP5IEQNQYVRXYOZTQSYBQ) // addr CIQZP6I73Q5527QWZHZLZBIDSOHVV5LMP5IEQNQYVRXYOZTQSYB7X57PBE
+    // src/ChainPeRegistry.algo.ts:261-269
+    // assertMatch(
+    //   payTx,
+    //   {
+    //     sender: Txn.sender,
+    //     receiver: new arc4.Address(ADMIN_ADDRESS).native,
+    //     amount: { greaterThanEq: REGISTRATION_FEE },
+    //   },
+    //   "Payment must be >= 1 ALGO from sender to admin wallet"
+    // );
+    ==
+    &&
+    frame_dig -1
+    gtxns Amount
+    // src/ChainPeRegistry.algo.ts:266
+    // amount: { greaterThanEq: REGISTRATION_FEE },
+    pushint 1000000 // 1000000
+    // src/ChainPeRegistry.algo.ts:261-269
+    // assertMatch(
+    //   payTx,
+    //   {
+    //     sender: Txn.sender,
+    //     receiver: new arc4.Address(ADMIN_ADDRESS).native,
+    //     amount: { greaterThanEq: REGISTRATION_FEE },
+    //   },
+    //   "Payment must be >= 1 ALGO from sender to admin wallet"
+    // );
+    >=
+    &&
+    assert // Payment must be >= 1 ALGO from sender to admin wallet
+    retsub
