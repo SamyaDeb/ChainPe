@@ -1,0 +1,41 @@
+{
+  "name": "chainpe-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ChainPe — AI Agent Marketplace on Algorand with x402 micropayments",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build:cli": "npm run build --workspace=@chainpe/cli",
+    "build:agent": "npm run build --workspace=@chainpe/agent",
+    "build:wallet": "npm run build --workspace=chainpe-wallet-mcp",
+    "build:mcpb": "npm run build:mcpb --workspace=chainpe-wallet-mcp",
+    "test:wallet": "npm run test --workspace=chainpe-wallet-mcp",
+    "dev": "npm run dev --workspace=@chainpe/cli",
+    "dev:agent": "npm run dev --workspace=@chainpe/agent",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present",
+    "publish:cli": "npm publish --workspace=@chainpe/cli --access public",
+    "publish:agent": "npm publish --workspace=@chainpe/agent --access public",
+    "publish:all": "npm run publish:cli && npm run publish:agent"
+  },
+  "keywords": [
+    "x402",
+    "algorand",
+    "ai-agents",
+    "marketplace",
+    "micropayments",
+    "pay-per-request",
+    "http-402",
+    "blockchain",
+    "usdc",
+    "api-monetization"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
