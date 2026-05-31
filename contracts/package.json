@@ -1,0 +1,22 @@
+{
+  "name": "@chainpe/contracts",
+  "version": "1.0.0",
+  "description": "ChainPe on-chain registry smart contract for Algorand",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "compile": "algokit compile ts src/",
+    "deploy": "tsx scripts/deploy.ts",
+    "deploy:testnet": "NETWORK=testnet tsx scripts/deploy.ts"
+  },
+  "dependencies": {
+    "@algorandfoundation/algorand-typescript": "^1.0.0",
+    "@algorandfoundation/algokit-utils": "^9.2.0",
+    "algosdk": "^3.5.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3"
+  }
+}
