@@ -110,6 +110,7 @@ contract ChainPeAccounts is Ownable2Step, Pausable, ReentrancyGuard {
     error ServiceNotActive(bytes32 key);
     error ServiceLimitReached(uint256 maximum);
     error InvalidStringLength(bytes32 field, uint256 length);
+    error PayToNotSender(address payTo, address sender);
     error NoPaymentRail();
     error InvalidPeriods(uint8 periods);
     error RenounceDisabled();
@@ -331,7 +332,7 @@ contract ChainPeAccounts is Ownable2Step, Pausable, ReentrancyGuard {
         if (!service.active) revert ServiceNotActive(key);
     }
 
-    function _validateInput(ServiceInput calldata input) private pure {
+    function _validateInput(ServiceInput calldata input) private view {
         _validateLength("name", bytes(input.name).length, 1, 64);
         _validateLength("endpoint", bytes(input.endpoint).length, 1, 256);
         _validateLength("pricePerRequest", bytes(input.pricePerRequest).length, 1, 32);
@@ -339,6 +340,7 @@ contract ChainPeAccounts is Ownable2Step, Pausable, ReentrancyGuard {
         _validateLength("description", bytes(input.description).length, 0, 1024);
         _validateLength("tags", bytes(input.tags).length, 0, 256);
         if (input.payTo == address(0)) revert ZeroAddress();
+        if (input.payTo != msg.sender) revert PayToNotSender(input.payTo, msg.sender);
         if (!input.acceptsExact && !input.acceptsGateway) revert NoPaymentRail();
         _requireNonzeroPrice(input.pricePerRequest);
     }

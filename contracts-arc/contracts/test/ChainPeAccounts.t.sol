@@ -45,7 +45,6 @@ contract ChainPeAccountsTest is Test {
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
     address internal carol = makeAddr("carol");
-    address internal payTo = makeAddr("payTo");
 
     uint256 internal constant PRICE = 10e6;
     uint256 internal constant T0 = 1_700_000_000;
@@ -68,7 +67,7 @@ contract ChainPeAccountsTest is Test {
             endpoint: "https://api.example.com/v1",
             pricePerRequest: "0.01",
             network: "arc-testnet",
-            payTo: payTo,
+            payTo: alice, // payTo must equal the caller; alice is the default test provider
             acceptsExact: true,
             acceptsGateway: false
         });
@@ -96,8 +95,10 @@ contract ChainPeAccountsTest is Test {
     }
 
     function _register(address who, string memory name) internal returns (bytes32 key) {
+        ChainPeAccounts.ServiceInput memory i = _input(name);
+        i.payTo = who;
         vm.prank(who);
-        key = acc.registerService(_input(name));
+        key = acc.registerService(i);
     }
 
     function _registerIn(address who, ChainPeAccounts.ServiceInput memory i) internal returns (bytes32 key) {
@@ -540,7 +541,7 @@ contract ChainPeAccountsTest is Test {
         ChainPeAccounts.Service memory s = acc.getService(key);
         assertEq(s.key, key);
         assertEq(s.provider, alice);
-        assertEq(s.payTo, payTo);
+        assertEq(s.payTo, alice);
         assertEq(s.agentId, 11);
         assertEq(s.name, "weather");
         assertEq(s.description, "desc");
@@ -593,7 +594,7 @@ contract ChainPeAccountsTest is Test {
         i.endpoint = "https://other.example.com";
         i.pricePerRequest = "2.5";
         i.network = "base";
-        i.payTo = bob;
+        i.payTo = alice;
         i.acceptsExact = false;
         i.acceptsGateway = true;
         _expectUpdated(alice, i, 0);
@@ -611,7 +612,7 @@ contract ChainPeAccountsTest is Test {
         assertEq(s.endpoint, "https://other.example.com");
         assertEq(s.pricePerRequest, "2.5");
         assertEq(s.network, "base");
-        assertEq(s.payTo, bob);
+        assertEq(s.payTo, alice);
         assertFalse(s.acceptsExact);
         assertTrue(s.acceptsGateway);
     }
@@ -741,7 +742,7 @@ contract ChainPeAccountsTest is Test {
         i.endpoint = "https://reborn.example.com";
         i.pricePerRequest = "9";
         i.network = "eth";
-        i.payTo = carol;
+        i.payTo = alice;
         i.acceptsExact = false;
         i.acceptsGateway = true;
         _expectRegistered(alice, i, 0);
@@ -756,7 +757,7 @@ contract ChainPeAccountsTest is Test {
         assertEq(s.endpoint, "https://reborn.example.com");
         assertEq(s.pricePerRequest, "9");
         assertEq(s.network, "eth");
-        assertEq(s.payTo, carol);
+        assertEq(s.payTo, alice);
         assertFalse(s.acceptsExact);
         assertTrue(s.acceptsGateway);
         assertEq(acc.servicesOf(alice).length, 1);
@@ -944,6 +945,45 @@ contract ChainPeAccountsTest is Test {
         acc.registerService(i);
     }
 
+    function test_Validation_PayToNotSenderReverts_Register() public {
+        _provider(alice);
+        ChainPeAccounts.ServiceInput memory i = _input("a");
+        i.payTo = bob;
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(ChainPeAccounts.PayToNotSender.selector, bob, alice));
+        acc.registerService(i);
+        assertEq(acc.serviceCount(), 0);
+        assertEq(_activeServices(alice), 0);
+    }
+
+    function test_Validation_PayToNotSenderReverts_Reactivate() public {
+        _provider(alice);
+        _register(alice, "a");
+        vm.prank(alice);
+        acc.deactivateService("a");
+        ChainPeAccounts.ServiceInput memory i = _input("a");
+        i.payTo = bob;
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(ChainPeAccounts.PayToNotSender.selector, bob, alice));
+        acc.registerService(i);
+    }
+
+    function test_Validation_PayToNotSenderReverts_Update() public {
+        _provider(alice);
+        bytes32 key = _register(alice, "a");
+        ChainPeAccounts.ServiceInput memory i = _input("a");
+        i.payTo = bob;
+        i.endpoint = "https://changed.example.com";
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(ChainPeAccounts.PayToNotSender.selector, bob, alice));
+        acc.updateService(i);
+
+        ChainPeAccounts.Service memory s = acc.getService(key);
+        assertEq(s.payTo, alice);
+        assertEq(s.endpoint, "https://api.example.com/v1");
+        assertTrue(s.active);
+    }
+
     function test_Validation_NoRailReverts_GatewayOnlyOk() public {
         _provider(alice);
         ChainPeAccounts.ServiceInput memory i = _input("a");
@@ -1102,8 +1142,10 @@ contract ChainPeAccountsTest is Test {
             address p = address(uint160(0x10000 + k));
             vm.prank(p);
             acc.registerProvider(0);
+            ChainPeAccounts.ServiceInput memory pi = _input(_svcName(k));
+            pi.payTo = p;
             vm.prank(p);
-            acc.registerService(_input(_svcName(k)));
+            acc.registerService(pi);
         }
         assertEq(acc.serviceCount(), n);
         assertEq(acc.MAX_SERVICES_PER_PAGE(), 100);

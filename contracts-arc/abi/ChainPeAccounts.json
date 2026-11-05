@@ -1154,6 +1154,22 @@
   },
   {
     "type": "error",
+    "name": "PayToNotSender",
+    "inputs": [
+      {
+        "name": "payTo",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "sender",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "ProviderAlreadyExists",
     "inputs": [
       {

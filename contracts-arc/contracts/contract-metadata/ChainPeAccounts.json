@@ -1,13 +1,20 @@
 {
-  "contractAddress": "0x1fd61443d8ec25b41c4e2bd5e010109e6aefefbb",
+  "contractAddress": "0xd315322c9d83a6f50a04236a2a242e0259bfb580",
   "network": "ARC-TESTNET",
   "deployerWalletId": "3c2464b2-8369-52e2-a782-800bbeca5396",
   "contract_code_path": "/home/user/app/contracts/ChainPeAccounts.sol",
   "contract_compiled_code_path": "/home/user/app/contracts/out/ChainPeAccounts.sol/ChainPeAccounts.json",
   "contract_network_and_links": {
-    "Arc Testnet": "https://explorer.testnet.arc.io/address/0x1fd61443d8ec25b41c4e2bd5e010109e6aefefbb"
+    "Arc Testnet": "https://explorer.testnet.arc.io/address/0xd315322c9d83a6f50a04236a2a242e0259bfb580"
   },
   "contract_deployments": [
+    {
+      "chain": "Arc Testnet",
+      "address": "0xd315322c9d83a6f50a04236a2a242e0259bfb580",
+      "explorerUrl": "https://explorer.testnet.arc.io/address/0xd315322c9d83a6f50a04236a2a242e0259bfb580",
+      "txHash": "0xc6fc0f559ded0557ac36e2f306d6cbe311f6be2d614ebb0318d15bef72f12497",
+      "deployedAt": "2026-11-05T20:55:14.856Z"
+    },
     {
       "chain": "Arc Testnet",
       "address": "0x1fd61443d8ec25b41c4e2bd5e010109e6aefefbb",
@@ -1165,6 +1172,22 @@
       "inputs": [
         {
           "name": "account",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "PayToNotSender",
+      "inputs": [
+        {
+          "name": "payTo",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "sender",
           "type": "address",
           "internalType": "address"
         }
