@@ -34,6 +34,8 @@ export interface NetworkInfo {
   gatewayChain: "arcTestnet" | "arc";
   /** Gateway API for this network; undefined uses the SDK default (mainnet). */
   gatewayUrl?: string;
+  /** ChainPeAccounts contract; undefined where it is not deployed. */
+  accountsAddress?: `0x${string}`;
 }
 
 const ARC_USDC = "0x3600000000000000000000000000000000000000";
@@ -48,6 +50,8 @@ function withEndpoints(chain: Chain, rpcUrl: string, explorer: string): Chain {
 
 const ARC_TESTNET_RPC = process.env.ARC_TESTNET_RPC_URL ?? "https://rpc.testnet.arc.io";
 const ARC_TESTNET_EXPLORER = "https://explorer.testnet.arc.io";
+const ARC_TESTNET_ACCOUNTS = (process.env.CHAINPE_ACCOUNTS_ADDRESS ??
+  "0xD315322c9D83a6f50A04236A2a242e0259bfB580") as `0x${string}`;
 const ARC_RPC = process.env.ARC_RPC_URL ?? "https://rpc.mainnet.arc.io";
 const ARC_EXPLORER = "https://explorer.arc.io";
 
@@ -64,6 +68,7 @@ export const NETWORKS: Record<ChainPeNetwork, NetworkInfo> = {
     gasToken: "USDC",
     gatewayChain: "arcTestnet",
     gatewayUrl: "https://gateway-api-testnet.circle.com",
+    accountsAddress: ARC_TESTNET_ACCOUNTS,
   },
   arc: {
     name: "arc",
@@ -76,6 +81,7 @@ export const NETWORKS: Record<ChainPeNetwork, NetworkInfo> = {
     explorer: ARC_EXPLORER,
     gasToken: "USDC",
     gatewayChain: "arc",
+    accountsAddress: undefined,
   },
 };
 

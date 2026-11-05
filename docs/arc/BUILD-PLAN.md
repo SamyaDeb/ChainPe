@@ -47,8 +47,8 @@ an acceptance check; do not start the next phase until it passes (except where m
 
 ## Phase 3 — contracts in Arc Studio
 
-- [ ] ARC-STUDIO.md run 1 with `prompts/studio-01-contracts.md`.
-- [ ] Pull to `contracts-arc/`; record address + traceId in `STUDIO-LOG.md`.
+- [x] ARC-STUDIO.md run 1 with `prompts/studio-01-contracts.md`, then run 1b with the review fix.
+- [x] Pull to `contracts-arc/`; record address + traceId in `STUDIO-LOG.md`.
 
 **Accept:** `ChainPeAccounts` deployed on Arc testnet; Foundry tests pass; ABI committed at `contracts-arc/abi/ChainPeAccounts.json`.
 

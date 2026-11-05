@@ -26,7 +26,8 @@ Facts that shape how we use it:
 - Code out: `arc-studio pull --out <dir> --paths "<glob>"`; preview with `pull --changed --dry-run --diff`.
 - `--output json` returns `status`, `filesChanged`, `deployments` (address, network, explorer, txHash), `webUrl`, `traceId`.
 - Exit codes: 0 completed · 3 needs_input (answer with `--answers-json`) · 4 budget_exceeded · 1 error.
-- Studio deploys to **Arc testnet**. Mainnet deploys use our own keys (Hardhat/Foundry locally).
+- Studio deploys to **Arc testnet** from its own smart account `0x5B12Ce46C7194aD57d143bC22847224047b1Ef42`, so any
+  owner must be passed in explicitly. Mainnet deploys use our own keys (Hardhat/Foundry locally).
 
 ## 2. App layout in Studio
 
@@ -34,9 +35,9 @@ One Studio app, two areas, so the judges' URL shows everything:
 
 | Studio path | Content | Pulled to (repo) |
 |---|---|---|
-| `contracts/ChainPeAccounts.sol` | provider accounts + plans (spec 06) | `contracts-arc/src/` |
-| `contracts/PolicyVault.sol` | stretch (spec 11) | `contracts-arc/src/` |
-| `test/*.t.sol` | Foundry tests | `contracts-arc/test/` |
+| `contracts/ChainPeAccounts.sol` | provider accounts + plans (spec 06) | `contracts-arc/contracts/` |
+| `contracts/PolicyVault.sol` | stretch (spec 11) | `contracts-arc/contracts/` |
+| `contracts/test/*.t.sol` | Foundry tests | `contracts-arc/contracts/test/` |
 | `src/**` | provider dashboard (spec 07) | `apps/arc-dashboard/src/` |
 
 ## 3. Runs (in order)
@@ -53,8 +54,9 @@ arc-studio run --prompt-file docs/arc/prompts/studio-01-contracts.md \
   --output json > .arc-studio/run1.json
 jq '{status, deployments, webUrl, traceId}' .arc-studio/run1.json
 arc-studio pull --changed --dry-run --diff            # preview what changed
-arc-studio pull --out contracts-arc --paths "contracts/**"
-arc-studio pull --out contracts-arc --paths "test/**"
+# Pull sources one path at a time: "contracts/**" also brings Studio's out/ and cache/.
+arc-studio pull --out contracts-arc --paths "contracts/ChainPeAccounts.sol"
+arc-studio pull --out contracts-arc --paths "contracts/test/**"
 arc-studio pull --out contracts-arc --paths "abi/**"
 ```
 

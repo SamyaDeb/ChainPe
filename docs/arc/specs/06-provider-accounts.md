@@ -116,7 +116,7 @@ zero constructor args revert · `renounceOwnership` reverts.
 
 ## Acceptance
 
-- [ ] Studio run 1 deploys to Arc testnet; address + traceId logged in `STUDIO-LOG.md`.
-- [ ] All Foundry tests pass in Studio.
+- [x] Studio run 1 deploys to Arc testnet; address + traceId logged in `STUDIO-LOG.md`.
+- [x] All Foundry tests pass in Studio.
 - [ ] `chainpe register --network arc-testnet` creates provider + service; `chainpe list` shows it.
 - [ ] `chainpe upgrade` → `planOf == 1` → dashboard shows Pro.

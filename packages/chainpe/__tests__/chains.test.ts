@@ -44,6 +44,13 @@ describe("Arc networks", () => {
   });
 });
 
+describe("ChainPeAccounts address", () => {
+  it("is set on testnet only", () => {
+    expect(getNetwork("arc-testnet").accountsAddress).toMatch(/^0x[0-9a-fA-F]{40}$/);
+    expect(getNetwork("arc").accountsAddress).toBeUndefined();
+  });
+});
+
 describe("Arc-only source", () => {
   it("has no AVAX strings left", () => {
     const files = readdirSync(SRC, { recursive: true, encoding: "utf8" }).filter((f) => f.endsWith(".ts"));
