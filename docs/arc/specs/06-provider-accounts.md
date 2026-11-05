@@ -48,7 +48,7 @@ It has no `active` field, so `updateService` cannot change whether a service is 
 |---|---|
 | `registerProvider(uint256 agentId)` | once per address; if `agentId != 0` require `IERC721(identityRegistry).ownerOf(agentId) == msg.sender`; free |
 | `setAgentId(uint256 agentId)` | provider must exist; same ownership check; `0` clears it; emits `AgentIdUpdated` |
-| `registerService(ServiceInput)` | provider must exist; name 1-64 bytes, endpoint 1-256, price 1-32, network 1-32, description ≤ 1024, tags ≤ 256; `payTo != 0`; at least one rail; `activeServices < maxServices(msg.sender)`. An active key reverts. An inactive key is **reactivated** (see below) |
+| `registerService(ServiceInput)` | provider must exist; name 1-64 bytes, endpoint 1-256, price 1-32, network 1-32, description ≤ 1024, tags ≤ 256; `payTo != 0` and `payTo == msg.sender`; `pricePerRequest` has a digit 1-9 (rejects `"0"` and `"0.00"`; not a format check); at least one rail; `activeServices < maxServices(msg.sender)`. An active key reverts. An inactive key is **reactivated** (see below) |
 | `updateService(ServiceInput)` | key derived from `msg.sender` + `name`, so only its owner can reach it; service must exist and be active; same validation; `createdAt` unchanged; never changes `activeServices` |
 | `deactivateService(string name)` | only owner; must be active; `active = false`, `activeServices -= 1`; keeps history |
 | `subscribe(uint8 periods)` | provider must exist; `1 ≤ periods ≤ 12`; `nonReentrant`; set `paidUntil = max(now, paidUntil) + periods * 30 days` (`uint64`, via `SafeCast`), then pull `proPricePerPeriod * periods` USDC to `treasury` via `safeTransferFrom` |
@@ -72,6 +72,10 @@ It has no `active` field, so `updateService` cannot change whether a service is 
 - **`agentId`.** `0` means "no identity". Token 0 does exist on the Arc testnet registry, so its owner cannot link it.
   `Service.agentId` is a snapshot from the last register or update. `providers(addr).agentId` is the current value.
   The contract does not track later transfers of the ERC-8004 token, so read `ownerOf` when ownership matters.
+
+- **`payTo`.** Must be the caller, in both `registerService` and `updateService`. Spec 08 treats `payTo` as proof of
+  ownership when it attributes revenue, and Circle only settles to a `payTo` the seller key controls, so no valid flow
+  needs another address. Review finding M-1 (`../reviews/chainpe-accounts-review.md`).
 
 ### Events
 
