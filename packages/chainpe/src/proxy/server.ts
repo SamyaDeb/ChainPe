@@ -9,6 +9,7 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import { createProxyMiddleware, type Options as ProxyOptions } from "http-proxy-middleware";
+import { decodePaymentResponseHeader, decodePaymentSignatureHeader } from "@x402/core/http";
 import type { FacilitatorClient } from "@x402/core/server";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
@@ -16,7 +17,9 @@ import { ExactEvmScheme } from "@x402/evm/exact/server";
 import type { ChainPeConfig, PaymentEvent, RouteConfig } from "../types.js";
 import { createRoutesConfig, formatRoutesForDisplay } from "./routeConfig.js";
 import { getNetwork } from "../chains.js";
+import { formatUsdc } from "../evm.js";
 import { analytics } from "./analytics.js";
+import { paymentIdentifierFor } from "./circleFacilitator.js";
 import { logger, logPayment, logRequest, logServerStart } from "../logger.js";
 
 export interface ProxyServerOptions {
@@ -30,7 +33,48 @@ export interface ProxyServerOptions {
 /** Discovery documents that stay free. Exact matches, so a path cannot smuggle in a paid route. */
 const FREE_PATHS = new Set(["/.well-known/x402", "/openapi.json"]);
 
+const RECENT_PAYMENTS_IN_STATS = 10;
+
 const PAYMENT_REQUEST_HEADERS = ["payment-signature", "x-payment"];
+
+/** Builds the event for a request that reached settlement; undefined if it never did. */
+function toPaymentEvent(
+  signature: string,
+  res: Response,
+  method: string,
+  route: string,
+  latencyMs: number
+): PaymentEvent | undefined {
+  const receiptHeader = res.getHeader("PAYMENT-RESPONSE");
+  if (typeof receiptHeader !== "string") return undefined;
+
+  try {
+    const payload = decodePaymentSignatureHeader(signature);
+    const receipt = decodePaymentResponseHeader(receiptHeader);
+    const settlement = receipt.extensions?.["settlement-status"] as { paymentId?: string } | undefined;
+    const failed = receipt.errorReason === "settlement_pending" ? "pending" : "failed";
+    return {
+      id: paymentIdentifierFor(payload),
+      ts: Date.now(),
+      route,
+      method,
+      rail: "exact",
+      network: payload.accepted.network,
+      amountAtomic: receipt.amount ?? payload.accepted.amount,
+      payer: receipt.payer ?? "unknown",
+      payTo: payload.accepted.payTo,
+      txHash: receipt.transaction || undefined,
+      paymentId: settlement?.paymentId,
+      status: receipt.success ? "completed" : failed,
+      latencyMs,
+      backendStatus: receipt.success ? res.statusCode : undefined,
+      error: receipt.errorReason,
+    };
+  } catch (err) {
+    logger.warn(`Could not record payment: ${(err as Error).message}`);
+    return undefined;
+  }
+}
 
 export function createProxyServer(options: ProxyServerOptions): Express {
   const { config, additionalRoutes, onPayment, facilitator } = options;
@@ -65,7 +109,16 @@ export function createProxyServer(options: ProxyServerOptions): Express {
     });
   }
   adminRouter.get("/stats", (_req: Request, res: Response) => {
-    res.json({ ...analytics.getStats(), revenue: analytics.getRevenueSummary(), totalRevenue: undefined, revenueByToken: undefined });
+    const { totalRequests, paidRequests, failedPayments, requestsPerMinute, lastHourRequests } = analytics.getStats();
+    res.json({
+      totalRequests,
+      paidRequests,
+      failedPayments,
+      requestsPerMinute,
+      lastHourRequests,
+      revenue: analytics.getRevenueSummary(),
+      recentPayments: analytics.getRecentPayments().slice(0, RECENT_PAYMENTS_IN_STATS),
+    });
   });
   adminRouter.get("/payments", (_req: Request, res: Response) => res.json(analytics.getRecentPayments()));
   adminRouter.get("/config", (_req: Request, res: Response) => {
@@ -113,6 +166,27 @@ export function createProxyServer(options: ProxyServerOptions): Express {
     logger.info(`  ${r.path} → ${r.price} ${r.token}`);
   }
 
+  // Payment tracking runs first so that refused payments are recorded too.
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const signature = req.get("payment-signature");
+    if (!signature) {
+      next();
+      return;
+    }
+    const start = Date.now();
+    const route = req.path;
+    res.on("finish", () => {
+      const event = toPaymentEvent(signature, res, req.method, route, Date.now() - start);
+      if (!event) return;
+      analytics.recordPayment(event);
+      if (event.status === "completed") {
+        logPayment(formatUsdc(BigInt(event.amountAtomic)), "USDC", event.payer, event.route);
+      }
+      onPayment?.(event);
+    });
+    next();
+  });
+
   // Payment middleware (gates everything after it).
   const resourceServer = new x402ResourceServer(facilitator).register(
     getNetwork(config.network).caip2,
@@ -125,39 +199,6 @@ export function createProxyServer(options: ProxyServerOptions): Express {
       return;
     }
     void paymentGate(req, res, next);
-  });
-
-  // Payment tracking — record successful settlements (x402 sets PAYMENT-RESPONSE).
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    const originalEnd = res.end.bind(res);
-    res.on("finish", () => {
-      const header = res.getHeader("PAYMENT-RESPONSE");
-      if (header && res.statusCode < 400) {
-        let payer = "unknown";
-        let txId: string | undefined;
-        try {
-          const decoded = JSON.parse(Buffer.from(String(header), "base64").toString("utf-8"));
-          payer = decoded.payer ?? decoded.payerAddress ?? "unknown";
-          txId = decoded.transaction ?? decoded.txHash;
-        } catch {
-          /* header not JSON — ignore */
-        }
-        const event: PaymentEvent = {
-          timestamp: new Date(),
-          path: req.path,
-          amount: config.pricePerRequest,
-          token: config.paymentToken,
-          payer,
-          txId,
-          success: true,
-        };
-        analytics.recordPayment(event);
-        logPayment(event.amount, event.token, payer, req.path);
-        onPayment?.(event);
-      }
-    });
-    void originalEnd;
-    next();
   });
 
   // Reverse proxy to the provider backend.

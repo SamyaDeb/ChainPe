@@ -6,7 +6,7 @@ import { decodePaymentRequiredHeader, decodePaymentResponseHeader } from "@x402/
 import { ExactEvmScheme } from "@x402/evm/exact/client";
 import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
 import type { SettleResponse } from "@x402/core/types";
-import { createProxyServer } from "../src/proxy/server.js";
+import { analytics, createProxyServer } from "../src/proxy/server.js";
 import { SettlementGuard, type CircleClient } from "../src/proxy/circleFacilitator.js";
 import type { ChainPeConfig } from "../src/types.js";
 
@@ -51,6 +51,7 @@ afterEach(() => {
   proxy = undefined;
   backendCalls.length = 0;
   backendStatus = 200;
+  analytics.reset();
 });
 
 async function startProxy(client: Partial<CircleClient>): Promise<string> {
@@ -231,5 +232,57 @@ describe("paid requests", () => {
     const res = await payingFetch().pay(`${url}/weather`);
     expect(res.status).toBe(500);
     expect(decodePaymentResponseHeader(res.headers.get("payment-response") as string).transaction).toBe(TX);
+  });
+});
+
+describe("/chainpe-admin/stats", () => {
+  it("shows rail, network and tx hash for a completed payment", async () => {
+    const url = await startProxy({ settle: vi.fn().mockResolvedValue(settled) });
+    await payingFetch().pay(`${url}/weather`);
+    await vi.waitFor(() => expect(analytics.getRecentPayments()).toHaveLength(1));
+
+    const stats = await (await fetch(`${url}/chainpe-admin/stats`)).json();
+    expect(stats.paidRequests).toBe(1);
+    expect(stats.revenue).toEqual({
+      USDC: "0.01",
+      byRail: { exact: "0.01", gateway: "0" },
+      byNetwork: { [NETWORK]: "0.01" },
+    });
+    expect(stats.recentPayments[0]).toMatchObject({
+      rail: "exact",
+      network: NETWORK,
+      txHash: TX,
+      status: "completed",
+      amountAtomic: "10000",
+      payer: buyer.address,
+      payTo: seller,
+      route: "/weather",
+      method: "GET",
+      backendStatus: 200,
+    });
+  });
+
+  it("records a failed settlement without revenue", async () => {
+    const url = await startProxy({
+      settle: vi.fn().mockResolvedValue(pending),
+      getStatus: vi.fn().mockResolvedValue({ status: "failed", reason: "insufficient_funds", transaction: null, payer: null }),
+    });
+    await payingFetch().pay(`${url}/weather`);
+    await vi.waitFor(() => expect(analytics.getRecentPayments()).toHaveLength(1));
+
+    const stats = await (await fetch(`${url}/chainpe-admin/stats`)).json();
+    expect(stats.failedPayments).toBe(1);
+    expect(stats.revenue.USDC).toBe("0");
+    expect(stats.recentPayments[0]).toMatchObject({ status: "failed", error: "insufficient_funds", paymentId: "pay_1" });
+  });
+
+  it("records a settlement that is still pending", async () => {
+    const url = await startProxy({
+      settle: vi.fn().mockResolvedValue(pending),
+      getStatus: vi.fn().mockResolvedValue({ status: "pending" }),
+    });
+    await payingFetch().pay(`${url}/weather`);
+    await vi.waitFor(() => expect(analytics.getRecentPayments()).toHaveLength(1));
+    expect(analytics.getRecentPayments()[0]).toMatchObject({ status: "pending", paymentId: "pay_1" });
   });
 });

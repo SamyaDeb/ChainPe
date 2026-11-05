@@ -25,8 +25,14 @@ export {
   Analytics,
   createRoutesConfig,
   formatRoutesForDisplay,
+  assertExactSupported,
+  createCircleFacilitator,
+  facilitatorMode,
+  paymentIdentifierFor,
+  resolveSellerSigner,
+  SettlementGuard,
 } from "./proxy/index.js";
-export type { RoutesConfig } from "./proxy/index.js";
+export type { RoutesConfig, CircleClient, FacilitatorMode, SettlementGuardOptions } from "./proxy/index.js";
 
 // EVM helpers
 export {

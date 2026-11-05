@@ -1,12 +1,18 @@
 /**
  * Analytics Module
- * Tracks payment events and request statistics (USDC on Avalanche).
+ * Tracks payment events and request statistics (USDC on Arc).
  */
 
-import type { PaymentEvent, RequestStats, PaymentToken } from "../types.js";
+import type { PaymentEvent, PaymentRail, RequestStats } from "../types.js";
 import { USDC_DECIMALS } from "../chains.js";
 
 const MAX_RECENT_PAYMENTS = 100;
+
+export interface RevenueSummary {
+  USDC: string;
+  byRail: Record<PaymentRail, string>;
+  byNetwork: Record<string, string>;
+}
 
 class Analytics {
   private stats: RequestStats;
@@ -28,6 +34,8 @@ class Analytics {
       failedPayments: 0,
       totalRevenue: 0n,
       revenueByToken: { USDC: 0n },
+      revenueByRail: { exact: 0n, gateway: 0n },
+      revenueByNetwork: {},
       requestsPerMinute: [],
       lastHourRequests: 0,
     };
@@ -39,13 +47,13 @@ class Analytics {
   }
 
   recordPayment(event: PaymentEvent): void {
-    if (event.success) {
+    if (event.status === "completed") {
+      const atomic = BigInt(event.amountAtomic);
       this.stats.paidRequests++;
-      // event.amount is human USDC; store atomic units for precision.
-      const atomic = toAtomic(event.amount);
       this.stats.totalRevenue += atomic;
-      this.stats.revenueByToken[event.token] =
-        (this.stats.revenueByToken[event.token] || 0n) + atomic;
+      this.stats.revenueByToken.USDC += atomic;
+      this.stats.revenueByRail[event.rail] += atomic;
+      this.stats.revenueByNetwork[event.network] = (this.stats.revenueByNetwork[event.network] ?? 0n) + atomic;
     } else {
       this.stats.failedPayments++;
     }
@@ -79,8 +87,13 @@ class Analytics {
     return [...this.recentPayments];
   }
 
-  getRevenueSummary(): Record<PaymentToken, string> {
-    return { USDC: format(this.stats.revenueByToken.USDC || 0n) };
+  getRevenueSummary(): RevenueSummary {
+    const { revenueByToken, revenueByRail, revenueByNetwork } = this.stats;
+    return {
+      USDC: format(revenueByToken.USDC),
+      byRail: { exact: format(revenueByRail.exact), gateway: format(revenueByRail.gateway) },
+      byNetwork: Object.fromEntries(Object.entries(revenueByNetwork).map(([n, v]) => [n, format(v)])),
+    };
   }
 
   reset(): void {
@@ -88,13 +101,6 @@ class Analytics {
     this.recentPayments = [];
     this.minuteRequests = new Array(60).fill(0);
   }
-}
-
-function toAtomic(human: string): bigint {
-  const clean = human.replace(/[^0-9.]/g, "");
-  const [whole = "0", frac = ""] = clean.split(".");
-  const fracPadded = frac.padEnd(USDC_DECIMALS, "0").slice(0, USDC_DECIMALS);
-  return BigInt(whole) * BigInt(10 ** USDC_DECIMALS) + BigInt(fracPadded || "0");
 }
 
 function format(atomic: bigint): string {

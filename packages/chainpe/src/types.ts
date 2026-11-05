@@ -104,18 +104,29 @@ export interface RequestStats {
   failedPayments: number;
   totalRevenue: bigint; // atomic USDC (6 decimals)
   revenueByToken: Record<PaymentToken, bigint>;
+  revenueByRail: Record<PaymentRail, bigint>;
+  revenueByNetwork: Record<string, bigint>;
   requestsPerMinute: number[];
   lastHourRequests: number;
 }
 
+export type PaymentRail = "exact" | "gateway";
+
 export interface PaymentEvent {
-  timestamp: Date;
-  path: string;
-  amount: string;
-  token: PaymentToken;
+  id: string;
+  ts: number;
+  route: string;
+  method: string;
+  rail: PaymentRail;
+  network: string; // CAIP-2
+  amountAtomic: string; // atomic USDC (6 decimals)
   payer: string;
-  txId?: string;
-  success: boolean;
+  payTo: string;
+  txHash?: string;
+  paymentId?: string;
+  status: "completed" | "failed" | "pending";
+  latencyMs: number;
+  backendStatus?: number;
   error?: string;
 }
 
