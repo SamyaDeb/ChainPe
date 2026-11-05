@@ -6,7 +6,7 @@ import { GatewayGuard, gatewayTerms, type GatewayTransfer, type TransferLookup }
 import { RailRouter } from "../src/proxy/railRouter.js";
 import { ALL_RAILS, createRoutesConfig, formatRoutesForDisplay, parseRails } from "../src/proxy/routeConfig.js";
 import { assertUsdcAmount, railPolicy } from "../src/commands/consume.js";
-import { pendingIncoming, resolveDestination } from "../src/commands/seller.js";
+import { netOfFee, parseWithdrawShortfall, pendingIncoming, resolveDestination } from "../src/commands/seller.js";
 import { getNetwork } from "../src/chains.js";
 import type { ChainPeConfig } from "../src/types.js";
 
@@ -375,6 +375,28 @@ describe("pendingIncoming", () => {
     }));
     expect(await pendingIncoming({ searchTransfers } as never, seller)).toBe(1525n);
     expect(searchTransfers.mock.calls.map(([params]) => params.status)).toEqual(["received", "batched"]);
+  });
+});
+
+describe("withdraw fee handling", () => {
+  it("reads Gateway's shortfall error", () => {
+    expect(parseWithdrawShortfall("Gateway API error: available 0.001000, required 0.0045")).toEqual({
+      available: "0.001000",
+      required: "0.0045",
+    });
+  });
+
+  it("ignores other errors", () => {
+    expect(parseWithdrawShortfall("Gateway API error: blocked")).toBeUndefined();
+  });
+
+  it("takes the fee off the available balance", () => {
+    expect(netOfFee(11_000n, 11_000n, 14_500n)).toBe(7_500n);
+  });
+
+  it("refuses when the fee uses up the balance", () => {
+    expect(netOfFee(1_000n, 1_000n, 4_500n)).toBeUndefined();
+    expect(netOfFee(3_500n, 3_500n, 7_000n)).toBeUndefined();
   });
 });
 

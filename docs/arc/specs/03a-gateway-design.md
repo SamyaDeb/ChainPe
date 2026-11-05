@@ -188,8 +188,16 @@ payment would find its transfer and get a free backend call.
 | Replay after a proxy restart | 402 `nonce_already_used`, from Gateway; backend not called |
 | `--max` below the price | refused before signing |
 | `auto` on a funded buyer | paid through Gateway |
-| `withdraw 0.001` | **failed**: "available 0.001000, required 0.0045" |
+| `withdraw 0.001`, available 0.001 | **refused**: "Withdrawal needs 0.0045 USDC available (amount + fee). Available: 0.001000." |
+| Seller `deposit 0.01` | available 0.001 → 0.011, tx `0xa0d1d20514ad84ca5d9c80a68841763e0c6b2ec2de30f49bebf5c1a952d270ce` |
+| `withdraw 0.001`, available 0.011 | **completed**, mint tx `0x0d45e8f011e835740846014329bf6c8aaab49df350a77ad0cdc62b82642652a7`; available 0.0065 |
+| `withdraw --all`, available 0.0065 | **completed**, 0.003 withdrawn, mint tx `0x0a8980435809e3cab8f664ee92a8da553fa572f709f4a89272ad57610eedf3bf`; available 0 |
 
-**Withdrawal fee.** Gateway required 0.0045 to withdraw 0.001, so the fee on this same-chain withdrawal was
-0.0035 USDC. It is charged on top of the amount, so `available` must cover both. One observation on testnet;
-the mainnet fee may differ. `withdraw` has not yet completed on-chain.
+**Withdrawal fee.** Each same-chain withdrawal debited 0.0035 USDC on top of the amount (0.011 → 0.0065 for
+0.001; 0.0065 → 0 for 0.003), so `available` must cover both. The seller also pays gas for the mint, about
+0.0027 USDC here. Withdrawing under about 0.0062 USDC therefore loses money overall. Testnet observations only;
+the mainnet fee may differ.
+
+**How the CLI learns the fee.** `@circle-fin/x402-batching` has no fee API. `withdraw` turns Gateway's "available
+X, required Y" refusal into a clear message. `--all` requests the full balance, reads the fee from the refusal
+(a refused burn intent moves nothing) and retries with the balance less the fee.

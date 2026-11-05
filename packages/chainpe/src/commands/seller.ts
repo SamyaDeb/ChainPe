@@ -5,9 +5,9 @@
  */
 import chalk from "chalk";
 import ora from "ora";
-import { CHAIN_CONFIGS, type GatewayClient } from "@circle-fin/x402-batching/client";
+import { CHAIN_CONFIGS, type GatewayClient, type WithdrawResult } from "@circle-fin/x402-batching/client";
 import { explorerTxUrl, getNetwork, USDC_DECIMALS, type ChainPeNetwork } from "../chains.js";
-import { formatUsdc, getUsdcBalance } from "../evm.js";
+import { formatUsdc, getUsdcBalance, parseUsdc } from "../evm.js";
 import { resolveSellerKey } from "../proxy/circleFacilitator.js";
 import { assertUsdcAmount, gatewayClient } from "./consume.js";
 
@@ -65,20 +65,74 @@ export async function runBalanceCommand(walletAddress: string, network: ChainPeN
   }
 }
 
+/** What Gateway reports when `available` does not cover the amount plus its fee. */
+export interface WithdrawShortfall {
+  available: string;
+  required: string;
+}
+
+/** Reads Gateway's "available X, required Y" error. The SDK has no fee API, so this is the only source. */
+export function parseWithdrawShortfall(message: string): WithdrawShortfall | undefined {
+  const match = /available\s+(\d+(?:\.\d+)?)\s*,\s*required\s+(\d+(?:\.\d+)?)/i.exec(message);
+  return match ? { available: match[1], required: match[2] } : undefined;
+}
+
+/**
+ * The amount `--all` can withdraw, given what a withdrawal of `requested` needed.
+ * Undefined when the fee alone uses up the balance.
+ */
+export function netOfFee(available: bigint, requested: bigint, required: bigint): bigint | undefined {
+  const fee = required - requested;
+  const net = available - fee;
+  return fee >= 0n && net > 0n ? net : undefined;
+}
+
+export interface WithdrawOptions {
+  chain?: string;
+  all?: boolean;
+}
+
+/**
+ * Withdraws `amount`, or with `all` the whole balance less the fee. Gateway quotes the fee only by refusing
+ * a withdrawal it cannot cover, so `all` asks for everything first: a refused burn intent moves nothing.
+ */
 export async function runWithdrawCommand(
-  amount: string,
+  amount: string | undefined,
   walletAddress: string,
   network: ChainPeNetwork,
-  chain?: string
+  options: WithdrawOptions = {}
 ): Promise<void> {
-  const spinner = ora(`Withdrawing ${amount} USDC from Gateway…`);
+  const spinner = ora();
   try {
-    assertUsdcAmount(amount);
-    const destination = chain ? resolveDestination(chain) : undefined;
+    if (options.all === (amount !== undefined)) {
+      throw new Error("Pass either an amount or --all.");
+    }
+    if (amount !== undefined) assertUsdcAmount(amount);
+    const destination = options.chain ? resolveDestination(options.chain) : undefined;
     const client = gatewayClient(network, resolveSellerKey(walletAddress));
+    const withdraw = (value: string) => client.withdraw(value, destination ? { chain: destination } : undefined);
 
-    spinner.start();
-    const result = await client.withdraw(amount, destination ? { chain: destination } : undefined);
+    spinner.start("Reading Gateway balance…");
+    const { available, formattedAvailable } = (await client.getBalances()).gateway;
+    if (available === 0n) throw new Error("Nothing to withdraw. Gateway available balance is 0.");
+    if (amount !== undefined && parseUsdc(amount) > available) {
+      throw new Error(`Withdrawal of ${amount} USDC exceeds the available ${formattedAvailable} USDC.`);
+    }
+
+    spinner.text = `Withdrawing ${amount ?? formattedAvailable} USDC from Gateway…`;
+    let result: WithdrawResult;
+    try {
+      result = await withdraw(amount ?? formattedAvailable);
+    } catch (err) {
+      const shortfall = parseWithdrawShortfall((err as Error).message);
+      if (!shortfall) throw err;
+      const net = options.all ? netOfFee(available, available, parseUsdc(shortfall.required)) : undefined;
+      if (net === undefined) {
+        throw new Error(`Withdrawal needs ${shortfall.required} USDC available (amount + fee). Available: ${shortfall.available}.`);
+      }
+      spinner.text = `Withdrawing ${formatUsdc(net)} USDC (available less the fee)…`;
+      result = await withdraw(formatUsdc(net));
+    }
     spinner.succeed(`Withdrew ${result.formattedAmount} USDC to ${result.destinationChain}`);
 
     console.log(chalk.gray(`    Tx:       ${chalk.cyan(result.mintTxHash)}`));

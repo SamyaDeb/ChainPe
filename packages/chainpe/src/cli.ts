@@ -433,13 +433,14 @@ program
   });
 
 program
-  .command("withdraw <amount>")
-  .description("Withdraw the seller's USDC from Gateway to the payout wallet")
+  .command("withdraw [amount]")
+  .description("Withdraw the seller's USDC from Gateway to the payout wallet (the fee is charged on top of the amount)")
+  .option("--all", "Withdraw the whole available balance less the fee")
   .option("--chain <name>", "Destination chain as named by Gateway (default: this Arc network)")
   .option("-n, --network <network>", "arc | arc-testnet (default: $CHAINPE_NETWORK, then config)")
-  .action(async (amount: string, options: { chain?: string; network?: string }) => {
+  .action(async (amount: string | undefined, options: { all?: boolean; chain?: string; network?: string }) => {
     const { walletAddress, network } = await sellerContext(options.network);
-    await runWithdrawCommand(amount, walletAddress, network, options.chain);
+    await runWithdrawCommand(amount, walletAddress, network, { all: options.all, chain: options.chain });
   });
 
 program.command("discover").description("Discover services (not available on Arc yet)").action(runDiscoverCommand);

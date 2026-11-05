@@ -41,7 +41,7 @@ an acceptance check; do not start the next phase until it passes (except where m
 - [x] Spec 03: `RailRouter` over `SettlementGuard` + `GatewayGuard`; both options in one 402 (see 03a).
 - [x] Buyer deposits to Gateway (`GatewayClient`), pays a $0.001 route.
 - [x] `chainpe balance`.
-- [ ] `chainpe withdraw <amount>`: built, not yet completed on-chain (fee exceeded the test balance).
+- [x] `chainpe withdraw <amount>` and `--all`: completed on-chain (see 03a "Live results").
 
 **Accept:** a $0.001 call settles through Gateway; seller Gateway balance increases; withdraw works.
 
