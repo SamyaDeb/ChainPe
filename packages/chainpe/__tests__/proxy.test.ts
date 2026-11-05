@@ -206,6 +206,25 @@ describe("paid requests", () => {
     expect(backendCalls).toHaveLength(0);
   });
 
+  it("reach the backend once when a retry finds the settlement completed", async () => {
+    const settle = vi.fn().mockResolvedValue(pending);
+    const getStatus = vi.fn().mockResolvedValue({ status: "pending" });
+    const url = await startProxy({ settle, getStatus });
+    const { pay, sent } = payingFetch();
+    expect((await pay(`${url}/weather`)).status).toBe(402);
+    expect(backendCalls).toHaveLength(0);
+
+    getStatus.mockResolvedValue({ status: "completed", transaction: TX, payer: buyer.address, amount: "10000" });
+    const retry = await fetch(`${url}/weather`, { headers: { "payment-signature": sent[0] } });
+    expect(retry.status).toBe(200);
+    expect(backendCalls).toHaveLength(1);
+
+    const replay = await fetch(`${url}/weather`, { headers: { "payment-signature": sent[0] } });
+    expect(replay.status).toBe(402);
+    expect(backendCalls).toHaveLength(1);
+    expect(settle).toHaveBeenCalledTimes(1);
+  });
+
   it("never reach the backend when Circle is unreachable", async () => {
     const url = await startProxy({ settle: vi.fn().mockRejectedValue(new Error("ECONNRESET")) });
     const res = await payingFetch().pay(`${url}/weather`);

@@ -149,14 +149,77 @@ describe("SettlementGuard", () => {
     expect((await first).success).toBe(true);
   });
 
-  it("lets a pending payment retry with the same identifier", async () => {
-    const settle = vi.fn().mockResolvedValueOnce(pending).mockResolvedValueOnce(settled);
-    const getStatus = vi.fn().mockResolvedValue(statusOf("pending"));
-    const guard = guardFor({ settle, getStatus }, 5);
-    expect((await guard.settle(payload(), requirements)).success).toBe(false);
-    expect((await guard.settle(payload(), requirements)).success).toBe(true);
-    const ids = settle.mock.calls.map(([p]) => (p as PaymentPayload).extensions?.["payment-identifier"]);
-    expect(ids[0]).toEqual(ids[1]);
+  describe("a retry of a payment that outlasted polling", () => {
+    /** Times out once, so the guard is left holding a pending payment. */
+    async function timedOut() {
+      const settle = vi.fn().mockResolvedValue(pending);
+      const getStatus = vi.fn().mockResolvedValue(statusOf("pending"));
+      const guard = guardFor({ settle, getStatus }, 5);
+      expect(await guard.settle(payload(), requirements)).toMatchObject({ errorReason: "settlement_pending" });
+      getStatus.mockClear();
+      return { guard, settle, getStatus };
+    }
+
+    it("delivers exactly once when Circle completes it later", async () => {
+      const { guard, settle, getStatus } = await timedOut();
+      getStatus.mockResolvedValue(statusOf("completed", { transaction: "0xtx", amount: "1000" }));
+
+      expect(await guard.settle(payload(), requirements)).toMatchObject({ success: true, transaction: "0xtx" });
+      expect(await guard.settle(payload(), requirements)).toMatchObject({ errorReason: "payment_already_used" });
+      expect(settle).toHaveBeenCalledTimes(1);
+      expect(getStatus).toHaveBeenCalledTimes(1);
+      expect(getStatus).toHaveBeenCalledWith("pay_1", { network: NETWORK });
+    });
+
+    it("fails when Circle fails it later, and forgets the payment", async () => {
+      const { guard, settle, getStatus } = await timedOut();
+      getStatus.mockResolvedValue(statusOf("failed", { reason: "insufficient_funds" }));
+
+      expect(await guard.settle(payload(), requirements)).toMatchObject({
+        success: false,
+        errorReason: "insufficient_funds",
+      });
+      expect(settle).toHaveBeenCalledTimes(1);
+
+      settle.mockResolvedValue(settled);
+      expect((await guard.settle(payload(), requirements)).success).toBe(true);
+    });
+
+    it("stays pending with its paymentId while Circle is still working", async () => {
+      const { guard, settle } = await timedOut();
+      const result = await guard.settle(payload(), requirements);
+      expect(result).toMatchObject({ success: false, errorReason: "settlement_pending" });
+      expect(result.extensions?.["settlement-status"]).toMatchObject({ paymentId: "pay_1" });
+      expect(settle).toHaveBeenCalledTimes(1);
+    });
+
+    it("stays pending when the status lookup fails", async () => {
+      const { guard, settle, getStatus } = await timedOut();
+      getStatus.mockRejectedValue(new Error("timeout"));
+      expect(await guard.settle(payload(), requirements)).toMatchObject({ errorReason: "settlement_pending" });
+      expect(settle).toHaveBeenCalledTimes(1);
+    });
+
+    it("delivers once when two retries race", async () => {
+      const { guard, getStatus } = await timedOut();
+      getStatus.mockResolvedValue(statusOf("completed", { transaction: "0xtx" }));
+      const results = await Promise.all([guard.settle(payload(), requirements), guard.settle(payload(), requirements)]);
+      expect(results.filter((r) => r.success)).toHaveLength(1);
+      expect(results.find((r) => !r.success)).toMatchObject({ errorReason: "payment_in_progress" });
+    });
+
+    it("stops using status once the TTL has passed", async () => {
+      const settle = vi.fn().mockResolvedValue(pending);
+      const getStatus = vi.fn().mockResolvedValue(statusOf("pending"));
+      const guard = new SettlementGuard({ settle, getStatus } as unknown as CircleClient, {
+        pollIntervalMs: 1,
+        pollTimeoutMs: 5,
+        pendingTtlMs: 0,
+      });
+      await guard.settle(payload(), requirements);
+      await guard.settle(payload(), requirements);
+      expect(settle).toHaveBeenCalledTimes(2);
+    });
   });
 });
 

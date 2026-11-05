@@ -28,7 +28,9 @@ export const REGISTRATION_REQUIRED_MESSAGE =
 
 const PAYMENT_IDENTIFIER = "payment-identifier";
 const SETTLEMENT_STATUS = "settlement-status";
+const INVALID_TRANSACTION_STATE = "invalid_transaction_state";
 const MAX_TRACKED_PAYMENTS = 50_000;
+const MAX_PENDING_PAYMENTS = 10_000;
 
 export function facilitatorMode(apiKey = process.env.CIRCLE_API_KEY): FacilitatorMode {
   return apiKey ? "circle-key" : "circle-keyless";
@@ -71,13 +73,27 @@ export type CircleClient = FacilitatorClient & {
 export interface SettlementGuardOptions {
   pollIntervalMs?: number;
   pollTimeoutMs?: number;
+  /** How long a payment that outlasted polling can still be resolved by a retry. */
+  pendingTtlMs?: number;
+}
+
+/** A payment Circle accepted but had not finished when polling gave up. */
+interface PendingPayment {
+  paymentId: string;
+  network: string;
+  firstSeen: number;
+  /** Circle's pending answer, returned again while the payment stays pending. */
+  response: SettleResponse;
 }
 
 export class SettlementGuard implements FacilitatorClient {
   private readonly pollIntervalMs: number;
   private readonly pollTimeoutMs: number;
+  private readonly pendingTtlMs: number;
   /** Payments being settled or already delivered, oldest first. */
   private readonly tracked = new Map<string, "settling" | "delivered">();
+  /** Payments Circle may still complete, oldest first. A retry must not settle these again. */
+  private readonly pending = new Map<string, PendingPayment>();
 
   constructor(
     private readonly client: CircleClient,
@@ -85,6 +101,7 @@ export class SettlementGuard implements FacilitatorClient {
   ) {
     this.pollIntervalMs = options.pollIntervalMs ?? 500;
     this.pollTimeoutMs = options.pollTimeoutMs ?? 20_000;
+    this.pendingTtlMs = options.pendingTtlMs ?? 3_600_000;
   }
 
   verify(payload: PaymentPayload, requirements: PaymentRequirements) {
@@ -108,9 +125,17 @@ export class SettlementGuard implements FacilitatorClient {
     }
     this.track(id, "settling");
 
-    const result = await this.settleToCompletion(id, payload, requirements);
+    // A retry of a pending payment asks Circle for the outcome. Settling it again
+    // would be refused once Circle completes it, leaving the buyer paid but unserved.
+    this.dropExpiredPending();
+    const known = this.pending.get(id);
+    const result = known
+      ? await this.checkPending(known, requirements)
+      : await this.settleToCompletion(id, payload, requirements);
+
     if (result.success) this.tracked.set(id, "delivered");
     else this.tracked.delete(id);
+    if (!isPending(result)) this.pending.delete(id);
     return result;
   }
 
@@ -119,6 +144,33 @@ export class SettlementGuard implements FacilitatorClient {
       this.tracked.delete(this.tracked.keys().next().value as string);
     }
     this.tracked.set(id, state);
+  }
+
+  private rememberPending(id: string, paymentId: string, response: SettleResponse): void {
+    if (this.pending.size >= MAX_PENDING_PAYMENTS) {
+      this.pending.delete(this.pending.keys().next().value as string);
+    }
+    this.pending.set(id, { paymentId, network: response.network, firstSeen: Date.now(), response });
+  }
+
+  private dropExpiredPending(): void {
+    const cutoff = Date.now() - this.pendingTtlMs;
+    for (const [id, payment] of this.pending) {
+      if (payment.firstSeen > cutoff) return;
+      logger.warn(`Gave up on pending payment ${payment.paymentId}: no final status after ${this.pendingTtlMs} ms`);
+      this.pending.delete(id);
+    }
+  }
+
+  /** One status lookup for a retry; an unreachable Circle leaves the payment pending. */
+  private async checkPending(known: PendingPayment, requirements: PaymentRequirements): Promise<SettleResponse> {
+    try {
+      const status = await this.client.getStatus(known.paymentId, { network: known.network });
+      return finalResult(status, known.response, requirements) ?? known.response;
+    } catch (err) {
+      logger.warn(`Status check for payment ${known.paymentId} failed: ${(err as Error).message}`);
+      return known.response;
+    }
   }
 
   private async settleToCompletion(
@@ -135,15 +187,20 @@ export class SettlementGuard implements FacilitatorClient {
     try {
       result = await this.client.settle(tagged, requirements);
     } catch (err) {
+      const known = this.pending.get(id);
+      if (known && err instanceof FacilitatorApiError && err.reason === INVALID_TRANSACTION_STATE) {
+        return this.checkPending(known, requirements);
+      }
       return fromSettleError(err, requirements);
     }
-    if (!isSettlementPending(result as Parameters<typeof isSettlementPending>[0])) return result;
+    if (!isPending(result)) return result;
 
     const status = result.extensions?.[SETTLEMENT_STATUS] as { paymentId?: string } | undefined;
     if (!status?.paymentId) {
       logger.error("Circle reported settlement_pending without a paymentId");
       return result;
     }
+    this.rememberPending(id, status.paymentId, result);
     return this.pollUntilFinal(status.paymentId, result, requirements);
   }
 
@@ -164,28 +221,43 @@ export class SettlementGuard implements FacilitatorClient {
         continue;
       }
 
-      if (status.status === "completed") {
-        return {
-          success: true,
-          transaction: status.transaction ?? "",
-          network: requirements.network,
-          payer: status.payer ?? pending.payer,
-          amount: status.amount,
-          extensions: pending.extensions,
-        };
-      }
-      if (status.status === "failed") {
-        return {
-          ...failure(requirements, status.reason ?? "settlement_failed"),
-          payer: status.payer ?? pending.payer,
-          extensions: pending.extensions,
-        };
-      }
+      const final = finalResult(status, pending, requirements);
+      if (final) return final;
     }
 
     logger.warn(`Settlement still pending after ${this.pollTimeoutMs} ms, paymentId ${paymentId}`);
     return pending;
   }
+}
+
+function isPending(result: SettleResponse): boolean {
+  return isSettlementPending(result as Parameters<typeof isSettlementPending>[0]);
+}
+
+/** The settle response for a final status; undefined while Circle is still working. */
+function finalResult(
+  status: FacilitatorPaymentStatus,
+  pending: SettleResponse,
+  requirements: PaymentRequirements
+): SettleResponse | undefined {
+  if (status.status === "completed") {
+    return {
+      success: true,
+      transaction: status.transaction ?? "",
+      network: requirements.network,
+      payer: status.payer ?? pending.payer,
+      amount: status.amount,
+      extensions: pending.extensions,
+    };
+  }
+  if (status.status === "failed") {
+    return {
+      ...failure(requirements, status.reason ?? "settlement_failed"),
+      payer: status.payer ?? pending.payer,
+      extensions: pending.extensions,
+    };
+  }
+  return undefined;
 }
 
 function failure(requirements: PaymentRequirements, errorReason: string, errorMessage?: string): SettleResponse {
