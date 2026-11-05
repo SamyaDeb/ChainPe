@@ -2,8 +2,8 @@
  * ChainPe Proxy Server
  *
  * x402 v2 payment gateway. Every proxied request is gated by a USDC payment on
- * Arc; once paid and settled by the facilitator, the request is forwarded to
- * the provider's backend.
+ * Arc. Routes use the `upfront` payment flow, so x402 settles before calling
+ * next(): the backend is reached only after settlement has completed.
  */
 
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
@@ -26,6 +26,11 @@ export interface ProxyServerOptions {
   /** Settles payments. */
   facilitator: FacilitatorClient;
 }
+
+/** Discovery documents that stay free. Exact matches, so a path cannot smuggle in a paid route. */
+const FREE_PATHS = new Set(["/.well-known/x402", "/openapi.json"]);
+
+const PAYMENT_REQUEST_HEADERS = ["payment-signature", "x-payment"];
 
 export function createProxyServer(options: ProxyServerOptions): Express {
   const { config, additionalRoutes, onPayment, facilitator } = options;
@@ -86,6 +91,9 @@ export function createProxyServer(options: ProxyServerOptions): Express {
       res.status(503).json({ error: "Backend unreachable" });
     }
   });
+  adminRouter.use((_req: Request, res: Response) => {
+    res.status(404).json({ error: "Not found" });
+  });
   app.use("/chainpe-admin", adminRouter);
 
   // Advertise this provider's ERC-8004 agentId so consumers can leave reputation
@@ -110,7 +118,14 @@ export function createProxyServer(options: ProxyServerOptions): Express {
     getNetwork(config.network).caip2,
     new ExactEvmScheme()
   );
-  app.use(paymentMiddleware(routesConfig, resourceServer));
+  const paymentGate = paymentMiddleware(routesConfig, resourceServer);
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.method === "OPTIONS" || FREE_PATHS.has(req.path)) {
+      next();
+      return;
+    }
+    void paymentGate(req, res, next);
+  });
 
   // Payment tracking — record successful settlements (x402 sets PAYMENT-RESPONSE).
   app.use((req: Request, res: Response, next: NextFunction) => {
@@ -149,9 +164,13 @@ export function createProxyServer(options: ProxyServerOptions): Express {
   const proxyOptions: ProxyOptions = {
     target: config.targetUrl,
     changeOrigin: true,
-    ws: true,
+    // WebSocket upgrades would skip the payment gate, so they are not proxied.
+    ws: false,
     on: {
-      proxyReq: (_proxyReq, req) => logger.verbose(`Proxying ${req.method} ${req.url} → ${config.targetUrl}`),
+      proxyReq: (proxyReq, req) => {
+        for (const header of PAYMENT_REQUEST_HEADERS) proxyReq.removeHeader(header);
+        logger.verbose(`Proxying ${req.method} ${req.url} → ${config.targetUrl}`);
+      },
       proxyRes: (proxyRes, req) => logger.verbose(`Response ${config.targetUrl}${req.url}: ${proxyRes.statusCode}`),
       error: (err, _req, res) => {
         logger.error(`Proxy error: ${err.message}`);

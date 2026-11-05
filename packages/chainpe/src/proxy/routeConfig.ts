@@ -4,7 +4,12 @@
  * Builds x402 v2 routes from a ChainPeConfig. Keys are "METHOD /path"; a
  * catch-all gates every proxied path, and specific routes may override it.
  */
-import type { PaymentOption, RouteConfig as X402RouteConfig, RoutesConfig } from "@x402/core/http";
+import type {
+  PaymentOption,
+  RouteConfig as X402RouteConfig,
+  RoutesConfig,
+  SettlementFailedResponseBody,
+} from "@x402/core/http";
 import { getNetwork } from "../chains.js";
 import type { ChainPeConfig, RouteConfig as ChainPeRouteConfig } from "../types.js";
 
@@ -21,6 +26,20 @@ function toRouteKey(path: string): string {
   return path.includes(" ") ? path : `* ${path}`;
 }
 
+/** Tells the buyer why a settlement failed, as JSON in the 402 body. */
+const settlementFailedResponseBody: SettlementFailedResponseBody = (_context, failure) => {
+  const status = failure.extensions?.["settlement-status"] as { paymentId?: string } | undefined;
+  return {
+    contentType: "application/json",
+    body: {
+      error: "payment_failed",
+      reason: failure.errorReason,
+      message: failure.errorMessage,
+      ...(status?.paymentId && { paymentId: status.paymentId }),
+    },
+  };
+};
+
 export type { RoutesConfig };
 
 export function createRoutesConfig(
@@ -36,9 +55,12 @@ export function createRoutesConfig(
         price: toMoney(price),
         network,
         payTo: config.walletAddress,
+        // Settle before the handler runs, so the backend only sees paid requests.
+        extra: { paymentFlow: "upfront" },
       },
     ],
     description: description ?? `Pay ${price} USDC per request`,
+    settlementFailedResponseBody,
   });
 
   const routes: Record<string, X402RouteConfig> = {};
