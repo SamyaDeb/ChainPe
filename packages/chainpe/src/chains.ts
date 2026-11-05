@@ -30,6 +30,10 @@ export interface NetworkInfo {
   explorer: string;
   /** Token that pays gas on this network. */
   gasToken: GasToken;
+  /** Circle Gateway SDK name of this chain. */
+  gatewayChain: "arcTestnet" | "arc";
+  /** Gateway API for this network; undefined uses the SDK default (mainnet). */
+  gatewayUrl?: string;
 }
 
 const ARC_USDC = "0x3600000000000000000000000000000000000000";
@@ -58,6 +62,8 @@ export const NETWORKS: Record<ChainPeNetwork, NetworkInfo> = {
     usdc: ARC_USDC,
     explorer: ARC_TESTNET_EXPLORER,
     gasToken: "USDC",
+    gatewayChain: "arcTestnet",
+    gatewayUrl: "https://gateway-api-testnet.circle.com",
   },
   arc: {
     name: "arc",
@@ -69,6 +75,7 @@ export const NETWORKS: Record<ChainPeNetwork, NetworkInfo> = {
     usdc: ARC_USDC,
     explorer: ARC_EXPLORER,
     gasToken: "USDC",
+    gatewayChain: "arc",
   },
 };
 

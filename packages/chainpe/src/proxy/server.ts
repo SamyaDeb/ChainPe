@@ -13,6 +13,7 @@ import { decodePaymentResponseHeader, decodePaymentSignatureHeader } from "@x402
 import type { FacilitatorClient } from "@x402/core/server";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
+import { isBatchPayment } from "@circle-fin/x402-batching/server";
 
 import type { ChainPeConfig, PaymentEvent, RouteConfig } from "../types.js";
 import { createRoutesConfig, formatRoutesForDisplay } from "./routeConfig.js";
@@ -20,14 +21,17 @@ import { getNetwork } from "../chains.js";
 import { formatUsdc } from "../evm.js";
 import { analytics } from "./analytics.js";
 import { paymentIdentifierFor } from "./circleFacilitator.js";
+import type { GatewayTerms } from "./gateway.js";
 import { logger, logPayment, logRequest, logServerStart } from "../logger.js";
 
 export interface ProxyServerOptions {
   config: ChainPeConfig;
   additionalRoutes?: RouteConfig[];
   onPayment?: (event: PaymentEvent) => void;
-  /** Settles payments. */
+  /** Settles payments. With more than one rail this is a RailRouter. */
   facilitator: FacilitatorClient;
+  /** Needed when the gateway rail is enabled. */
+  gateway?: GatewayTerms;
 }
 
 /** Discovery documents that stay free. Exact matches, so a path cannot smuggle in a paid route. */
@@ -36,6 +40,8 @@ const FREE_PATHS = new Set(["/.well-known/x402", "/openapi.json"]);
 const RECENT_PAYMENTS_IN_STATS = 10;
 
 const PAYMENT_REQUEST_HEADERS = ["payment-signature", "x-payment"];
+
+const TX_HASH = /^0x[0-9a-fA-F]{64}$/;
 
 const LOOPBACK_ADDRESSES = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
 
@@ -66,18 +72,21 @@ function toPaymentEvent(
     const receipt = decodePaymentResponseHeader(receiptHeader);
     const settlement = receipt.extensions?.["settlement-status"] as { paymentId?: string } | undefined;
     const failed = receipt.errorReason === "settlement_pending" ? "pending" : "failed";
+    const gateway = isBatchPayment(payload.accepted);
+    // Gateway answers with a transfer id; its tx hash only exists after the batch lands.
+    const transaction = receipt.transaction || undefined;
     return {
       id: paymentIdentifierFor(payload),
       ts: Date.now(),
       route,
       method,
-      rail: "exact",
+      rail: gateway ? "gateway" : "exact",
       network: payload.accepted.network,
       amountAtomic: receipt.amount ?? payload.accepted.amount,
       payer: receipt.payer ?? "unknown",
       payTo: payload.accepted.payTo,
-      txHash: receipt.transaction || undefined,
-      paymentId: settlement?.paymentId,
+      txHash: transaction && TX_HASH.test(transaction) ? transaction : undefined,
+      paymentId: settlement?.paymentId ?? (gateway ? transaction : undefined),
       status: receipt.success ? "completed" : failed,
       latencyMs,
       backendStatus: receipt.success ? res.statusCode : undefined,
@@ -90,7 +99,7 @@ function toPaymentEvent(
 }
 
 export function createProxyServer(options: ProxyServerOptions): Express {
-  const { config, additionalRoutes, onPayment, facilitator } = options;
+  const { config, additionalRoutes, onPayment, facilitator, gateway } = options;
   const app = express();
 
   app.use(cors({ exposedHeaders: ["PAYMENT-REQUIRED", "PAYMENT-RESPONSE", "X-CHAINPE-AGENT-ID"] }));
@@ -174,10 +183,10 @@ export function createProxyServer(options: ProxyServerOptions): Express {
   }
 
   // x402 routes.
-  const routesConfig = createRoutesConfig(config, additionalRoutes);
+  const routesConfig = createRoutesConfig(config, [...(config.routes ?? []), ...(additionalRoutes ?? [])], gateway);
   logger.info("Configured x402 routes:");
   for (const r of formatRoutesForDisplay(routesConfig)) {
-    logger.info(`  ${r.path} → ${r.price} ${r.token}`);
+    logger.info(`  ${r.path} → ${r.price} ${r.token} (${r.rails.join(", ")})`);
   }
 
   // Payment tracking runs first so that refused payments are recorded too.
@@ -201,7 +210,8 @@ export function createProxyServer(options: ProxyServerOptions): Express {
     next();
   });
 
-  // Payment middleware (gates everything after it).
+  // Payment middleware (gates everything after it). ExactEvmScheme serves both
+  // rails: `exact` is the only scheme name, and route `extra` carries the rail.
   const resourceServer = new x402ResourceServer(facilitator).register(
     getNetwork(config.network).caip2,
     new ExactEvmScheme()

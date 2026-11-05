@@ -31,8 +31,18 @@ export {
   paymentIdentifierFor,
   resolveSellerSigner,
   SettlementGuard,
+  createGateway,
+  GatewayGuard,
+  RailRouter,
 } from "./proxy/index.js";
-export type { RoutesConfig, CircleClient, FacilitatorMode, SettlementGuardOptions } from "./proxy/index.js";
+export type {
+  RoutesConfig,
+  CircleClient,
+  FacilitatorMode,
+  SettlementGuardOptions,
+  GatewayGuardOptions,
+  GatewayTerms,
+} from "./proxy/index.js";
 
 // EVM helpers
 export {

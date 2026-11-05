@@ -44,6 +44,12 @@ export interface ChainPeConfig {
   // Network
   network: ChainPeNetwork;
 
+  // Payment rails to accept. Default: all of them.
+  rails?: PaymentRail[];
+
+  // Routes priced differently from pricePerRequest, e.g. { path: "GET /weather", ... }.
+  routes?: RouteConfig[];
+
   // Deployed ChainPeRegistry contract address (0x...)
   registryAddress?: string;
 

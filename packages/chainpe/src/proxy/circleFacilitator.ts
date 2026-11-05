@@ -41,12 +41,18 @@ export function resolveSellerSigner(
   walletAddress: string,
   key = process.env.CHAINPE_SELLER_PRIVATE_KEY
 ): PrivateKeyAccount {
+  return privateKeyToAccount(resolveSellerKey(walletAddress, key));
+}
+
+/** The seller key, checked against the payout wallet. Never log the result. */
+export function resolveSellerKey(walletAddress: string, key = process.env.CHAINPE_SELLER_PRIVATE_KEY): Hex {
   if (!key) {
     throw new Error("CHAINPE_SELLER_PRIVATE_KEY is not set (the key of your payout wallet).");
   }
+  const hex = (key.startsWith("0x") ? key : `0x${key}`) as Hex;
   let account: PrivateKeyAccount;
   try {
-    account = privateKeyToAccount((key.startsWith("0x") ? key : `0x${key}`) as Hex);
+    account = privateKeyToAccount(hex);
   } catch {
     throw new Error("CHAINPE_SELLER_PRIVATE_KEY is not a valid private key.");
   }
@@ -56,7 +62,7 @@ export function resolveSellerSigner(
         "Circle only settles to a payTo the seller key controls."
     );
   }
-  return account;
+  return hex;
 }
 
 /** Stable id for one signed payment, so a retry of it reuses the same id. */
@@ -260,7 +266,7 @@ function finalResult(
   return undefined;
 }
 
-function failure(requirements: PaymentRequirements, errorReason: string, errorMessage?: string): SettleResponse {
+export function failure(requirements: PaymentRequirements, errorReason: string, errorMessage?: string): SettleResponse {
   return {
     success: false,
     errorReason,
