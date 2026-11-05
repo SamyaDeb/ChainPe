@@ -121,11 +121,13 @@ export function createProxyServer(options: ProxyServerOptions): Express {
     next();
   });
   adminRouter.get("/stats", (_req: Request, res: Response) => {
-    const { totalRequests, paidRequests, failedPayments, requestsPerMinute, lastHourRequests } = analytics.getStats();
+    const { totalRequests, paidRequests, failedPayments, chargedButBackendFailed, requestsPerMinute, lastHourRequests } =
+      analytics.getStats();
     res.json({
       totalRequests,
       paidRequests,
       failedPayments,
+      chargedButBackendFailed,
       requestsPerMinute,
       lastHourRequests,
       revenue: analytics.getRevenueSummary(),

@@ -47,6 +47,13 @@ Do not use plain `paymentMiddleware` + proxy, because it settles after the handl
 Telemetry: batch POST to `${cloudUrl}/v1/ingest/events` every 5 s or 50 events, `Authorization: Bearer <ingest key>`;
 retry with backoff; drop after 24 h. Off with `--no-telemetry` or no ingest key.
 
+## Known limitations
+
+- Settlement runs before the backend, so a buyer stays charged if the backend then returns 5xx or is
+  unreachable. There is no automatic refund; `/chainpe-admin/stats` counts these as `chargedButBackendFailed`.
+- Pending payments live in memory. If the proxy restarts while one is pending, a retry is sent to Circle
+  again and refused once it has completed.
+
 ## Stretch: MCP tools
 
 If `targetUrl` is an MCP server (`/mcp`), price per tool from `routes.json` (`"mcp:<toolName>": "0.002"`),

@@ -32,6 +32,7 @@ class Analytics {
       totalRequests: 0,
       paidRequests: 0,
       failedPayments: 0,
+      chargedButBackendFailed: 0,
       totalRevenue: 0n,
       revenueByToken: { USDC: 0n },
       revenueByRail: { exact: 0n, gateway: 0n },
@@ -54,6 +55,7 @@ class Analytics {
       this.stats.revenueByToken.USDC += atomic;
       this.stats.revenueByRail[event.rail] += atomic;
       this.stats.revenueByNetwork[event.network] = (this.stats.revenueByNetwork[event.network] ?? 0n) + atomic;
+      if ((event.backendStatus ?? 0) >= 500) this.stats.chargedButBackendFailed++;
     } else {
       this.stats.failedPayments++;
     }

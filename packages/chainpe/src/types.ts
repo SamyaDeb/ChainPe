@@ -102,6 +102,7 @@ export interface RequestStats {
   totalRequests: number;
   paidRequests: number;
   failedPayments: number;
+  chargedButBackendFailed: number; // settled, then the backend answered 5xx or was unreachable
   totalRevenue: bigint; // atomic USDC (6 decimals)
   revenueByToken: Record<PaymentToken, bigint>;
   revenueByRail: Record<PaymentRail, bigint>;

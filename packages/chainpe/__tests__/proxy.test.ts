@@ -315,6 +315,34 @@ describe("/chainpe-admin access", () => {
 });
 
 describe("/chainpe-admin/stats", () => {
+  it("counts a paid request whose backend failed", async () => {
+    backendStatus = 503;
+    const url = await startProxy({ settle: vi.fn().mockResolvedValue(settled) });
+    await payingFetch().pay(`${url}/weather`);
+    await vi.waitFor(() => expect(analytics.getRecentPayments()).toHaveLength(1));
+
+    const stats = await (await fetch(`${url}/chainpe-admin/stats`)).json();
+    expect(stats).toMatchObject({ paidRequests: 1, chargedButBackendFailed: 1 });
+    expect(stats.recentPayments[0]).toMatchObject({ status: "completed", backendStatus: 503 });
+  });
+
+  it("counts a paid request whose backend was unreachable", async () => {
+    const url = await startProxy({ settle: vi.fn().mockResolvedValue(settled) }, { targetUrl: "http://localhost:1" });
+    const res = await payingFetch().pay(`${url}/weather`);
+    expect(res.status).toBe(502);
+    await vi.waitFor(() => expect(analytics.getRecentPayments()).toHaveLength(1));
+    expect(analytics.getStats().chargedButBackendFailed).toBe(1);
+  });
+
+  it("does not count a backend failure on an unpaid request or a 4xx", async () => {
+    backendStatus = 404;
+    const url = await startProxy({ settle: vi.fn().mockResolvedValue(settled) });
+    await fetch(`${url}/weather`);
+    await payingFetch().pay(`${url}/weather`);
+    await vi.waitFor(() => expect(analytics.getRecentPayments()).toHaveLength(1));
+    expect(analytics.getStats().chargedButBackendFailed).toBe(0);
+  });
+
   it("shows rail, network and tx hash for a completed payment", async () => {
     const url = await startProxy({ settle: vi.fn().mockResolvedValue(settled) });
     await payingFetch().pay(`${url}/weather`);
