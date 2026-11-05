@@ -27,3 +27,7 @@ npm-debug.log*
 
 # TypeScript
 *.tsbuildinfo
+
+# Arc Studio local state and run output
+.arc-studio/
+.arc-studio-run*.json

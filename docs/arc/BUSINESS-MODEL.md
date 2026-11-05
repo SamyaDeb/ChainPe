@@ -19,7 +19,7 @@ their buyers, their revenue.
 
 | | Free | Pro |
 |---|---|---|
-| Price | 0 | **19 USDC / 30 days** (default, owner to confirm) paid on Arc |
+| Price | 0 | **19 USDC / 30 days** on mainnet (default, owner to confirm), paid on Arc. Testnet: 1 USDC, because the faucet gives 20 USDC per 2 hours |
 | Services | 1 | up to 10 |
 | Revenue + calls | last 7 days | full history |
 | Breakdown | total only | by route, by rail (exact / Gateway), by buyer wallet |

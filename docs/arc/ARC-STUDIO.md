@@ -50,9 +50,8 @@ Record every run's `webUrl`, `traceId` and `deployments` in `docs/arc/STUDIO-LOG
 arc-studio run --prompt-file docs/arc/prompts/studio-01-contracts.md \
   --file docs/arc/specs/06-provider-accounts.md \
   --file contracts/contracts/ChainPeRegistryUpgradeable.sol \
-  --file contracts/contracts/PolicyVaultUpgradeable.sol \
-  --output json > .arc-studio-run1.json
-jq '{status, deployments, webUrl, traceId}' .arc-studio-run1.json
+  --output json > .arc-studio/run1.json
+jq '{status, deployments, webUrl, traceId}' .arc-studio/run1.json
 arc-studio pull --changed --dry-run --diff            # preview what changed
 arc-studio pull --out contracts-arc --paths "contracts/**"
 arc-studio pull --out contracts-arc --paths "test/**"
