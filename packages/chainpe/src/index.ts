@@ -1,6 +1,6 @@
 /**
  * ChainPe - Provider SDK
- * Monetize any API with x402 micropayments on Avalanche C-Chain.
+ * Monetize any API with x402 micropayments on Arc.
  */
 
 // Types
@@ -10,11 +10,12 @@ export * from "./types.js";
 export {
   NETWORKS,
   getNetwork,
+  parseNetwork,
   fromX402Network,
   explorerTxUrl,
   USDC_DECIMALS,
 } from "./chains.js";
-export type { ChainPeNetwork, NetworkInfo } from "./chains.js";
+export type { ChainPeNetwork, GasToken, NetworkInfo } from "./chains.js";
 
 // Proxy Server
 export {
@@ -32,12 +33,10 @@ export {
   createClient,
   isValidAddress,
   toChecksum,
-  getAccountBalances,
+  getUsdcBalance,
   formatUsdc,
-  formatAvax,
   parseUsdc,
 } from "./evm.js";
-export type { AccountBalances } from "./evm.js";
 
 // On-Chain Registry
 export {

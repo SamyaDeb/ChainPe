@@ -6,7 +6,7 @@
  * EIP-1193 wallet). The CLI:
  *   1. starts an ephemeral localhost server,
  *   2. opens the browser to a signing page,
- *   3. the page connects the wallet, switches to Avalanche, runs USDC `approve`
+ *   3. the page connects the wallet, switches to the target chain, runs USDC `approve`
  *      (if a fee is required) then `register`/`update` on ChainPeRegistry,
  *   4. the page POSTs the resulting tx hash back; the CLI prints it and exits.
  *
@@ -66,7 +66,8 @@ export async function registerViaBrowser(
     expectedDeveloper: params.walletAddress,
     chainId: info.chainId,
     chainIdHex: "0x" + info.chainId.toString(16),
-    chainName: params.network === "fuji" ? "Avalanche Fuji C-Chain" : "Avalanche C-Chain",
+    chainName: info.displayName,
+    nativeCurrency: info.chain.nativeCurrency,
     rpcUrl: info.rpcUrl,
     explorer: info.explorer,
     input: {
@@ -206,7 +207,7 @@ async function ensureChain() {
     if (e.code === 4902) {
       await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{
         chainId: CFG.chainIdHex, chainName: CFG.chainName,
-        nativeCurrency: { name: "Avalanche", symbol: "AVAX", decimals: 18 },
+        nativeCurrency: CFG.nativeCurrency,
         rpcUrls: [CFG.rpcUrl], blockExplorerUrls: [CFG.explorer]
       }]});
     } else { throw e; }

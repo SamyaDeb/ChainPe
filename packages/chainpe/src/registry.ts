@@ -1,5 +1,5 @@
 /**
- * ChainPe On-Chain Registry Client (Avalanche C-Chain)
+ * ChainPe On-Chain Registry Client (legacy contract, not yet on Arc)
  *
  * Reads from / writes to the deployed `ChainPeRegistry` Solidity contract via
  * viem. Replaces the Algorand algosdk implementation (atomic groups, ARC-4
@@ -211,7 +211,7 @@ function decodeService(raw: RawService): OnChainService {
     pricePerRequest: raw.pricePerRequest,
     paymentToken: (raw.paymentToken || "USDC") as PaymentToken,
     walletAddress: raw.payTo,
-    network: (raw.network as ChainPeNetwork) ?? "fuji",
+    network: (raw.network as ChainPeNetwork) ?? "arc-testnet",
     developer: raw.developer,
     agentId: raw.agentId.toString(),
     createdAt: Number(raw.createdAt),
@@ -228,7 +228,7 @@ export class ChainPeRegistryClient {
   private network: ChainPeNetwork;
   readonly address: `0x${string}`;
 
-  constructor(network: ChainPeNetwork = "fuji", registryAddress?: string) {
+  constructor(network: ChainPeNetwork = "arc-testnet", registryAddress?: string) {
     this.network = network;
     const info = getNetwork(network);
     this.publicClient = createPublicClient({ chain: info.chain, transport: http(info.rpcUrl) });

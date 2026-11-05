@@ -2,7 +2,7 @@
 
 /**
  * ChainPe CLI
- * Terminal interface for the x402 payment gateway on Avalanche C-Chain.
+ * Terminal interface for the x402 payment gateway on Arc.
  */
 
 import { program } from "commander";
@@ -16,7 +16,7 @@ import os from "os";
 import { privateKeyToAccount } from "viem/accounts";
 
 import type { ChainPeConfig, ChainPeNetwork } from "./types.js";
-import { isValidAddress, getAccountBalances, formatUsdc, formatAvax } from "./evm.js";
+import { isValidAddress, getUsdcBalance, formatUsdc } from "./evm.js";
 import { resolveIdentityRegistry, mintAgentIdentity, hasIdentity } from "./erc8004.js";
 import { explorerTxUrl } from "./chains.js";
 import { startProxyServer } from "./proxy/index.js";
@@ -33,7 +33,7 @@ const CONFIG_DIR = path.join(os.homedir(), ".chainpe");
 const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
 const VERSION = "2.0.0";
 
-const chainpeGradient = gradient(["#E84142", "#FF6B6B", "#FFD93D"]); // Avalanche red → gold
+const chainpeGradient = gradient(["#E84142", "#FF6B6B", "#FFD93D"]);
 
 // ============================================================================
 // Banner & styling
@@ -51,7 +51,7 @@ function printBanner(): void {
   \\_____|_| |_|\\__,_|_|_| |_|_|   \\___|
 `)
   );
-  console.log(chalk.gray("  API Marketplace on Avalanche C-Chain • x402 Micropayments"));
+  console.log(chalk.gray("  API Marketplace on Arc • x402 Micropayments"));
   console.log();
 }
 
@@ -156,21 +156,21 @@ async function runInit(): Promise<void> {
   printSection("Network & Wallet");
   const network = (await prompt(
     p.select({
-      message: "Avalanche network",
+      message: "Arc network",
       options: [
-        { value: "fuji", label: "Fuji (testnet)", hint: "recommended for testing" },
-        { value: "avalanche", label: "Avalanche (mainnet)" },
+        { value: "arc-testnet", label: "Arc Testnet", hint: "recommended for testing" },
+        { value: "arc", label: "Arc (mainnet)" },
       ],
     })
   )) as ChainPeNetwork;
 
   console.log(chalk.gray("\n  Your wallet address receives all payments. No private key is needed to run the proxy.\n"));
-  const walletAddress = (await prompt(p.text({ message: "Your Avalanche wallet address (0x…, receives payments)", placeholder: "0x…", validate: validateWalletAddress }))) as string;
+  const walletAddress = (await prompt(p.text({ message: "Your Arc wallet address (0x…, receives payments)", placeholder: "0x…", validate: validateWalletAddress }))) as string;
 
   const spinner = ora("Validating wallet address…").start();
   try {
-    const balances = await getAccountBalances(network, walletAddress);
-    spinner.succeed(`Wallet verified! Balance: ${chalk.green(formatAvax(balances.avax))} AVAX · ${chalk.green(formatUsdc(balances.usdc))} USDC`);
+    const usdc = await getUsdcBalance(network, walletAddress);
+    spinner.succeed(`Wallet verified! Balance: ${chalk.green(formatUsdc(usdc))} USDC`);
   } catch {
     spinner.succeed(`Wallet address accepted: ${shortAddr(walletAddress)}`);
   }
@@ -350,7 +350,7 @@ async function runRegister(): Promise<void> {
       console.log(chalk.gray(`    Tx: ${chalk.cyan(result.txnHash)}`));
       console.log(chalk.gray(`    Explorer: ${chalk.cyan(explorerTxUrl(config.network, result.txnHash))}`));
       console.log();
-      p.outro(chalk.green("Service is now discoverable on Avalanche!"));
+      p.outro(chalk.green("Service is now discoverable!"));
     } else {
       console.log(chalk.red(`  ✗ ${result.error || "Registration was not completed in the browser"}`));
       process.exit(1);
@@ -428,7 +428,7 @@ async function runRegister(): Promise<void> {
       console.log(chalk.gray(`    ERC-8004 agent #${agentId} linked — reputation will accrue per paid call.`));
     }
     console.log();
-    p.outro(chalk.green("Service is now discoverable on Avalanche!"));
+    p.outro(chalk.green("Service is now discoverable!"));
   } catch (error) {
     spinner.fail(isUpdate ? "Update failed" : "Registration failed");
     console.log(chalk.red(`  ✗ ${(error as Error).message}`));
@@ -471,7 +471,7 @@ async function runDeregister(): Promise<void> {
 
 async function runList(): Promise<void> {
   printBanner();
-  console.log(chalk.cyan.bold("▸ Registered Services (Avalanche)"));
+  console.log(chalk.cyan.bold("▸ Registered Services"));
   console.log(chalk.gray("─".repeat(50)));
   console.log();
 
@@ -539,10 +539,9 @@ async function runStatus(): Promise<void> {
 
   const spinner = ora("Checking balance…").start();
   try {
-    const balances = await getAccountBalances(config.network, config.walletAddress);
+    const usdc = await getUsdcBalance(config.network, config.walletAddress);
     spinner.stop();
-    console.log(chalk.gray(`    Balance:     ${chalk.green(formatAvax(balances.avax))} AVAX`));
-    console.log(chalk.gray(`                 ${chalk.green(formatUsdc(balances.usdc))} USDC`));
+    console.log(chalk.gray(`    Balance:     ${chalk.green(formatUsdc(usdc))} USDC (also pays gas)`));
   } catch {
     spinner.stop();
     console.log(chalk.gray(`    Balance:     ${chalk.yellow("(could not fetch)")}`));
@@ -592,7 +591,7 @@ function shortAddr(addr: string): string {
 
 program
   .name("chainpe")
-  .description("ChainPe — Monetize any API with x402 micropayments on Avalanche C-Chain")
+  .description("ChainPe — Monetize any API with x402 micropayments on Arc")
   .version(VERSION);
 
 program.command("init").description("Initialize a new ChainPe configuration").action(runInit);
@@ -615,7 +614,7 @@ program
   .option("-H, --header <header...>", "Request header as \"Key: Value\" (repeatable)")
   .option("-d, --data <body>", "Request body")
   .option("-k, --key <privateKey>", "Consumer wallet key (default: $CHAINPE_PRIVATE_KEY)")
-  .option("-n, --network <network>", "fuji | avalanche (default: $CHAINPE_NETWORK or fuji)")
+  .option("-n, --network <network>", "arc | arc-testnet (default: $CHAINPE_NETWORK or arc-testnet)")
   .option("--max <usdc>", "Max USDC to auto-pay for one call (default 1)")
   .option("--feedback", "Post positive ERC-8004 reputation after a paid call")
   .option("--raw", "Print only the response body (for piping)")
@@ -624,7 +623,7 @@ program
 program
   .command("discover [query]")
   .description("Discover on-chain services ranked by ERC-8004 reputation")
-  .option("-n, --network <network>", "fuji | avalanche (default: $CHAINPE_NETWORK or fuji)")
+  .option("-n, --network <network>", "arc | arc-testnet (default: $CHAINPE_NETWORK or arc-testnet)")
   .option("--tag <tag...>", "Filter by tag (repeatable)")
   .option("--max-price <usdc>", "Maximum price per request in USDC")
   .option("--json", "Output raw JSON")

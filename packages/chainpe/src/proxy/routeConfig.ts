@@ -22,11 +22,11 @@ export function createRoutesConfig(
   config: ChainPeConfig,
   additionalRoutes?: ChainPeRouteConfig[]
 ): RoutesConfig {
-  const x402Network = getNetwork(config.network).x402Network;
+  const x402Network = getNetwork(config.network).caip2;
 
   const build = (price: string, description?: string): X402RouteConfig => ({
     price: toMoney(price),
-    network: x402Network,
+    network: x402Network as unknown as X402RouteConfig["network"],
     config: {
       description: description ?? `Pay ${price} USDC per request`,
     },

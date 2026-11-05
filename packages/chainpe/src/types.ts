@@ -1,5 +1,5 @@
 /**
- * ChainPe Provider Types (Avalanche C-Chain)
+ * ChainPe Provider Types
  *
  * EVM-native types for the x402 payment gateway. Payment gating uses USDC via
  * the x402 "exact" scheme (EIP-3009 transferWithAuthorization). Prices are
@@ -8,14 +8,14 @@
 
 import type { ChainPeNetwork } from "./chains.js";
 
-export type { ChainPeNetwork } from "./chains.js";
+export type { ChainPeNetwork, GasToken } from "./chains.js";
 
 // ============================================================================
 // Payment Token
 // ============================================================================
 
-// x402 "exact" on EVM settles in USDC. AVAX is used only for gas (paid by the
-// facilitator), not as a payment-gating token.
+// x402 "exact" on EVM settles in USDC. The network's gas token is paid by the
+// facilitator and is not a payment-gating token.
 export type PaymentToken = "USDC";
 
 // ============================================================================

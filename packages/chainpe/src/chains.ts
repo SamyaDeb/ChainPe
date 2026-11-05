@@ -1,51 +1,74 @@
 /**
- * Avalanche C-Chain network definitions.
+ * Network definitions for ChainPe on Circle's Arc.
  *
- * Replaces the Algorand network constants (CAIP-2 genesis hashes, algod URLs,
- * ASA ids) with EVM equivalents: chainId, RPC, USDC ERC-20 address, the x402
- * network identifier, and the Snowtrace explorer base.
+ * Arc pays gas in USDC. The native balance has 18 decimals while the ERC-20
+ * interface at `usdc` has 6, so amounts always go through the ERC-20.
  */
-import { avalanche, avalancheFuji } from "viem/chains";
+import { arc, arcTestnet } from "viem/chains";
 import type { Chain } from "viem";
-import type { Network as X402Network } from "x402/types";
 
-export type ChainPeNetwork = "fuji" | "avalanche";
+export type ChainPeNetwork = "arc-testnet" | "arc";
+
+export type GasToken = "USDC";
 
 export interface NetworkInfo {
   /** ChainPe-facing network name. */
   name: ChainPeNetwork;
+  /** Human-readable network name. */
+  displayName: string;
   /** EVM chain id. */
   chainId: number;
-  /** viem chain object. */
+  /** CAIP-2 network id, used by x402 v2. */
+  caip2: `eip155:${number}`;
+  /** viem chain object, pointing at the RPC and explorer below. */
   chain: Chain;
-  /** Default public RPC URL. */
+  /** RPC URL (env override, else the public default). */
   rpcUrl: string;
   /** Canonical Circle USDC ERC-20 (6 decimals). */
   usdc: `0x${string}`;
-  /** x402 network identifier. */
-  x402Network: X402Network;
-  /** Snowtrace explorer base URL (no trailing slash). */
+  /** Explorer base URL (no trailing slash). */
   explorer: string;
+  /** Token that pays gas on this network. */
+  gasToken: GasToken;
 }
 
+const ARC_USDC = "0x3600000000000000000000000000000000000000";
+
+function withEndpoints(chain: Chain, rpcUrl: string, explorer: string): Chain {
+  return {
+    ...chain,
+    rpcUrls: { default: { http: [rpcUrl] } },
+    blockExplorers: { default: { name: "Arc Explorer", url: explorer } },
+  };
+}
+
+const ARC_TESTNET_RPC = process.env.ARC_TESTNET_RPC_URL ?? "https://rpc.testnet.arc.io";
+const ARC_TESTNET_EXPLORER = "https://explorer.testnet.arc.io";
+const ARC_RPC = process.env.ARC_RPC_URL ?? "https://rpc.mainnet.arc.io";
+const ARC_EXPLORER = "https://explorer.arc.io";
+
 export const NETWORKS: Record<ChainPeNetwork, NetworkInfo> = {
-  fuji: {
-    name: "fuji",
-    chainId: 43113,
-    chain: avalancheFuji,
-    rpcUrl: process.env.FUJI_RPC_URL ?? "https://api.avax-test.network/ext/bc/C/rpc",
-    usdc: "0x5425890298aed601595a70AB815c96711a31Bc65",
-    x402Network: "avalanche-fuji",
-    explorer: "https://testnet.snowtrace.io",
+  "arc-testnet": {
+    name: "arc-testnet",
+    displayName: "Arc Testnet",
+    chainId: 5042002,
+    caip2: "eip155:5042002",
+    chain: withEndpoints(arcTestnet, ARC_TESTNET_RPC, ARC_TESTNET_EXPLORER),
+    rpcUrl: ARC_TESTNET_RPC,
+    usdc: ARC_USDC,
+    explorer: ARC_TESTNET_EXPLORER,
+    gasToken: "USDC",
   },
-  avalanche: {
-    name: "avalanche",
-    chainId: 43114,
-    chain: avalanche,
-    rpcUrl: process.env.AVALANCHE_RPC_URL ?? "https://api.avax.network/ext/bc/C/rpc",
-    usdc: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
-    x402Network: "avalanche",
-    explorer: "https://snowtrace.io",
+  arc: {
+    name: "arc",
+    displayName: "Arc",
+    chainId: 5042,
+    caip2: "eip155:5042",
+    chain: withEndpoints(arc, ARC_RPC, ARC_EXPLORER),
+    rpcUrl: ARC_RPC,
+    usdc: ARC_USDC,
+    explorer: ARC_EXPLORER,
+    gasToken: "USDC",
   },
 };
 
@@ -57,11 +80,15 @@ export function getNetwork(network: ChainPeNetwork): NetworkInfo {
   return info;
 }
 
-/** Maps an x402 network id back to the ChainPe network name. */
+/** Validates a user-supplied network name. */
+export function parseNetwork(value: string): ChainPeNetwork {
+  if (Object.hasOwn(NETWORKS, value)) return value as ChainPeNetwork;
+  throw new Error(`Invalid network "${value}" (expected ${Object.keys(NETWORKS).join(" or ")}).`);
+}
+
+/** Maps an x402 network id (CAIP-2) or ChainPe name to the ChainPe network name. */
 export function fromX402Network(x402: string): ChainPeNetwork | undefined {
-  if (x402 === "avalanche-fuji") return "fuji";
-  if (x402 === "avalanche") return "avalanche";
-  return undefined;
+  return Object.values(NETWORKS).find((n) => n.caip2 === x402 || n.name === x402)?.name;
 }
 
 export function explorerTxUrl(network: ChainPeNetwork, txHash: string): string {

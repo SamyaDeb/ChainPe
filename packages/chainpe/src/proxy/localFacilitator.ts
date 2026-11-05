@@ -42,7 +42,7 @@ export function createLocalFacilitatorRouter(privateKey: string, network: ChainP
 
   router.get("/supported", (_req: Request, res: Response) => {
     res.json({
-      kinds: [{ x402Version: 1, scheme: "exact", network: info.x402Network }],
+      kinds: [{ x402Version: 1, scheme: "exact", network: info.caip2 }],
     });
   });
 
@@ -74,7 +74,7 @@ export function createLocalFacilitatorRouter(privateKey: string, network: ChainP
         success: false,
         errorReason: "settle_error",
         transaction: "",
-        network: info.x402Network,
+        network: info.caip2,
         errorMessage: (err as Error).message,
       });
     }

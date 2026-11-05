@@ -1,9 +1,6 @@
 /**
- * EVM helpers for the ChainPe provider (Avalanche C-Chain).
- *
- * Replaces the Algorand `facilitator/algorand-client.ts` helpers: address
- * validation, account balances (AVAX + USDC), and amount formatting — all via
- * viem instead of algosdk.
+ * EVM helpers for the ChainPe provider: address validation, USDC balances and
+ * amount formatting, all via viem.
  */
 import {
   createPublicClient,
@@ -33,41 +30,19 @@ export function toChecksum(address: string): `0x${string}` {
   return getAddress(address);
 }
 
-export interface AccountBalances {
-  avax: bigint; // wei (18 decimals)
-  usdc: bigint; // atomic (6 decimals)
-}
-
-/** Fetches native AVAX and USDC balances for an address. */
-export async function getAccountBalances(
-  network: ChainPeNetwork,
-  address: string
-): Promise<AccountBalances> {
-  const client = createClient(network);
-  const info = getNetwork(network);
-  const addr = getAddress(address);
-
-  const [avax, usdc] = await Promise.all([
-    client.getBalance({ address: addr }),
-    client.readContract({
-      address: info.usdc,
-      abi: erc20Abi,
-      functionName: "balanceOf",
-      args: [addr],
-    }) as Promise<bigint>,
-  ]);
-
-  return { avax, usdc };
+/** Fetches the ERC-20 USDC balance (6 decimals). On Arc this also pays gas. */
+export async function getUsdcBalance(network: ChainPeNetwork, address: string): Promise<bigint> {
+  return createClient(network).readContract({
+    address: getNetwork(network).usdc,
+    abi: erc20Abi,
+    functionName: "balanceOf",
+    args: [getAddress(address)],
+  }) as Promise<bigint>;
 }
 
 /** Formats atomic USDC (6 decimals) to a human string. */
 export function formatUsdc(atomic: bigint): string {
   return formatUnits(atomic, USDC_DECIMALS);
-}
-
-/** Formats wei AVAX (18 decimals) to a human string. */
-export function formatAvax(wei: bigint): string {
-  return formatUnits(wei, 18);
 }
 
 /** Parses a human USDC string to atomic units. */

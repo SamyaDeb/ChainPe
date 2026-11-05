@@ -46,9 +46,7 @@ export const IDENTITY_REGISTRY_ABI = [
 
 // ─── Address resolution ──────────────────────────────────────────────────────
 
-const KNOWN_IDENTITY_REGISTRY: Partial<Record<ChainPeNetwork, string>> = {
-  fuji: "0x56FEc2359fcDfFa6FA1D3a8AB3b708Ff698161D5",
-};
+const KNOWN_IDENTITY_REGISTRY: Partial<Record<ChainPeNetwork, string>> = {};
 
 export function resolveIdentityRegistry(
   network: ChainPeNetwork,

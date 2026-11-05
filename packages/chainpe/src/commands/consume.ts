@@ -18,14 +18,10 @@ import {
   type RankedService,
 } from "@chainpeavax/sdk";
 import type { ChainPeNetwork } from "../types.js";
-import { explorerTxUrl } from "../chains.js";
+import { explorerTxUrl, parseNetwork } from "../chains.js";
 
 function resolveNetwork(explicit?: string): ChainPeNetwork {
-  const n = explicit ?? process.env.CHAINPE_NETWORK ?? "fuji";
-  if (n !== "fuji" && n !== "avalanche") {
-    throw new Error(`Invalid network "${n}" (expected "fuji" or "avalanche").`);
-  }
-  return n;
+  return parseNetwork(explicit ?? process.env.CHAINPE_NETWORK ?? "arc-testnet");
 }
 
 function resolveKey(explicit?: string): string {
@@ -68,7 +64,7 @@ export async function runFetchCommand(url: string, opts: FetchCommandOptions): P
 
   const cp = new ChainPe({
     privateKey,
-    network,
+    network: network as never,
     maxPerCall: opts.max,
     autoFeedback: !!opts.feedback,
   });
@@ -136,12 +132,12 @@ export interface DiscoverCommandOptions {
 
 export async function runDiscoverCommand(query: string | undefined, opts: DiscoverCommandOptions): Promise<void> {
   const network = resolveNetwork(opts.network);
-  const registryAddress = resolveRegistryAddress(network);
-  const reputationRegistry = resolveReputationRegistry(network);
+  const registryAddress = resolveRegistryAddress(network as never);
+  const reputationRegistry = resolveReputationRegistry(network as never);
 
   const spinner = opts.json ? null : ora("Discovering services on-chain…").start();
   try {
-    const registry = new RegistryClient(network, registryAddress);
+    const registry = new RegistryClient(network as never, registryAddress);
     const services = filterServices(await registry.listAllServices(), {
       query,
       tags: opts.tag,
@@ -152,7 +148,7 @@ export async function runDiscoverCommand(query: string | undefined, opts: Discov
       await Promise.all(
         services.map(async (s) => ({
           ...s,
-          reputation: s.agentId ? await getReputation(network, reputationRegistry, s.agentId) : null,
+          reputation: s.agentId ? await getReputation(network as never, reputationRegistry, s.agentId) : null,
         })),
       ),
     );
