@@ -98,8 +98,9 @@ export class SettlementGuard implements FacilitatorClient {
   async settle(payload: PaymentPayload, requirements: PaymentRequirements): Promise<SettleResponse> {
     const id = paymentIdentifierFor(payload);
 
-    // Circle answers a repeated identifier with the original result, so a
-    // replayed header would otherwise be served again for one payment.
+    // Circle rejects a replay of a completed payment (invalid_transaction_state).
+    // This check answers duplicates locally and covers concurrent ones, where
+    // the first settle has not finished yet.
     const state = this.tracked.get(id);
     if (state) {
       const reason = state === "delivered" ? "payment_already_used" : "payment_in_progress";
