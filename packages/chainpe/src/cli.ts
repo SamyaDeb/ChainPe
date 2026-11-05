@@ -28,7 +28,7 @@ import { runFetchCommand, runDiscoverCommand } from "./commands/consume.js";
 
 const CONFIG_DIR = path.join(os.homedir(), ".chainpe");
 const CONFIG_FILE = process.env.CHAINPE_CONFIG ?? path.join(CONFIG_DIR, "config.json");
-const VERSION = "2.0.0";
+const VERSION = "3.0.0-arc.0";
 
 const chainpeGradient = gradient(["#E84142", "#FF6B6B", "#FFD93D"]);
 

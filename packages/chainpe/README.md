@@ -2,6 +2,11 @@
 
 [![npm](https://img.shields.io/npm/v/@chainpeavax/cli.svg)](https://www.npmjs.com/package/@chainpeavax/cli)
 
+> **Breaking change in 3.0.0:** the CLI is Arc-only (`arc`, `arc-testnet`), settled through Circle.
+> `avalanche` and `fuji` are removed; stay on `@chainpeavax/cli@2.0.1` for Avalanche. 3.0.0-arc.0 is a
+> prerelease and is not published. The rest of this README still describes 2.x and will be updated
+> when the Arc work lands.
+
 **Monetize any API with x402 micropayments on Avalanche**
 
 ChainPe is a reverse proxy that sits in front of your HTTP API and enforces x402 protocol payments on every request. One command, zero backend changes, real AVAX/USDC settlements on Avalanche.
