@@ -1,6 +1,6 @@
 # Spec 03a — Gateway rail design (B1 spike)
 
-**Status:** awaiting approval. No production code for the Gateway rail exists yet.
+**Status:** approved and implemented. Live results are at the end.
 
 Evidence is one of: **source** (read in `node_modules`, `file:line`), **ran** (executed during the spike),
 **docs** (Circle's Gateway docs), or **unknown** (could not be established without a funded payment).
@@ -154,7 +154,7 @@ payment would find its transfer and get a free backend call.
 - `fetch --rail`: an x402 policy filters `accepts` by `isBatchPayment`, on `CompositeEvmScheme`. `auto` reads
   the Gateway balance first. `--max` stays in `spendControls`, which run before policies, so before signing.
 
-## Decisions for approval
+## Decisions (all approved as recommended)
 
 1. **Forward on Gateway `success: true`?** Recommended: yes. Funds are locked and Circle's flow serves at this
    point; waiting for `completed` would hold each request for minutes. This **conflicts with CLAUDE.md**
@@ -174,3 +174,22 @@ payment would find its transfer and get a free backend call.
 - Retries protect only a re-send of the **same signature**. `chainpe fetch` signs anew on each run, so
   re-running it after a lost response can pay twice, on both rails. Fix belongs in the buyer SDK (Phase 7).
 - Serving before the batch lands needs reconciliation to catch a late `failed` transfer. Not in this phase.
+
+## Live results (Arc testnet)
+
+| Check | Result |
+|---|---|
+| `deposit 1.00` | `0x5c05705f9945fba7815d3511c9f717a0922dee8f534f076e4ffcbb8a8fcacb81` |
+| `fetch` $0.001, `--rail gateway` | 200, transfer `393435a2-78e7-45c3-bfd8-9f85d7b87930` |
+| `fetch` $0.01, `--rail exact` | 200, tx `0x11027eae23b4efd8419e7fdfae073622d6096efb0767882d30a71080df83c6c9` |
+| Batch for that transfer | `completed` in about 35 s, tx `0xccffd62c1f3dc573deb7cff643d62560043da11794da8875ce03af4951691ab6` |
+| `balance` | available 0 → 0.001, pending shown before it landed |
+| Replay, same process | 402 `payment_already_used` |
+| Replay after a proxy restart | 402 `nonce_already_used`, from Gateway; backend not called |
+| `--max` below the price | refused before signing |
+| `auto` on a funded buyer | paid through Gateway |
+| `withdraw 0.001` | **failed**: "available 0.001000, required 0.0045" |
+
+**Withdrawal fee.** Gateway required 0.0045 to withdraw 0.001, so the fee on this same-chain withdrawal was
+0.0035 USDC. It is charged on top of the amount, so `available` must cover both. One observation on testnet;
+the mainnet fee may differ. `withdraw` has not yet completed on-chain.

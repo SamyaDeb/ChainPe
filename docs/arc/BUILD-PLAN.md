@@ -38,9 +38,10 @@ an acceptance check; do not start the next phase until it passes (except where m
 
 ## Phase 2 — Gateway rail
 
-- [ ] Spec 03: register `GatewayEvmScheme` + `BatchFacilitatorClient`; both options in one 402.
-- [ ] Buyer deposits to Gateway (`GatewayClient`), pays a $0.001 route.
-- [ ] `chainpe balance` and `chainpe withdraw <amount>`.
+- [x] Spec 03: `RailRouter` over `SettlementGuard` + `GatewayGuard`; both options in one 402 (see 03a).
+- [x] Buyer deposits to Gateway (`GatewayClient`), pays a $0.001 route.
+- [x] `chainpe balance`.
+- [ ] `chainpe withdraw <amount>`: built, not yet completed on-chain (fee exceeded the test balance).
 
 **Accept:** a $0.001 call settles through Gateway; seller Gateway balance increases; withdraw works.
 

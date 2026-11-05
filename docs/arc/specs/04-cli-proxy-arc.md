@@ -22,8 +22,9 @@ Default port stays `4402`.
 
 1. Free paths pass through without payment: `/.well-known/x402`, `/openapi.json`, `/chainpe-admin/*`, `OPTIONS`.
 2. Paid path, no payment header → 402 with `PAYMENT-REQUIRED` listing enabled rails (spec 03).
-3. Payment header present → verify → **settle before handler** → on `success: true` forward to `targetUrl`;
+3. Payment header present → **settle before handler** → on `success: true` forward to `targetUrl`;
    on pending → poll status (spec 02); on failure → 402 with reason. Backend never sees payment headers.
+   On Gateway, `success: true` means accepted and funds locked; the batch lands later (spec 03a).
 4. Response to buyer includes `PAYMENT-RESPONSE` (tx hash or Gateway payment id).
 5. `afterSettle` hook records a `PaymentEvent` locally (existing `proxy/analytics.ts`) and queues it for telemetry.
 
@@ -51,6 +52,8 @@ retry with backoff; drop after 24 h. Off with `--no-telemetry` or no ingest key.
 
 - Settlement runs before the backend, so a buyer stays charged if the backend then returns 5xx or is
   unreachable. There is no automatic refund; `/chainpe-admin/stats` counts these as `chargedButBackendFailed`.
+- Gateway payments are served before their batch lands. A transfer that later ends `failed` would leave the
+  seller unpaid; nothing reconciles this yet.
 - Pending payments live in memory. If the proxy restarts while one is pending, a retry is sent to Circle
   again and refused once it has completed.
 

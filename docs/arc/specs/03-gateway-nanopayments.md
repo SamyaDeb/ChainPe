@@ -18,36 +18,37 @@ testnet includes **Arc Testnet**, Avalanche Fuji, Base Sepolia…
 
 ## Server wiring (proxy)
 
+Two facilitators cannot share `exact` on one network, so a router dispatches by `extra.name`. Why, with
+evidence: `03a-gateway-design.md`.
+
 ```ts
-const server = new x402ResourceServer([
-  circleFacilitator(cfg, sellerKey),                                   // spec 02 — exact
-  new BatchFacilitatorClient({ url: gatewayUrl(cfg.network) }),        // Gateway
-])
-  .register(caip2, new ExactEvmScheme())
-  .register('eip155:*', new GatewayEvmScheme())
-await server.initialize()
+const facilitator = new RailRouter({ exact: settlementGuard, gateway: gatewayGuard })
+new x402ResourceServer(facilitator).register(caip2, new ExactEvmScheme())
 ```
 
-Route `accepts` lists both options with the same `payTo` and price. Config:
+Route `accepts` lists exact, then Gateway, with the same `payTo` and price. Config:
 
 ```json
-{ "rails": ["exact", "gateway"] }   // default both on arc*; ["exact"] on avalanche/fuji
+{ "rails": ["exact", "gateway"] }   // default: both
 ```
 
-Prices below `$0.01`: allow only the Gateway option (exact settlement fees make no sense there);
-`chainpe start` warns when a route price < $0.01 has `exact` enabled.
+Prices below `$0.01`: only the Gateway option is listed, and `chainpe start` warns once. A route left with no
+option stops `chainpe start`, as does Gateway being unreachable while the rail is on.
 
 ## New CLI commands
 
 | Command | Does |
 |---|---|
-| `chainpe balance` | `GatewayClient.getBalances()` for the seller: available + total (USDC) and on-chain USDC |
-| `chainpe withdraw <amount> [--chain <name>]` | `GatewayClient.withdraw(amount, { chain })`; prints tx |
+| `chainpe balance` | Seller Gateway available, total and pending (not yet batched), and on-chain USDC |
+| `chainpe withdraw <amount> [--chain <name>]` | `GatewayClient.withdraw(amount, { chain })`; prints tx. A fee comes on top of the amount (0.0035 USDC seen on Arc testnet) |
+| `chainpe deposit <amount>` | Buyer deposit into Gateway (`CHAINPE_PRIVATE_KEY`) |
+| `chainpe fetch <url> --rail gateway\|exact\|auto` | `auto` uses Gateway if the deposit covers the price |
 
 Both use the seller key locally. Telemetry heartbeat (spec 08) reports the Gateway balance every 5 min.
 
 ## Acceptance
 
-- [ ] Unpaid request → 402 with two `accepts` (exact on `eip155:5042002`, Gateway with `extra.name: "GatewayWalletBatched"`).
-- [ ] Buyer with only a Gateway deposit pays a `$0.001` route; backend called once.
-- [ ] `chainpe balance` increases after the call; `chainpe withdraw 0.001` returns a tx on Arc testnet.
+- [x] Unpaid request → 402 with two `accepts` (exact on `eip155:5042002`, Gateway with `extra.name: "GatewayWalletBatched"`).
+- [x] Buyer with only a Gateway deposit pays a `$0.001` route; backend called once.
+- [x] `chainpe balance` increases after the batch lands.
+- [ ] `chainpe withdraw` returns a tx on Arc testnet. Needs `available` to cover the amount plus the fee.

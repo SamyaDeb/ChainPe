@@ -246,7 +246,7 @@ export async function createGateway(
   const batch = new BatchFacilitatorClient({ url: url ?? info.gatewayUrl });
   const client = batch as unknown as FacilitatorClient;
   const terms = await gatewayTerms(client, info.caip2, info.usdc).catch((err: Error) => {
-    throw new Error(`Circle Gateway is not available at ${batch.url}: ${err.message} Use --rails exact to run without it.`);
+    throw new Error(`Circle Gateway is not available at ${batch.url}: ${err.message.replace(/\.$/, "")}. Use --rails exact to run without it.`);
   });
   return { guard: new GatewayGuard(client, transferLookup(batch.url)), terms };
 }
