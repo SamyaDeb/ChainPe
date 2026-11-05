@@ -377,17 +377,9 @@ program
   .option("-k, --key <privateKey>", "Consumer wallet key (default: $CHAINPE_PRIVATE_KEY)")
   .option("-n, --network <network>", "arc | arc-testnet (default: $CHAINPE_NETWORK or arc-testnet)")
   .option("--max <usdc>", "Max USDC to auto-pay for one call (default 1)")
-  .option("--feedback", "Post positive ERC-8004 reputation after a paid call")
   .option("--raw", "Print only the response body (for piping)")
   .action(runFetchCommand);
 
-program
-  .command("discover [query]")
-  .description("Discover on-chain services ranked by ERC-8004 reputation")
-  .option("-n, --network <network>", "arc | arc-testnet (default: $CHAINPE_NETWORK or arc-testnet)")
-  .option("--tag <tag...>", "Filter by tag (repeatable)")
-  .option("--max-price <usdc>", "Maximum price per request in USDC")
-  .option("--json", "Output raw JSON")
-  .action(runDiscoverCommand);
+program.command("discover").description("Discover services (not available on Arc yet)").action(runDiscoverCommand);
 
 program.parse();

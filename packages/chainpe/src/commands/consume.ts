@@ -1,37 +1,26 @@
 /**
  * Consumer-side CLI commands (curl-level): `chainpe fetch` and `chainpe discover`.
  *
- * These are thin wrappers over `@chainpe/sdk` — the same payment + discovery
- * core used by the wallet MCP, the agent, and the framework tools — so a paid
- * call from the terminal settles on Avalanche exactly like one from an agent.
+ * `fetch` pays any x402 v2 402 on Arc in USDC, signing with the consumer wallet.
  */
 import chalk from "chalk";
 import ora from "ora";
-import {
-  ChainPe,
-  RegistryClient,
-  resolveRegistryAddress,
-  resolveReputationRegistry,
-  getReputation,
-  filterServices,
-  rankByReputation,
-  type RankedService,
-} from "@chainpeavax/sdk";
-import type { ChainPeNetwork } from "../types.js";
-import { explorerTxUrl, parseNetwork } from "../chains.js";
+import { privateKeyToAccount } from "viem/accounts";
+import type { Hex } from "viem";
+import { ExactEvmScheme } from "@x402/evm/exact/client";
+import { decodePaymentResponseHeader, wrapFetchWithPaymentFromConfig } from "@x402/fetch";
+import { explorerTxUrl, getNetwork, parseNetwork } from "../chains.js";
 
-function resolveNetwork(explicit?: string): ChainPeNetwork {
-  return parseNetwork(explicit ?? process.env.CHAINPE_NETWORK ?? "arc-testnet");
-}
+const DEFAULT_MAX_USDC = "1";
 
-function resolveKey(explicit?: string): string {
+function resolveKey(explicit?: string): Hex {
   const key = explicit ?? process.env.CHAINPE_PRIVATE_KEY;
   if (!key) {
     throw new Error(
       "No wallet key. Pass --key 0x… or set CHAINPE_PRIVATE_KEY (the consumer wallet that pays).",
     );
   }
-  return key;
+  return (key.startsWith("0x") ? key : `0x${key}`) as Hex;
 }
 
 /** Parses repeated `-H "Key: Value"` flags into a headers object. */
@@ -53,133 +42,61 @@ export interface FetchCommandOptions {
   key?: string;
   network?: string;
   max?: string;
-  feedback?: boolean;
   raw?: boolean;
 }
 
 export async function runFetchCommand(url: string, opts: FetchCommandOptions): Promise<void> {
-  const network = resolveNetwork(opts.network);
-  const privateKey = resolveKey(opts.key);
-  const method = (opts.method ?? "GET").toUpperCase();
-
-  const cp = new ChainPe({
-    privateKey,
-    network: network as never,
-    maxPerCall: opts.max,
-    autoFeedback: !!opts.feedback,
-  });
-
-  const headers = parseHeaders(opts.header);
-
-  if (!opts.raw) {
-    console.log(chalk.gray(`  ${method} ${chalk.white(url)}  ·  wallet ${shortAddr(cp.getAddress())} on ${chalk.yellow(network)}`));
-  }
-  const spinner = opts.raw ? null : ora("Fetching (auto-pays a 402 in USDC)…").start();
+  const spinner = opts.raw ? null : ora("Fetching (auto-pays a 402 in USDC)…");
 
   try {
-    const res = await cp.pay(url, {
-      method,
-      headers,
-      body: opts.data,
+    const network = parseNetwork(opts.network ?? process.env.CHAINPE_NETWORK ?? "arc-testnet");
+    const account = privateKeyToAccount(resolveKey(opts.key));
+    const method = (opts.method ?? "GET").toUpperCase();
+
+    if (!opts.raw) {
+      console.log(chalk.gray(`  ${method} ${chalk.white(url)}  ·  wallet ${shortAddr(account.address)} on ${chalk.yellow(network)}`));
+    }
+    spinner?.start();
+
+    const payingFetch = wrapFetchWithPaymentFromConfig(fetch, {
+      schemes: [{ network: getNetwork(network).caip2, client: new ExactEvmScheme(account) }],
+      spendControls: { maxAmountPerPayment: `$${opts.max ?? DEFAULT_MAX_USDC}` },
     });
+
+    const res = await payingFetch(url, { method, headers: parseHeaders(opts.header), body: opts.data });
+    const body = await res.text();
+    const header = res.headers.get("PAYMENT-RESPONSE");
+    const receipt = header ? decodePaymentResponseHeader(header) : undefined;
     spinner?.stop();
 
     if (opts.raw) {
-      process.stdout.write(typeof res.data === "string" ? res.data : JSON.stringify(res.data, null, 2));
-      process.stdout.write("\n");
+      process.stdout.write(`${body}\n`);
+      if (!res.ok) process.exit(1);
       return;
     }
 
-    const statusColor = res.ok ? chalk.green : chalk.red;
-    console.log(statusColor(`  ✓ ${res.status}`));
-
-    if (res.payment) {
-      console.log(
-        chalk.gray(
-          `    Paid:     ${chalk.green(res.payment.amount)} USDC → ${shortAddr(res.payment.recipient)} on ${chalk.yellow(res.payment.network)}`,
-        ),
-      );
-      if (res.payment.txHash) {
-        console.log(chalk.gray(`    Tx:       ${chalk.cyan(explorerTxUrl(network, res.payment.txHash))}`));
-      }
+    console.log((res.ok ? chalk.green : chalk.red)(`  ${res.ok ? "✓" : "✗"} ${res.status}`));
+    if (receipt?.success && receipt.transaction) {
+      console.log(chalk.gray(`    Tx:       ${chalk.cyan(receipt.transaction)}`));
+      console.log(chalk.gray(`    Explorer: ${chalk.cyan(explorerTxUrl(network, receipt.transaction))}`));
+    } else if (receipt) {
+      console.log(chalk.red(`    Payment failed: ${receipt.errorReason ?? "unknown reason"}`));
     } else {
-      console.log(chalk.gray("    Payment:  none required (non-402 response)"));
+      console.log(chalk.gray("    Payment:  none made"));
     }
-
-    if (res.reputation) {
-      console.log(
-        chalk.gray(
-          `    Rated:    agent ${res.reputation.agentId} +${res.reputation.score} (ERC-8004) · ${chalk.cyan(explorerTxUrl(network, res.reputation.txHash))}`,
-        ),
-      );
-    }
-
     console.log();
-    console.log(typeof res.data === "string" ? res.data : JSON.stringify(res.data, null, 2));
+    console.log(body);
+    if (!res.ok) process.exit(1);
   } catch (err) {
     spinner?.fail("Request failed");
-    console.log(chalk.red(`  ✗ ${(err as Error).message}`));
+    console.error(chalk.red(`  ✗ ${(err as Error).message}`));
     process.exit(1);
   }
 }
 
-export interface DiscoverCommandOptions {
-  network?: string;
-  tag?: string[];
-  maxPrice?: string;
-  json?: boolean;
-}
-
-export async function runDiscoverCommand(query: string | undefined, opts: DiscoverCommandOptions): Promise<void> {
-  const network = resolveNetwork(opts.network);
-  const registryAddress = resolveRegistryAddress(network as never);
-  const reputationRegistry = resolveReputationRegistry(network as never);
-
-  const spinner = opts.json ? null : ora("Discovering services on-chain…").start();
-  try {
-    const registry = new RegistryClient(network as never, registryAddress);
-    const services = filterServices(await registry.listAllServices(), {
-      query,
-      tags: opts.tag,
-      maxPrice: opts.maxPrice,
-    });
-
-    const ranked: RankedService[] = rankByReputation(
-      await Promise.all(
-        services.map(async (s) => ({
-          ...s,
-          reputation: s.agentId ? await getReputation(network as never, reputationRegistry, s.agentId) : null,
-        })),
-      ),
-    );
-    spinner?.stop();
-
-    if (opts.json) {
-      process.stdout.write(JSON.stringify(ranked, null, 2) + "\n");
-      return;
-    }
-
-    if (ranked.length === 0) {
-      console.log(chalk.gray("  No matching services on-chain.\n"));
-      return;
-    }
-
-    console.log();
-    for (const s of ranked) {
-      const rep = s.reputation;
-      const stars = rep?.score != null ? chalk.yellow(`⭐ ${rep.score} (${rep.count})`) : chalk.gray("unrated");
-      console.log(`  ${chalk.white.bold(s.name)}  ${stars}`);
-      console.log(chalk.gray(`    ${s.description}`));
-      console.log(chalk.gray(`    Endpoint: ${chalk.cyan(s.endpoint)}`));
-      console.log(chalk.gray(`    Price:    ${chalk.green(s.pricePerRequest)} USDC${s.tags.length ? `  ·  ${s.tags.join(", ")}` : ""}`));
-      console.log();
-    }
-    console.log(chalk.gray(`  ${ranked.length} service(s) · ranked by ERC-8004 reputation · Registry ${registryAddress}\n`));
-  } catch (err) {
-    spinner?.fail("Discovery failed");
-    console.log(chalk.red(`  ✗ ${(err as Error).message}`));
-    process.exit(1);
-  }
+export function runDiscoverCommand(): void {
+  console.log(chalk.yellow("  Service discovery is not available on Arc yet."));
+  process.exit(1);
 }
 
 function shortAddr(addr: string): string {
