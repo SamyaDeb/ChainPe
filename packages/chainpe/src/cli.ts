@@ -18,9 +18,19 @@ import os from "os";
 import type { ChainPeConfig, ChainPeNetwork } from "./types.js";
 import { isValidAddress, getUsdcBalance, formatUsdc } from "./evm.js";
 import { getNetwork, parseNetwork } from "./chains.js";
-import { assertExactSupported, createCircleFacilitator, facilitatorMode, startProxyServer } from "./proxy/index.js";
+import {
+  ALL_RAILS,
+  assertExactSupported,
+  createCircleFacilitator,
+  createGateway,
+  facilitatorMode,
+  parseRails,
+  RailRouter,
+  startProxyServer,
+} from "./proxy/index.js";
 import { setLogLevel } from "./logger.js";
-import { runFetchCommand, runDiscoverCommand } from "./commands/consume.js";
+import { runFetchCommand, runDiscoverCommand, runDepositCommand } from "./commands/consume.js";
+import { runBalanceCommand, runWithdrawCommand } from "./commands/seller.js";
 
 // ============================================================================
 // Constants
@@ -204,6 +214,7 @@ async function runStart(options: {
   verbose?: boolean;
   network?: string;
   facilitatorUrl?: string;
+  rails?: string;
 }): Promise<void> {
   printBanner();
   const config = await loadConfig();
@@ -219,8 +230,13 @@ async function runStart(options: {
   try {
     config.network = resolveNetwork(options.network, config);
     const info = getNetwork(config.network);
-    const facilitator = createCircleFacilitator(config, { url: options.facilitatorUrl });
-    await assertExactSupported(facilitator, info.caip2);
+    const rails = options.rails ? parseRails(options.rails) : (config.rails ?? ALL_RAILS);
+    config.rails = rails;
+
+    const exact = rails.includes("exact") ? createCircleFacilitator(config, { url: options.facilitatorUrl }) : undefined;
+    if (exact) await assertExactSupported(exact, info.caip2);
+    const gateway = rails.includes("gateway") ? await createGateway(config.network) : undefined;
+    const facilitator = new RailRouter({ exact, gateway: gateway?.guard });
 
     console.log(chalk.gray("  Starting x402 payment gateway…\n"));
     console.log(chalk.gray("  Configuration:"));
@@ -229,10 +245,11 @@ async function runStart(options: {
     console.log(chalk.gray(`    Price:       ${chalk.green(config.pricePerRequest)} USDC`));
     console.log(chalk.gray(`    Wallet:      ${shortAddr(config.walletAddress)}`));
     console.log(chalk.gray(`    Network:     ${chalk.yellow(config.network)} (${info.caip2})`));
-    console.log(chalk.gray(`    Facilitator: ${chalk.green(facilitatorMode())}`));
+    console.log(chalk.gray(`    Rails:       ${chalk.green(rails.join(", "))}`));
+    if (exact) console.log(chalk.gray(`    Facilitator: ${chalk.green(facilitatorMode())}`));
     console.log();
 
-    await startProxyServer({ config, facilitator });
+    await startProxyServer({ config, facilitator, gateway: gateway?.terms });
     console.log(chalk.gray("  Press Ctrl+C to stop\n"));
     process.on("SIGINT", () => {
       console.log(chalk.yellow("\n  Shutting down…"));
@@ -296,6 +313,7 @@ async function runStatus(options: { network?: string }): Promise<void> {
   console.log(chalk.gray(`    Chain ID:    ${chalk.white(info.chainId)}`));
   console.log(chalk.gray(`    CAIP-2:      ${chalk.white(info.caip2)}`));
   console.log(chalk.gray(`    Gas token:   ${chalk.white(info.gasToken)}`));
+  console.log(chalk.gray(`    Rails:       ${chalk.green((config.rails ?? ALL_RAILS).join(", "))}`));
   console.log(chalk.gray(`    Facilitator: ${chalk.green(facilitatorMode())}`));
   console.log();
   console.log(chalk.gray("  Wallet (receives payments):"));
@@ -331,6 +349,22 @@ function resolveNetwork(explicit: string | undefined, config: ChainPeConfig): Ch
   return parseNetwork(explicit ?? process.env.CHAINPE_NETWORK ?? config.network);
 }
 
+/** Loads what a seller money command needs, or exits. */
+async function sellerContext(networkOption?: string): Promise<{ walletAddress: string; network: ChainPeNetwork }> {
+  const config = await loadConfig();
+  if (!config) {
+    console.log(chalk.red("✗ No configuration found."));
+    console.log(chalk.gray(`  Run ${chalk.cyan("chainpe init")} first.`));
+    process.exit(1);
+  }
+  try {
+    return { walletAddress: config.walletAddress, network: resolveNetwork(networkOption, config) };
+  } catch (error) {
+    console.log(chalk.red(`✗ ${(error as Error).message}`));
+    process.exit(1);
+  }
+}
+
 /** Registry commands need the Arc contracts, which arrive in Phase 4. */
 function exitRegistryNotOnArc(): never {
   console.log(chalk.yellow("  Service registration is not available on Arc yet."));
@@ -358,6 +392,7 @@ program
   .option("-v, --verbose", "Enable verbose logging")
   .option("-n, --network <network>", "arc | arc-testnet (default: $CHAINPE_NETWORK, then config)")
   .option("--facilitator-url <url>", "Override the Circle facilitator URL (advanced)")
+  .option("--rails <rails>", "Payment rails to accept: exact,gateway (default: config, then both)")
   .action(runStart);
 program.command("register").description("Register / update your service on-chain").action(runRegister);
 program.command("deregister").description("Remove your service from the on-chain registry").action(runDeregister);
@@ -377,8 +412,35 @@ program
   .option("-k, --key <privateKey>", "Consumer wallet key (default: $CHAINPE_PRIVATE_KEY)")
   .option("-n, --network <network>", "arc | arc-testnet (default: $CHAINPE_NETWORK or arc-testnet)")
   .option("--max <usdc>", "Max USDC to auto-pay for one call (default 1)")
+  .option("--rail <rail>", "gateway | exact | auto (default auto: Gateway if the deposit covers the price)")
   .option("--raw", "Print only the response body (for piping)")
   .action(runFetchCommand);
+
+program
+  .command("deposit <amount>")
+  .description("Deposit USDC into Gateway as a consumer, to pay with the gateway rail")
+  .option("-k, --key <privateKey>", "Consumer wallet key (default: $CHAINPE_PRIVATE_KEY)")
+  .option("-n, --network <network>", "arc | arc-testnet (default: $CHAINPE_NETWORK or arc-testnet)")
+  .action(runDepositCommand);
+
+program
+  .command("balance")
+  .description("Show the seller's Gateway and on-chain USDC balances")
+  .option("-n, --network <network>", "arc | arc-testnet (default: $CHAINPE_NETWORK, then config)")
+  .action(async (options: { network?: string }) => {
+    const { walletAddress, network } = await sellerContext(options.network);
+    await runBalanceCommand(walletAddress, network);
+  });
+
+program
+  .command("withdraw <amount>")
+  .description("Withdraw the seller's USDC from Gateway to the payout wallet")
+  .option("--chain <name>", "Destination chain as named by Gateway (default: this Arc network)")
+  .option("-n, --network <network>", "arc | arc-testnet (default: $CHAINPE_NETWORK, then config)")
+  .action(async (amount: string, options: { chain?: string; network?: string }) => {
+    const { walletAddress, network } = await sellerContext(options.network);
+    await runWithdrawCommand(amount, walletAddress, network, options.chain);
+  });
 
 program.command("discover").description("Discover services (not available on Arc yet)").action(runDiscoverCommand);
 

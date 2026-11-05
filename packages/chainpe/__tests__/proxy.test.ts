@@ -5,9 +5,14 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { decodePaymentRequiredHeader, decodePaymentResponseHeader } from "@x402/core/http";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
 import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
+import type { FacilitatorClient } from "@x402/core/server";
 import type { SettleResponse } from "@x402/core/types";
+import { BatchEvmScheme, CompositeEvmScheme } from "@circle-fin/x402-batching/client";
 import { analytics, createProxyServer, isLocalRequest } from "../src/proxy/server.js";
 import { SettlementGuard, type CircleClient } from "../src/proxy/circleFacilitator.js";
+import { GatewayGuard, type GatewayTerms, type TransferLookup } from "../src/proxy/gateway.js";
+import { RailRouter } from "../src/proxy/railRouter.js";
+import { railPolicy, spendControlsFor, type RailChoice } from "../src/commands/consume.js";
 import type { ChainPeConfig } from "../src/types.js";
 
 const NETWORK = "eip155:5042002";
@@ -24,6 +29,14 @@ const pending: SettleResponse = {
   payer: buyer.address,
   extensions: { "settlement-status": { status: "pending", paymentId: "pay_1", statusUrl: "/status/pay_1" } },
 };
+
+const TERMS: GatewayTerms = {
+  name: "GatewayWalletBatched",
+  version: "1",
+  verifyingContract: "0x0077777d7eba4688bdef3e311b846f25870a19b9",
+};
+const TRANSFER_ID = "0eecd4bf-15f4-4bea-8eab-284e7385fb4f";
+const accepted: SettleResponse = { success: true, transaction: TRANSFER_ID, network: NETWORK, payer: buyer.address };
 
 const backendCalls: Array<{ url?: string; headers: IncomingHttpHeaders }> = [];
 let backendStatus = 200;
@@ -54,7 +67,12 @@ afterEach(() => {
   analytics.reset();
 });
 
-async function startProxy(client: Partial<CircleClient>, overrides: Partial<ChainPeConfig> = {}): Promise<string> {
+async function startProxy(
+  client: Partial<CircleClient>,
+  overrides: Partial<ChainPeConfig> = {},
+  gatewayClient: Partial<FacilitatorClient> = {},
+  lookup: TransferLookup = async () => []
+): Promise<string> {
   const config: ChainPeConfig = {
     serviceName: "test",
     serviceDescription: "test service",
@@ -67,7 +85,7 @@ async function startProxy(client: Partial<CircleClient>, overrides: Partial<Chai
     network: "arc-testnet",
     ...overrides,
   };
-  const facilitator = new SettlementGuard(
+  const exact = new SettlementGuard(
     {
       verify: vi.fn(),
       getSupported: async () => ({
@@ -79,7 +97,21 @@ async function startProxy(client: Partial<CircleClient>, overrides: Partial<Chai
     } as unknown as CircleClient,
     { pollIntervalMs: 1, pollTimeoutMs: 50 }
   );
-  proxy = http.createServer(createProxyServer({ config, facilitator }));
+  const gateway = new GatewayGuard(
+    {
+      verify: vi.fn(),
+      getSupported: async () => ({
+        kinds: [{ x402Version: 2, scheme: "exact", network: NETWORK, extra: TERMS }],
+        extensions: [],
+        signers: {},
+      }),
+      ...gatewayClient,
+    } as unknown as FacilitatorClient,
+    lookup,
+    { settleTimeoutMs: 50 }
+  );
+  const facilitator = new RailRouter({ exact, gateway });
+  proxy = http.createServer(createProxyServer({ config, facilitator, gateway: TERMS }));
   return `http://localhost:${await listen(proxy)}`;
 }
 
@@ -96,6 +128,206 @@ function payingFetch() {
   });
   return { pay, sent };
 }
+
+/** Pays like `chainpe fetch`: both schemes, with a rail policy. */
+function railFetch(rail: RailChoice, gatewayAvailable = 0n, max = "1") {
+  const sent: string[] = [];
+  const recording: typeof fetch = async (input, init) => {
+    const signature = new Request(input, init).headers.get("payment-signature");
+    if (signature) sent.push(signature);
+    return fetch(input, init);
+  };
+  const client = new CompositeEvmScheme(new BatchEvmScheme(buyer), new ExactEvmScheme(buyer));
+  const pay = wrapFetchWithPaymentFromConfig(recording, {
+    schemes: [{ network: NETWORK, client: client as unknown as ExactEvmScheme }],
+    spendControls: spendControlsFor("arc-testnet", max),
+    policies: [railPolicy(rail, gatewayAvailable)],
+  });
+  return { pay, sent };
+}
+
+const ROUTES: ChainPeConfig["routes"] = [{ path: "GET /cheap", pricePerRequest: "0.001", paymentToken: "USDC" }];
+
+async function acceptsOf(url: string) {
+  const res = await fetch(url);
+  expect(res.status).toBe(402);
+  return decodePaymentRequiredHeader(res.headers.get("payment-required") as string).accepts;
+}
+
+describe("the 402 for each rail", () => {
+  it("lists exact then Gateway on a $0.01 route, with the same price and payTo", async () => {
+    const url = await startProxy({});
+    const accepts = await acceptsOf(`${url}/weather`);
+    expect(accepts).toHaveLength(2);
+    expect(accepts[0]).toMatchObject({ scheme: "exact", network: NETWORK, amount: "10000", payTo: seller, maxTimeoutSeconds: 300 });
+    expect(accepts[0].extra).toEqual({ name: "USDC", version: "2", paymentFlow: "upfront" });
+    expect(accepts[1]).toMatchObject({ scheme: "exact", network: NETWORK, amount: "10000", payTo: seller, maxTimeoutSeconds: 604900 });
+    expect(accepts[1].extra).toEqual({ ...TERMS, paymentFlow: "upfront" });
+  });
+
+  it("lists only Gateway on a $0.001 route", async () => {
+    const url = await startProxy({}, { routes: ROUTES });
+    const accepts = await acceptsOf(`${url}/cheap`);
+    expect(accepts).toHaveLength(1);
+    expect(accepts[0]).toMatchObject({ amount: "1000", extra: { name: "GatewayWalletBatched" } });
+  });
+
+  it("lists one option with rails [exact]", async () => {
+    const url = await startProxy({}, { rails: ["exact"] });
+    const accepts = await acceptsOf(`${url}/weather`);
+    expect(accepts).toHaveLength(1);
+    expect(accepts[0].extra.name).toBe("USDC");
+  });
+
+  it("lists one option with rails [gateway]", async () => {
+    const url = await startProxy({}, { rails: ["gateway"] });
+    const accepts = await acceptsOf(`${url}/weather`);
+    expect(accepts).toHaveLength(1);
+    expect(accepts[0].extra.name).toBe("GatewayWalletBatched");
+  });
+});
+
+describe("--max", () => {
+  it.each(["gateway", "exact"] as const)("stops a %s payment over the cap before it is signed", async (rail) => {
+    const settle = vi.fn();
+    const url = await startProxy({ settle }, {}, { settle });
+    const { pay, sent } = railFetch(rail, 0n, "0.009");
+    await expect(pay(`${url}/weather`)).rejects.toThrow(/maxAmountPerPayment/);
+    expect(sent).toHaveLength(0);
+    expect(settle).not.toHaveBeenCalled();
+    expect(backendCalls).toHaveLength(0);
+  });
+
+  it("allows a payment of exactly the cap", async () => {
+    const url = await startProxy({}, {}, { settle: vi.fn().mockResolvedValue(accepted) });
+    expect((await railFetch("gateway", 0n, "0.01").pay(`${url}/weather`)).status).toBe(200);
+  });
+});
+
+describe("Gateway payments", () => {
+  it("settle through Gateway before forwarding, and never touch Circle's facilitator", async () => {
+    const order: string[] = [];
+    const circleSettle = vi.fn();
+    const settle = vi.fn(async () => {
+      order.push(`settle:${backendCalls.length}`);
+      return accepted;
+    });
+    const url = await startProxy({ settle: circleSettle }, { routes: ROUTES }, { settle });
+
+    const res = await railFetch("gateway").pay(`${url}/cheap`);
+    expect(res.status).toBe(200);
+    expect(order).toEqual(["settle:0"]);
+    expect(backendCalls).toHaveLength(1);
+    expect(circleSettle).not.toHaveBeenCalled();
+    expect(decodePaymentResponseHeader(res.headers.get("payment-response") as string)).toMatchObject({
+      success: true,
+      transaction: TRANSFER_ID,
+    });
+  });
+
+  it("do not pass payment headers to the backend", async () => {
+    const url = await startProxy({}, {}, { settle: vi.fn().mockResolvedValue(accepted) });
+    await railFetch("gateway").pay(`${url}/weather`);
+    expect(backendCalls[0].headers).not.toHaveProperty("payment-signature");
+  });
+
+  it("are recorded as the gateway rail, with the transfer id and no tx hash", async () => {
+    const url = await startProxy({}, {}, { settle: vi.fn().mockResolvedValue(accepted) });
+    await railFetch("gateway").pay(`${url}/weather`);
+    await vi.waitFor(() => expect(analytics.getRecentPayments()).toHaveLength(1));
+
+    const stats = await (await fetch(`${url}/chainpe-admin/stats`)).json();
+    expect(stats.revenue.byRail).toEqual({ exact: "0", gateway: "0.01" });
+    expect(stats.recentPayments[0]).toMatchObject({ rail: "gateway", paymentId: TRANSFER_ID, status: "completed" });
+    expect(stats.recentPayments[0]).not.toHaveProperty("txHash");
+  });
+
+  it("split revenue by rail when both are used", async () => {
+    const url = await startProxy(
+      { settle: vi.fn().mockResolvedValue(settled) },
+      {},
+      { settle: vi.fn().mockResolvedValue(accepted) }
+    );
+    await railFetch("gateway").pay(`${url}/weather`);
+    await railFetch("exact").pay(`${url}/weather`);
+    await vi.waitFor(() => expect(analytics.getRecentPayments()).toHaveLength(2));
+    expect(analytics.getRevenueSummary().byRail).toEqual({ exact: "0.01", gateway: "0.01" });
+    expect(backendCalls).toHaveLength(2);
+  });
+
+  it.each([
+    ["refused", { success: false, errorReason: "insufficient_balance", transaction: "", network: NETWORK }, "insufficient_balance"],
+    ["pending", { success: false, errorReason: "settlement_pending", transaction: "", network: NETWORK }, "settlement_pending"],
+    ["accepted without a transfer id", { success: true, transaction: "", network: NETWORK }, "gateway_not_final"],
+  ])("never reach the backend when %s", async (_name, result, reason) => {
+    const url = await startProxy({}, {}, { settle: vi.fn().mockResolvedValue(result) });
+    const res = await railFetch("gateway").pay(`${url}/weather`);
+    expect(res.status).toBe(402);
+    expect(await res.json()).toMatchObject({ reason });
+    expect(backendCalls).toHaveLength(0);
+  });
+
+  it("never reach the backend when Gateway is unreachable", async () => {
+    const url = await startProxy({}, {}, { settle: vi.fn().mockRejectedValue(new Error("ECONNRESET")) });
+    const res = await railFetch("gateway").pay(`${url}/weather`);
+    expect(res.status).toBe(402);
+    expect(await res.json()).toMatchObject({ reason: "gateway_unavailable" });
+    expect(backendCalls).toHaveLength(0);
+  });
+
+  it("never reach the backend when Gateway hangs", async () => {
+    const url = await startProxy({}, {}, { settle: vi.fn(() => new Promise<never>(() => {})) });
+    const res = await railFetch("gateway").pay(`${url}/weather`);
+    expect(res.status).toBe(402);
+    expect(backendCalls).toHaveLength(0);
+  });
+
+  it("cannot be replayed for a second backend call", async () => {
+    const settle = vi.fn().mockResolvedValue(accepted);
+    const url = await startProxy({}, {}, { settle });
+    const { pay, sent } = railFetch("gateway");
+    expect((await pay(`${url}/weather`)).status).toBe(200);
+
+    const replay = await fetch(`${url}/weather`, { headers: { "payment-signature": sent[0] } });
+    expect(replay.status).toBe(402);
+    expect(await replay.json()).toMatchObject({ reason: "payment_already_used" });
+    expect(backendCalls).toHaveLength(1);
+    expect(settle).toHaveBeenCalledTimes(1);
+  });
+
+  it("are served once when a retry finds a lost response went through", async () => {
+    const settle = vi.fn().mockRejectedValueOnce(new Error("socket hang up")).mockResolvedValue({
+      success: false,
+      errorReason: "nonce_already_used",
+      transaction: "",
+      network: NETWORK,
+    });
+    const lookup = vi.fn<TransferLookup>();
+    const url = await startProxy({}, {}, { settle }, lookup);
+    const { pay, sent } = railFetch("gateway");
+    expect((await pay(`${url}/weather`)).status).toBe(402);
+    expect(backendCalls).toHaveLength(0);
+
+    const { authorization } = JSON.parse(Buffer.from(sent[0], "base64").toString()).payload;
+    lookup.mockResolvedValue([
+      {
+        id: TRANSFER_ID,
+        status: "received",
+        fromAddress: buyer.address,
+        toAddress: seller,
+        amount: "10000",
+        nonce: authorization.nonce,
+      },
+    ]);
+    const retry = await fetch(`${url}/weather`, { headers: { "payment-signature": sent[0] } });
+    expect(retry.status).toBe(200);
+    expect(backendCalls).toHaveLength(1);
+
+    const replay = await fetch(`${url}/weather`, { headers: { "payment-signature": sent[0] } });
+    expect(replay.status).toBe(402);
+    expect(backendCalls).toHaveLength(1);
+  });
+});
 
 describe("unpaid requests", () => {
   it("get a 402 with an Arc testnet exact option and never reach the backend", async () => {
