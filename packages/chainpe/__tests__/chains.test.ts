@@ -1,5 +1,10 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { explorerTxUrl, fromX402Network, getNetwork, parseNetwork } from "../src/chains.js";
+
+const SRC = join(dirname(fileURLToPath(import.meta.url)), "../src");
 
 describe("Arc networks", () => {
   it("defines arc-testnet", () => {
@@ -36,5 +41,13 @@ describe("Arc networks", () => {
 
   it("builds explorer links", () => {
     expect(explorerTxUrl("arc-testnet", "0xabc")).toBe("https://explorer.testnet.arc.io/tx/0xabc");
+  });
+});
+
+describe("Arc-only source", () => {
+  it("has no AVAX strings left", () => {
+    const files = readdirSync(SRC, { recursive: true, encoding: "utf8" }).filter((f) => f.endsWith(".ts"));
+    const hits = files.filter((f) => /\bAVAX\b/.test(readFileSync(join(SRC, f), "utf8")));
+    expect(hits).toEqual([]);
   });
 });

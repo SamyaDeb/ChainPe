@@ -1,26 +1,21 @@
 /**
- * ChainPe Proxy Server (Avalanche C-Chain)
+ * ChainPe Proxy Server
  *
- * x402 payment gateway built on Coinbase's `x402-express` middleware. Every
- * proxied request is gated by a USDC payment (EIP-3009) on Avalanche; once paid
- * and settled by a facilitator, the request is forwarded to the provider's
- * backend.
- *
- * Facilitator modes:
- *   1. External (default): set `facilitatorUrl` (e.g. an Avalanche-capable
- *      facilitator). The provider needs no key — it only receives payments.
- *   2. Local (`--facilitator <privateKey>`): runs an in-process facilitator that
- *      settles on-chain using a funded gas wallet. No external dependency.
+ * x402 v2 payment gateway. Every proxied request is gated by a USDC payment on
+ * Arc; once paid and settled by the facilitator, the request is forwarded to
+ * the provider's backend.
  */
 
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import { createProxyMiddleware, type Options as ProxyOptions } from "http-proxy-middleware";
-import { paymentMiddleware } from "x402-express";
+import type { FacilitatorClient } from "@x402/core/server";
+import { paymentMiddleware, x402ResourceServer } from "@x402/express";
+import { ExactEvmScheme } from "@x402/evm/exact/server";
 
 import type { ChainPeConfig, PaymentEvent, RouteConfig } from "../types.js";
 import { createRoutesConfig, formatRoutesForDisplay } from "./routeConfig.js";
-import { createLocalFacilitatorRouter } from "./localFacilitator.js";
+import { getNetwork } from "../chains.js";
 import { analytics } from "./analytics.js";
 import { logger, logPayment, logRequest, logServerStart } from "../logger.js";
 
@@ -28,17 +23,15 @@ export interface ProxyServerOptions {
   config: ChainPeConfig;
   additionalRoutes?: RouteConfig[];
   onPayment?: (event: PaymentEvent) => void;
-  /** Optional EVM private key to run an in-process facilitator (settles on-chain). */
-  facilitatorKey?: string;
+  /** Settles payments. */
+  facilitator: FacilitatorClient;
 }
 
-const LOCAL_FACILITATOR_PATH = "/chainpe-facilitator";
-
 export function createProxyServer(options: ProxyServerOptions): Express {
-  const { config, additionalRoutes, onPayment, facilitatorKey } = options;
+  const { config, additionalRoutes, onPayment, facilitator } = options;
   const app = express();
 
-  app.use(cors({ exposedHeaders: ["X-PAYMENT-RESPONSE", "X-CHAINPE-AGENT-ID"] }));
+  app.use(cors({ exposedHeaders: ["PAYMENT-REQUIRED", "PAYMENT-RESPONSE", "X-CHAINPE-AGENT-ID"] }));
 
   // Request logging / counting (raw — no body parsing, so proxying is unaffected).
   app.use((req: Request, res: Response, next: NextFunction) => {
@@ -95,52 +88,12 @@ export function createProxyServer(options: ProxyServerOptions): Express {
   });
   app.use("/chainpe-admin", adminRouter);
 
-  // Resolve the facilitator. Local mode mounts an in-process facilitator and
-  // points x402 at it; otherwise use the configured external facilitator URL.
-  let facilitatorUrl = config.facilitatorUrl;
-  if (facilitatorKey) {
-    app.use(LOCAL_FACILITATOR_PATH, createLocalFacilitatorRouter(facilitatorKey, config.network));
-    facilitatorUrl = `http://localhost:${config.proxyPort}${LOCAL_FACILITATOR_PATH}`;
-    logger.info("Using in-process facilitator (settles on-chain with the provided gas key)");
-  } else if (facilitatorUrl) {
-    logger.info(`Using external facilitator: ${facilitatorUrl}`);
-  } else {
-    logger.warn(
-      "No facilitator configured. Payments cannot be settled on Avalanche.\n" +
-        "  Set facilitatorUrl in config, or run `chainpe start --facilitator <privateKey>`."
-    );
-  }
-
-  // 3b: advertise this provider's ERC-8004 agentId on the 402 so consumers can
-  // leave reputation feedback without scanning the whole registry by payTo. The
-  // id is added to the response body (top-level + each accept's `extra`) and an
-  // `X-CHAINPE-AGENT-ID` header.
+  // Advertise this provider's ERC-8004 agentId so consumers can leave reputation
+  // feedback without scanning a registry by payTo.
   const advertisedAgentId = config.agentId ?? process.env.CHAINPE_AGENT_ID;
   if (advertisedAgentId && advertisedAgentId !== "0") {
     app.use((_req: Request, res: Response, next: NextFunction) => {
-      const originalJson = res.json.bind(res);
-      res.json = ((body: unknown) => {
-        if (
-          res.statusCode === 402 &&
-          body !== null &&
-          typeof body === "object" &&
-          Array.isArray((body as { accepts?: unknown }).accepts)
-        ) {
-          res.setHeader("X-CHAINPE-AGENT-ID", advertisedAgentId);
-          const b = body as {
-            agentId?: string;
-            accepts: Array<Record<string, unknown>>;
-          };
-          b.agentId = advertisedAgentId;
-          for (const accept of b.accepts) {
-            accept.extra = {
-              ...((accept.extra as Record<string, unknown>) ?? {}),
-              agentId: advertisedAgentId,
-            };
-          }
-        }
-        return originalJson(body);
-      }) as typeof res.json;
+      res.setHeader("X-CHAINPE-AGENT-ID", advertisedAgentId);
       next();
     });
   }
@@ -153,21 +106,17 @@ export function createProxyServer(options: ProxyServerOptions): Express {
   }
 
   // Payment middleware (gates everything after it).
-  const facilitatorConfig = facilitatorUrl ? { url: facilitatorUrl as `${string}://${string}` } : undefined;
-  app.use(
-    paymentMiddleware(
-      config.walletAddress as `0x${string}`,
-      routesConfig,
-      facilitatorConfig,
-      { appName: config.serviceName }
-    )
+  const resourceServer = new x402ResourceServer(facilitator).register(
+    getNetwork(config.network).caip2,
+    new ExactEvmScheme()
   );
+  app.use(paymentMiddleware(routesConfig, resourceServer));
 
-  // Payment tracking — record successful settlements (x402 sets X-PAYMENT-RESPONSE).
+  // Payment tracking — record successful settlements (x402 sets PAYMENT-RESPONSE).
   app.use((req: Request, res: Response, next: NextFunction) => {
     const originalEnd = res.end.bind(res);
     res.on("finish", () => {
-      const header = res.getHeader("X-PAYMENT-RESPONSE");
+      const header = res.getHeader("PAYMENT-RESPONSE");
       if (header && res.statusCode < 400) {
         let payer = "unknown";
         let txId: string | undefined;

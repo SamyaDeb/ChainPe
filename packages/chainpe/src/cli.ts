@@ -14,6 +14,7 @@ import fs from "fs/promises";
 import path from "path";
 import os from "os";
 import { privateKeyToAccount } from "viem/accounts";
+import { HTTPFacilitatorClient } from "@x402/core/server";
 
 import type { ChainPeConfig, ChainPeNetwork } from "./types.js";
 import { isValidAddress, getUsdcBalance, formatUsdc } from "./evm.js";
@@ -164,7 +165,7 @@ async function runInit(): Promise<void> {
     })
   )) as ChainPeNetwork;
 
-  console.log(chalk.gray("\n  Your wallet address receives all payments. No private key is needed to run the proxy.\n"));
+  console.log(chalk.gray("\n  Your wallet address receives all payments. `chainpe start` needs its key in CHAINPE_SELLER_PRIVATE_KEY.\n"));
   const walletAddress = (await prompt(p.text({ message: "Your Arc wallet address (0x…, receives payments)", placeholder: "0x…", validate: validateWalletAddress }))) as string;
 
   const spinner = ora("Validating wallet address…").start();
@@ -177,13 +178,6 @@ async function runInit(): Promise<void> {
 
   printSection("Server Configuration");
   const proxyPort = await prompt(p.text({ message: "Proxy port", placeholder: "4402", initialValue: "4402", validate: validatePort }));
-  const facilitatorUrl = await prompt(
-    p.text({
-      message: "x402 facilitator URL (optional — leave blank to use --facilitator <key> instead)",
-      placeholder: "https://facilitator.example.com",
-      defaultValue: "",
-    })
-  );
 
   const config: ChainPeConfig = {
     serviceName: serviceName as string,
@@ -195,7 +189,6 @@ async function runInit(): Promise<void> {
     walletAddress: walletAddress,
     proxyPort: parseInt(proxyPort as string, 10),
     network,
-    facilitatorUrl: (facilitatorUrl as string) || process.env.CHAINPE_FACILITATOR_URL || undefined,
     registryAddress: process.env.CHAINPE_REGISTRY_ADDRESS,
     logLevel: "normal",
   };
@@ -225,7 +218,7 @@ async function runInit(): Promise<void> {
 // start
 // ============================================================================
 
-async function runStart(options: { port?: string; verbose?: boolean; facilitator?: string }): Promise<void> {
+async function runStart(options: { port?: string; verbose?: boolean }): Promise<void> {
   printBanner();
   const config = await loadConfig();
   if (!config) {
@@ -237,7 +230,7 @@ async function runStart(options: { port?: string; verbose?: boolean; facilitator
   if (options.port) config.proxyPort = parseInt(options.port, 10);
   setLogLevel(options.verbose ? "verbose" : config.logLevel ?? "normal");
 
-  const facilitatorKey = options.facilitator ?? process.env.CHAINPE_FACILITATOR_KEY;
+  const facilitator = new HTTPFacilitatorClient();
 
   console.log(chalk.gray("  Starting x402 payment gateway…\n"));
   console.log(chalk.gray("  Configuration:"));
@@ -246,11 +239,10 @@ async function runStart(options: { port?: string; verbose?: boolean; facilitator
   console.log(chalk.gray(`    Price:    ${chalk.green(config.pricePerRequest)} USDC`));
   console.log(chalk.gray(`    Wallet:   ${shortAddr(config.walletAddress)}`));
   console.log(chalk.gray(`    Network:  ${chalk.yellow(config.network)}`));
-  console.log(chalk.gray(`    Facilitator: ${chalk.green(facilitatorKey ? "in-process (local)" : config.facilitatorUrl ?? "none configured")}`));
   console.log();
 
   try {
-    await startProxyServer({ config, facilitatorKey });
+    await startProxyServer({ config, facilitator });
     console.log(chalk.gray("  Press Ctrl+C to stop\n"));
     process.on("SIGINT", () => {
       console.log(chalk.yellow("\n  Shutting down…"));
@@ -600,7 +592,6 @@ program
   .description("Start the x402 payment proxy")
   .option("-p, --port <port>", "Override the proxy port")
   .option("-v, --verbose", "Enable verbose logging")
-  .option("-f, --facilitator <privateKey>", "EVM key to run an in-process facilitator (settles on-chain)")
   .action(runStart);
 program.command("register").description("Register / update your service on-chain").action(runRegister);
 program.command("deregister").description("Remove your service from the on-chain registry").action(runDeregister);

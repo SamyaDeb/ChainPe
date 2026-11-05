@@ -52,10 +52,6 @@ export interface ChainPeConfig {
   // feedback without scanning the registry. Override via CHAINPE_AGENT_ID.
   agentId?: string;
 
-  // x402 facilitator URL (verifies + settles payments, pays gas). Optional —
-  // when omitted, `chainpe start --facilitator <key>` runs one in-process.
-  facilitatorUrl?: string;
-
   // Optional settings
   logLevel?: "verbose" | "normal" | "quiet";
   adminKey?: string;
