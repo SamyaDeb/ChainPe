@@ -37,6 +37,19 @@ const RECENT_PAYMENTS_IN_STATS = 10;
 
 const PAYMENT_REQUEST_HEADERS = ["payment-signature", "x-payment"];
 
+const LOOPBACK_ADDRESSES = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
+
+/**
+ * True for a caller on this machine. A forwarded request came through a local
+ * tunnel or reverse proxy, and an Origin means a web page is calling through the
+ * developer's browser (CORS is open), so neither counts as local.
+ */
+export function isLocalRequest(req: Pick<Request, "headers" | "socket">): boolean {
+  const { headers, socket } = req;
+  if (headers.origin || headers.forwarded || headers["x-forwarded-for"]) return false;
+  return LOOPBACK_ADDRESSES.has(socket.remoteAddress ?? "");
+}
+
 /** Builds the event for a request that reached settlement; undefined if it never did. */
 function toPaymentEvent(
   signature: string,
@@ -95,19 +108,18 @@ export function createProxyServer(options: ProxyServerOptions): Express {
     res.json({ status: "ok", service: config.serviceName, uptime: process.uptime() });
   });
 
-  // Admin endpoints (JSON-parsed, optionally key-protected) — not gated.
+  // Admin endpoints expose payer addresses: they need the admin key or a local caller.
   const adminRouter = express.Router();
   adminRouter.use(express.json());
-  if (config.adminKey) {
-    adminRouter.use((req: Request, res: Response, next: NextFunction) => {
-      const apiKey = req.headers["x-admin-key"] || req.query.adminKey;
-      if (apiKey !== config.adminKey) {
-        res.status(401).json({ error: "Unauthorized" });
-        return;
-      }
-      next();
-    });
-  }
+  adminRouter.use((req: Request, res: Response, next: NextFunction) => {
+    const apiKey = req.headers["x-admin-key"] || req.query.adminKey;
+    const hasKey = Boolean(config.adminKey) && apiKey === config.adminKey;
+    if (!hasKey && !isLocalRequest(req)) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    next();
+  });
   adminRouter.get("/stats", (_req: Request, res: Response) => {
     const { totalRequests, paidRequests, failedPayments, requestsPerMinute, lastHourRequests } = analytics.getStats();
     res.json({

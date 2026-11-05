@@ -6,7 +6,7 @@ import { decodePaymentRequiredHeader, decodePaymentResponseHeader } from "@x402/
 import { ExactEvmScheme } from "@x402/evm/exact/client";
 import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
 import type { SettleResponse } from "@x402/core/types";
-import { analytics, createProxyServer } from "../src/proxy/server.js";
+import { analytics, createProxyServer, isLocalRequest } from "../src/proxy/server.js";
 import { SettlementGuard, type CircleClient } from "../src/proxy/circleFacilitator.js";
 import type { ChainPeConfig } from "../src/types.js";
 
@@ -54,7 +54,7 @@ afterEach(() => {
   analytics.reset();
 });
 
-async function startProxy(client: Partial<CircleClient>): Promise<string> {
+async function startProxy(client: Partial<CircleClient>, overrides: Partial<ChainPeConfig> = {}): Promise<string> {
   const config: ChainPeConfig = {
     serviceName: "test",
     serviceDescription: "test service",
@@ -65,6 +65,7 @@ async function startProxy(client: Partial<CircleClient>): Promise<string> {
     walletAddress: seller,
     proxyPort: 0,
     network: "arc-testnet",
+    ...overrides,
   };
   const facilitator = new SettlementGuard(
     {
@@ -251,6 +252,65 @@ describe("paid requests", () => {
     const res = await payingFetch().pay(`${url}/weather`);
     expect(res.status).toBe(500);
     expect(decodePaymentResponseHeader(res.headers.get("payment-response") as string).transaction).toBe(TX);
+  });
+});
+
+describe("isLocalRequest", () => {
+  const request = (remoteAddress: string, headers = {}) =>
+    ({ headers, socket: { remoteAddress } }) as Parameters<typeof isLocalRequest>[0];
+
+  it("accepts loopback in every form Node reports it", () => {
+    for (const address of ["127.0.0.1", "::1", "::ffff:127.0.0.1"]) {
+      expect(isLocalRequest(request(address))).toBe(true);
+    }
+  });
+
+  it("refuses other addresses", () => {
+    expect(isLocalRequest(request("203.0.113.7"))).toBe(false);
+    expect(isLocalRequest(request("::ffff:203.0.113.7"))).toBe(false);
+  });
+
+  it("refuses a request forwarded by a local tunnel or proxy", () => {
+    expect(isLocalRequest(request("127.0.0.1", { "x-forwarded-for": "203.0.113.7" }))).toBe(false);
+    expect(isLocalRequest(request("127.0.0.1", { forwarded: "for=203.0.113.7" }))).toBe(false);
+  });
+
+  it("refuses a web page calling through the local browser", () => {
+    expect(isLocalRequest(request("127.0.0.1", { origin: "https://evil.example" }))).toBe(false);
+  });
+});
+
+describe("/chainpe-admin access", () => {
+  const remote = { "x-forwarded-for": "203.0.113.7" };
+
+  it("lets a loopback caller in without a key", async () => {
+    const url = await startProxy({});
+    expect((await fetch(`${url}/chainpe-admin/payments`)).status).toBe(200);
+  });
+
+  it("refuses a remote caller when no adminKey is set", async () => {
+    const url = await startProxy({});
+    for (const path of ["stats", "payments", "config", "schema"]) {
+      expect((await fetch(`${url}/chainpe-admin/${path}`, { headers: remote })).status).toBe(401);
+    }
+  });
+
+  it("does not treat an empty key as a key when none is set", async () => {
+    const url = await startProxy({});
+    const res = await fetch(`${url}/chainpe-admin/stats`, { headers: { ...remote, "x-admin-key": "" } });
+    expect(res.status).toBe(401);
+  });
+
+  it("lets a remote caller in with the adminKey, and only with it", async () => {
+    const url = await startProxy({}, { adminKey: "secret" });
+    const stats = `${url}/chainpe-admin/stats`;
+    expect((await fetch(stats, { headers: { ...remote, "x-admin-key": "secret" } })).status).toBe(200);
+    expect((await fetch(stats, { headers: { ...remote, "x-admin-key": "wrong" } })).status).toBe(401);
+  });
+
+  it("keeps /health public", async () => {
+    const url = await startProxy({});
+    expect((await fetch(`${url}/health`, { headers: remote })).status).toBe(200);
   });
 });
 
