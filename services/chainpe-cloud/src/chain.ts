@@ -2,7 +2,7 @@
  * Everything the API reads from Arc, behind one interface so tests can stand in
  * for the RPC. Failures throw: a caller must never read one as "not registered".
  */
-import { createPublicClient, http, parseAbi, type PublicClient } from 'viem'
+import { BaseError, ContractFunctionRevertedError, createPublicClient, http, parseAbi, type PublicClient } from 'viem'
 import { chainPeAccountsAbi } from './accountsAbi.js'
 import type { Env } from './config.js'
 
@@ -76,14 +76,20 @@ export function createChainReader(
       }
     },
     async serviceProvider(key) {
-      const service = await client.readContract({
-        address: accounts,
-        abi: chainPeAccountsAbi,
-        functionName: 'getService',
-        args: [key],
-      })
-      const provider = service.provider.toLowerCase()
-      return provider === ZERO ? null : provider
+      try {
+        const service = await client.readContract({
+          address: accounts,
+          abi: chainPeAccountsAbi,
+          functionName: 'getService',
+          args: [key],
+        })
+        const provider = service.provider.toLowerCase()
+        return provider === ZERO ? null : provider
+      } catch (err) {
+        // An unknown key reverts. That is an answer, not an outage.
+        if (isRevert(err)) return null
+        throw err
+      }
     },
     verifySiwe({ message, signature, domain, nonce, address, time }) {
       return client.verifySiweMessage({ message, signature, domain, nonce, address, time })
@@ -91,6 +97,7 @@ export function createChainReader(
   }
 }
 
-function isRevert(err: unknown): boolean {
-  return err instanceof Error && err.name === 'ContractFunctionExecutionError' && /revert/i.test(err.message)
+/** A call the chain answered by reverting. A network failure or a 429 is not one, and must keep throwing. */
+export function isRevert(err: unknown): boolean {
+  return err instanceof BaseError && err.walk((e) => e instanceof ContractFunctionRevertedError) instanceof ContractFunctionRevertedError
 }
