@@ -57,7 +57,7 @@ export function CtaSection() {
                 </h2>
 
                 <p className="text-xl text-muted-foreground mb-12 leading-relaxed max-w-xl">
-                  Join the Avalanche agent economy. One SDK, three lines of code, sub-cent settlement.
+                  Put a price on your API today. One command, USDC on Arc, and no cut taken.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-start gap-4">
@@ -75,7 +75,7 @@ export function CtaSection() {
                 </div>
 
                 <p className="text-sm text-muted-foreground mt-8 font-mono">
-                  npm install @chainpeavax/sdk
+                  git clone github.com/SamyaDeb/ChainPeAvax
                 </p>
               </div>
 

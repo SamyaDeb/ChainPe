@@ -105,6 +105,21 @@ export async function seedProvider(h: Harness, opts: { pro?: boolean; agentId?: 
       blockTs: new Date(Date.now() - 10_000),
       txHash: hex32(id, 'e'),
     })
+    // Unsolicited: BUYER2's only payment failed, so this must not count as a payer's rating.
+    await db.insert(feedback).values({
+      agentId: opts.agentId.toString(),
+      client: BUYER2,
+      feedbackIndex: 1n,
+      value: '40',
+      valueDecimals: 0,
+      tag1: 'patrol',
+      tag2: '',
+      endpoint: '',
+      feedbackUri: '',
+      block: 70918901n,
+      blockTs: new Date(Date.now() - 5_000),
+      txHash: hex32(id, 'f'),
+    })
   }
   await request(h.app).put('/v1/me/wallets').set(...auth(token)).send({ wallets: [`0x${id.toString(16).padStart(40, 'f')}`] }).expect(200)
 

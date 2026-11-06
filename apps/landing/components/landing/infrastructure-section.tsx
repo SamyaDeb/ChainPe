@@ -3,12 +3,12 @@
 import { useEffect, useState, useRef } from "react";
 
 const locations = [
-  { city: "Avalanche C-Chain", region: "Primary Settlement", latency: "~1.2s" },
-  { city: "Mainnet", region: "Development", latency: "~1.5s" },
-  { city: "ICM Subnet A", region: "Cross-L1", latency: "~2.1s" },
-  { city: "ICM Subnet B", region: "Cross-L1", latency: "~2.3s" },
-  { city: "Railway (Facilitator)", region: "Settlement Service", latency: "<100ms" },
-  { city: "Railway (Indexer)", region: "Discovery API", latency: "<50ms" },
+  { city: "Arc testnet", region: "Settlement network", latency: "chain 5042002" },
+  { city: "Circle Facilitator", region: "Normal x402 payments", latency: "settles on Arc" },
+  { city: "Circle Gateway", region: "Nanopayments", latency: "batched" },
+  { city: "ChainPeAccounts", region: "Provider accounts", latency: "verified source" },
+  { city: "Demo seller", region: "Live paid API", latency: "Railway" },
+  { city: "chainpe-cloud", region: "Verified revenue API", latency: "Railway" },
 ];
 
 export function InfrastructureSection() {
@@ -50,27 +50,27 @@ export function InfrastructureSection() {
               Infrastructure
             </span>
             <h2 className="text-4xl lg:text-6xl font-display tracking-tight mb-8">
-              Avalanche-native
+              Arc-native
               <br />
               by design.
             </h2>
             <p className="text-xl text-muted-foreground leading-relaxed mb-12">
-              Sub-cent settlement, ~1–2s deterministic finality, and native Circle USDC 
-              make pay-per-request economics real. Plus cross-L1 hiring over ICM/Teleporter.
+              Sub-second finality, gas paid in USDC, and settlement by Circle 
+              make pay-per-request pricing practical. Plus Gateway nanopayments for prices below one cent.
             </p>
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-8">
               <div>
-                <div className="text-4xl lg:text-5xl font-display mb-2">$0.003</div>
-                <div className="text-sm text-muted-foreground">Per settlement</div>
+                <div className="text-4xl lg:text-5xl font-display mb-2">USDC</div>
+                <div className="text-sm text-muted-foreground">Gas token</div>
               </div>
               <div>
-                <div className="text-4xl lg:text-5xl font-display mb-2">~1–2s</div>
+                <div className="text-4xl lg:text-5xl font-display mb-2">&lt;1s</div>
                 <div className="text-sm text-muted-foreground">Finality</div>
               </div>
               <div>
-                <div className="text-4xl lg:text-5xl font-display mb-2">44</div>
+                <div className="text-4xl lg:text-5xl font-display mb-2">101</div>
                 <div className="text-sm text-muted-foreground">Contract tests</div>
               </div>
             </div>
@@ -85,10 +85,10 @@ export function InfrastructureSection() {
             <div className="border border-foreground/10">
               {/* Header */}
               <div className="px-6 py-4 border-b border-foreground/10 flex items-center justify-between">
-                <span className="text-sm font-mono text-muted-foreground">Network Status</span>
+                <span className="text-sm font-mono text-muted-foreground">What runs where</span>
                 <span className="flex items-center gap-2 text-xs font-mono text-green-600">
                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  All operational
+                  Arc testnet
                 </span>
               </div>
 

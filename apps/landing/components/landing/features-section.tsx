@@ -6,25 +6,25 @@ const features = [
   {
     number: "01",
     title: "x402 Payment Protocol",
-    description: "Any HTTP endpoint returns 402 Payment Required with a USDC price. Consumers auto-pay with a signed EIP-3009 transfer. A non-custodial facilitator settles on Avalanche C-Chain.",
+    description: "Any HTTP endpoint answers 402 Payment Required with a USDC price. The buyer signs a payment, and Circle's facilitator settles it on Arc before your API runs.",
     visual: "deploy",
   },
   {
     number: "02",
     title: "On-chain Reputation (ERC-8004)",
-    description: "Every paid call lets the payer rate the service 1–5 ⭐. Scores are portable, permissionless, and self-feedback-resistant. Agents discover services ranked by reputation.",
+    description: "Each service gets an identity on Arc's ERC-8004 registry. Payers rate it after a call, and your dashboard shows ratings from real payers first.",
     visual: "ai",
   },
   {
     number: "03",
-    title: "Gasless Policy Spending",
-    description: "PolicyVault lets owners set on-chain limits — maxPerCall, dailyCap, totalBudget, expiry, allowlist — and grant session keys. Agents sign spends gaslessly; over-cap reverts on-chain.",
+    title: "Gateway Nanopayments",
+    description: "Buyers can pay from a Circle Gateway balance, with no gas and prices below one cent. Circle settles these payments in batches on Arc.",
     visual: "collab",
   },
   {
     number: "04",
-    title: "Cross-L1 Hiring via ICM",
-    description: "An agent on one Avalanche L1 can hire a service on another via Teleporter — no bridges, no wrapped tokens. Truly cross-chain agent collaboration.",
+    title: "Your Own Dashboard",
+    description: "Register once and sign in with your wallet. See your revenue, buyers and ratings, each checked against Arc and Circle's own records.",
     visual: "security",
   },
 ];
@@ -334,7 +334,7 @@ export function FeaturesSection() {
           >
             One core, many surfaces.
             <br />
-            <span className="text-muted-foreground">All on Avalanche.</span>
+            <span className="text-muted-foreground">All on Arc.</span>
           </h2>
         </div>
 

@@ -1,0 +1,36 @@
+{
+  "agentId": "4217",
+  "agentIdStatus": "owned",
+  "payerAverage": "95.00",
+  "payerCount": 1,
+  "allAverage": "67.50",
+  "allCount": 2,
+  "items": [
+    {
+      "client": "0x1111111111111111111111111111111111111111",
+      "feedbackIndex": "1",
+      "value": "40",
+      "valueDecimals": 0,
+      "tag1": "patrol",
+      "tag2": "",
+      "endpoint": "",
+      "feedbackUri": "",
+      "blockTs": "2026-11-06T04:47:43.479Z",
+      "txHash": "0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff3e8",
+      "fromPayer": false
+    },
+    {
+      "client": "0x24BC730c658201bC51873f7aeAaDE65A545c7A11",
+      "feedbackIndex": "1",
+      "value": "95",
+      "valueDecimals": 0,
+      "tag1": "x402",
+      "tag2": "/marker-route-1000",
+      "endpoint": "https://weather.example.com",
+      "feedbackUri": "",
+      "blockTs": "2026-11-06T04:47:38.478Z",
+      "txHash": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee3e8",
+      "fromPayer": true
+    }
+  ]
+}

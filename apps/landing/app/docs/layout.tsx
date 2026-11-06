@@ -11,7 +11,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         tree={source.pageTree} 
         nav={{ title: <span className="font-[family-name:var(--font-poppins)] font-semibold tracking-normal text-[22px]">ChainPe Docs</span> }} 
         themeSwitch={{ enabled: false }}
-        githubUrl="https://github.com/SamyaDeb/ChainPe"
+        githubUrl="https://github.com/SamyaDeb/ChainPeAvax"
       >
         {children}
       </DocsLayout>

@@ -5,12 +5,12 @@ import WaitlistForm from '@/components/marketing/WaitlistForm'
 export const metadata: Metadata = {
   title: 'ChainPe | AI Agent Marketplace on Avalanche',
   description:
-    'ChainPe lets AI agents pay for APIs autonomously using Avalanche micropayments — no human approval, no subscriptions, just pay-per-request with native AVAX.',
+    'ChainPe lets AI agents pay for APIs autonomously using Avalanche micropayments — no human approval, no subscriptions, just pay-per-request in USDC.',
 }
 
 const features = [
   { title: 'x402 Protocol', desc: 'Real HTTP 402 "Payment Required" implementation — how the web was designed to handle payments' },
-  { title: 'native AVAX', desc: 'Pure native payments, no wrapped tokens or bridges. Near-zero fees make micropayments viable' },
+  { title: 'USDC payments', desc: 'Prices in dollars, paid in Circle USDC with a signed EIP-3009 transfer. Near-zero fees make micropayments viable' },
   { title: 'sub-second finality', desc: 'Avalanche confirms in about 1 second. Agents can\'t wait 10 minutes for Bitcoin confirmations' },
   { title: 'AI SDK Integration', desc: 'Built on Vercel AI SDK, works with any LLM. npm install and you\'re paying for APIs' },
   { title: 'Direct Settlement', desc: 'Providers get paid directly to their Avalanche wallet. No intermediary holds funds' },
@@ -84,14 +84,14 @@ const useCases = [
       </svg>
     ),
     title: 'Any API, Any Agent',
-    desc: 'Turn any API into a paid service. Turn any AI agent into a paying customer. Powered by AVAX.',
+    desc: 'Turn any API into a paid service. Turn any AI agent into a paying customer. Paid in USDC.',
   },
 ]
 
 const faqs = [
   {
     q: 'What is ChainPe?',
-    a: 'ChainPe is an AI Agent Marketplace on Avalanche that uses the x402 payment protocol. It enables AI agents to autonomously discover services, pay for them with native AVAX micropayments, and receive results — all without human intervention.',
+    a: 'ChainPe is an AI Agent Marketplace on Avalanche that uses the x402 payment protocol. It enables AI agents to autonomously discover services, pay for them with USDC micropayments, and receive results — all without human intervention.',
   },
   {
     q: 'Why not just use Stripe?',
@@ -133,7 +133,7 @@ export default function LandingPage() {
             The payment rail for<br />the <span className="highlight">AI economy</span>
           </h1>
           <p className="hero-subtitle">
-            AI agents discover services, pay in native AVAX, and get results &mdash; all in one
+            AI agents discover services, pay in USDC, and get results &mdash; all in one
             autonomous flow. No human in the loop. No subscriptions. Pay only for what you use.
           </p>
           <InstallBox />
@@ -171,7 +171,7 @@ export default function LandingPage() {
           <h2 className="section-title">What is ChainPe?</h2>
           <p className="section-description">
             ChainPe is an AI Agent Marketplace on Avalanche using the x402 payment protocol. Agents
-            discover services, pay in native AVAX, and get results &mdash; all in one autonomous flow.
+            discover services, pay in USDC, and get results &mdash; all in one autonomous flow.
           </p>
           <div className="features-list">
             {features.map(f => (
@@ -270,7 +270,7 @@ export default function LandingPage() {
         <div className="container">
           <h2 className="section-title">Be the first to know when we launch</h2>
           <p className="section-description">
-            We&apos;ve built the SDK, the proxy, and the agent. The x402 flow works with real AVAX.
+            We&apos;ve built the SDK, the proxy, and the agent. The x402 flow works with real USDC.
             We&apos;re ready to onboard API providers and agent developers.
           </p>
           <WaitlistForm />

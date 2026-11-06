@@ -4,50 +4,48 @@ import { ArrowRight, Check } from "lucide-react";
 
 const plans = [
   {
-    name: "Mainnet",
-    description: "For development and testing",
+    name: "Open source",
+    description: "CLI, proxy and SDK",
     price: "Free",
     period: "forever",
     features: [
-      "Mainnet support",
-      "Unlimited mainnet transactions",
-      "Mock facilitator for local dev",
-      "Community Discord support",
-      "Full API access",
+      "One-command x402 proxy",
+      "Normal x402 and Gateway nanopayments",
+      "Settled by Circle on Arc",
+      "chainpe doctor listing checks",
+      "MIT licensed",
     ],
-    cta: "Start building",
+    cta: "View GitHub",
     popular: false,
   },
   {
-    name: "Production",
-    description: "Pay-as-you-go on mainnet",
-    price: "$0.003",
-    period: "per settlement",
+    name: "Dashboard Pro",
+    description: "Paid in USDC on Arc",
+    price: "19 USDC",
+    period: "per 30 days",
     features: [
-      "Avalanche C-Chain",
-      "Native USDC settlement",
-      "Non-custodial processing",
-      "On-chain reputation (ERC-8004)",
-      "High-availability facilitator RPC",
-      "Sub-second discovery API",
+      "Up to 10 services",
+      "Full history and CSV export",
+      "Revenue by route, payment type and buyer",
+      "Every rating, with the payer-only average",
+      "Listing health history",
     ],
-    cta: "Deploy to Mainnet",
+    cta: "Upgrade in the dashboard",
     popular: true,
   },
   {
-    name: "Self-Hosted",
-    description: "Run your own infrastructure",
-    price: "Open",
-    period: "source",
+    name: "Dashboard Free",
+    description: "For every registered provider",
+    price: "Free",
+    period: "forever",
     features: [
-      "Everything in Production",
-      "Zero facilitator fees",
-      "Host your own indexer",
-      "Custom ERC-20 token support",
-      "Direct smart contract access",
-      "Self-managed RPC endpoints",
+      "1 service",
+      "Last 7 days of revenue",
+      "Verified and unverified totals",
+      "Top 5 buyers",
+      "Average rating",
     ],
-    cta: "View GitHub",
+    cta: "Register a provider",
     popular: false,
   },
 ];
@@ -62,12 +60,12 @@ export function PricingSection() {
             Pricing
           </span>
           <h2 className="font-display text-5xl md:text-6xl lg:text-7xl tracking-tight text-foreground mb-6">
-            Pay per request.
+            Keep 100% of
             <br />
-            <span className="text-stroke">No subscriptions.</span>
+            <span className="text-stroke">what agents pay.</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl">
-            A sustainable model for the agent economy. Only pay when your agents successfully transact.
+            ChainPe takes no cut. Buyers pay your wallet directly. You only pay if you want the Pro dashboard (1 USDC on testnet).
           </p>
         </div>
 
@@ -82,7 +80,7 @@ export function PricingSection() {
             >
               {plan.popular && (
                 <span className="absolute -top-3 left-8 px-3 py-1 bg-foreground text-primary-foreground text-xs font-mono uppercase tracking-widest">
-                  Mainnet Default
+                  Pro
                 </span>
               )}
 
@@ -132,9 +130,9 @@ export function PricingSection() {
 
         {/* Bottom Note */}
         <p className="mt-12 text-center text-sm text-muted-foreground">
-          Note: Network gas fees on Avalanche C-Chain still apply.{" "}
-          <a href="#" className="underline underline-offset-4 hover:text-foreground transition-colors">
-            Read fee mechanics
+          Note: on Arc, gas is paid in USDC. Circle's facilitator pays settlement gas; Gateway withdrawals carry a small fee.{" "}
+          <a href="https://github.com/SamyaDeb/ChainPeAvax/blob/arc/docs/arc/BUSINESS-MODEL.md" className="underline underline-offset-4 hover:text-foreground transition-colors">
+            Read the business model
           </a>
         </p>
       </div>

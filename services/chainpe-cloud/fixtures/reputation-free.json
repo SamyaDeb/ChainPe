@@ -1,7 +1,9 @@
 {
   "agentId": "4218",
   "agentIdStatus": "owned",
-  "average": "95.00",
-  "count": 1,
+  "payerAverage": "95.00",
+  "payerCount": 1,
+  "allAverage": "67.50",
+  "allCount": 2,
   "items": null
 }

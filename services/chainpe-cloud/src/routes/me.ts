@@ -303,41 +303,83 @@ export function meRoutes({ db, views, sessions, readLimit, now = Date.now }: MeO
 
   router.get('/me/reputation', async (req, res) => {
     const view = await views.get(req.provider!)
-    const empty = { agentId: null, agentIdStatus: view.agentIdStatus, average: null, count: 0, items: view.plan === 'pro' ? [] : null }
+    const empty = {
+      agentId: null,
+      agentIdStatus: view.agentIdStatus,
+      payerAverage: null,
+      payerCount: 0,
+      allAverage: null,
+      allCount: 0,
+      items: view.plan === 'pro' ? [] : null,
+    }
     // Attributed only while the token is still this provider's (review L-1).
     if (view.agentIdStatus !== 'owned' || !view.agentId) {
       res.json(empty)
       return
     }
     const agentId = view.agentId
+    // Anyone can rate an agent (spec 08a section 12). A rating counts as a payer's only if
+    // that wallet has a verified payment here. Self-pay does not count: a provider must not
+    // be able to raise this figure by paying itself from a declared wallet.
+    const fromPayer = sql<boolean>`EXISTS (
+      SELECT 1 FROM ${paymentEvents} p
+      WHERE p.provider = ${req.provider!} AND p.payer = f.client AND p.verification = 'verified' AND NOT p.self_pay
+    )`
+    const score = sql`f.value / POWER(10::numeric, f.value_decimals)`
     const [stats] = (
-      await db.execute<{ average: string | null; count: string }>(sql`
-        SELECT ROUND(AVG(f.value / POWER(10::numeric, f.value_decimals)), 2)::text AS average, COUNT(*)::text AS count
+      await db.execute<{ payer_average: string | null; payer_count: string; all_average: string | null; all_count: string }>(sql`
+        SELECT
+          ROUND(AVG(${score}) FILTER (WHERE ${fromPayer}), 2)::text AS payer_average,
+          (COUNT(*) FILTER (WHERE ${fromPayer}))::text AS payer_count,
+          ROUND(AVG(${score}), 2)::text AS all_average,
+          COUNT(*)::text AS all_count
         FROM ${feedback} f WHERE f.agent_id = ${agentId} AND NOT f.revoked
       `)
     ).rows
     let items = null
     if (view.plan === 'pro') {
-      const rows = await db
-        .select()
-        .from(feedback)
-        .where(and(eq(feedback.agentId, agentId), eq(feedback.revoked, false)))
-        .orderBy(desc(feedback.block), desc(feedback.feedbackIndex))
-        .limit(200)
-      items = rows.map((f) => ({
+      const rows = await db.execute<{
+        client: string
+        feedback_index: string
+        value: string
+        value_decimals: number
+        tag1: string | null
+        tag2: string | null
+        endpoint: string | null
+        feedback_uri: string | null
+        block_ts: Date | string
+        tx_hash: string
+        from_payer: boolean
+      }>(sql`
+        SELECT f.client, f.feedback_index::text AS feedback_index, f.value::text AS value, f.value_decimals, f.tag1, f.tag2,
+          f.endpoint, f.feedback_uri, f.block_ts, f.tx_hash, ${fromPayer} AS from_payer
+        FROM ${feedback} f WHERE f.agent_id = ${agentId} AND NOT f.revoked
+        ORDER BY f.block DESC, f.feedback_index DESC
+        LIMIT 200
+      `)
+      items = rows.rows.map((f) => ({
         client: getAddress(f.client),
-        feedbackIndex: f.feedbackIndex.toString(),
+        feedbackIndex: f.feedback_index,
         value: f.value,
-        valueDecimals: f.valueDecimals,
+        valueDecimals: f.value_decimals,
         tag1: f.tag1,
         tag2: f.tag2,
         endpoint: f.endpoint,
-        feedbackUri: f.feedbackUri,
-        blockTs: f.blockTs.toISOString(),
-        txHash: f.txHash,
+        feedbackUri: f.feedback_uri,
+        blockTs: new Date(f.block_ts).toISOString(),
+        txHash: f.tx_hash,
+        fromPayer: f.from_payer,
       }))
     }
-    res.json({ agentId, agentIdStatus: view.agentIdStatus, average: stats.average, count: Number(stats.count), items })
+    res.json({
+      agentId,
+      agentIdStatus: view.agentIdStatus,
+      payerAverage: stats.payer_average,
+      payerCount: Number(stats.payer_count),
+      allAverage: stats.all_average,
+      allCount: Number(stats.all_count),
+      items,
+    })
   })
 
   router.get('/me/health', async (req, res) => {
