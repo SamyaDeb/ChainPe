@@ -9,19 +9,20 @@ portable across every Arc agent.
 | Reputation | `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63` | `0x8004B663056A597Dffe9eCcC1965A193B7388713` |
 | Validation | `0x8004Cc8439f36fd5F9F049D9fF86523Df6dAAB58` | `0x8004Cb1BF31DAf7788923b405b754f57acEB4272` |
 
-**VERIFY** before coding: compare the canonical ABIs (explorer "Contract" tab or Arc docs MCP) with
-`contracts/abis/erc8004/*.json`. Our Avalanche copies are the reference contracts, so they should match;
-if a function signature differs, add an Arc ABI file instead of editing the shared one.
+**Verified 2026-11-06, Identity only:** the live testnet implementation `0x7274e874…9c02` matches
+`contracts/abis/erc8004/IdentityRegistry.json`, and only adds `isAuthorizedOrOwner`. Compare the Reputation ABI in Phase 7.
 
-## `chainpe identity`
+## `chainpe identity [--agent-id <id>] [--update-uri] [--new]`
 
-1. If config has `agentId` and `ownerOf(agentId) == seller`, print it and exit.
-2. Build agent card JSON: `{ name, description, endpoint, x402: { networks, rails, priceUsd }, chainpe: { serviceKey } }`.
-3. Host it: served by the proxy at `/.well-known/agent.json`; `agentURI` = that URL (or IPFS if `--ipfs`).
-4. `register(agentURI)` on the IdentityRegistry; read `agentId` from the `Registered`/`Transfer` log (existing `packages/chainpe/src/erc8004.ts` logic).
-5. Save `agentId`; `chainpe register` reuses it.
+1. `agentId` in config (or `--agent-id`): require `ownerOf(agentId) == seller`. If not, stop with an explanation. Never mint over it.
+2. No `agentId` and `balanceOf(seller) > 0`: recover the id through the explorer (`/api/v2/addresses/{addr}/nft?type=ERC-721`), confirmed with `ownerOf`. One token: use it. Several, or the explorer is down: stop and ask for `--agent-id`. The registry is not enumerable and the public RPC refuses long `eth_getLogs` ranges, so the explorer is the only practical lookup.
+3. `balanceOf == 0`: `register(<publicUrl>/.well-known/agent.json)`, read `agentId` from `Registered`, save it at once. `--new` mints another on purpose.
+4. Token URI differs from the expected URL: report it. `--update-uri` calls `setAgentURI`.
 
-Reuse `packages/chainpe/src/erc8004.ts` with network-aware addresses.
+An RPC failure stops the command: it must never read as "this wallet has no identity", because a duplicate splits reputation.
+`agentId` 0 cannot be linked, since `ChainPeAccounts` reads 0 as "no identity".
+
+**Agent card**, served by the proxy at `/.well-known/agent.json`: `{ name, description, agent_type, capabilities, version, endpoint, x402: { networks, rails, priceUsd }, chainpe: { serviceKey } }`. Arc's docs leave these fields to the application; `agent_type`, `capabilities` and `version` follow the Arc tutorial. `--ipfs` is deferred: the card changes with the config, and pinning needs a provider key.
 
 ## Feedback
 

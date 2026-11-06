@@ -108,11 +108,19 @@ zero constructor args revert · `renounceOwnership` reverts.
 
 ## CLI (`chainpe register` on `arc*`)
 
+The command reads first and sends only what is missing, so a failed run resumes and a run with nothing to do sends no transaction.
+
 1. Ensure ERC-8004 identity (spec 10) → `agentId`.
-2. `registerProvider(agentId)` if `providers(addr).exists == false`.
-3. `registerService` from config; network = CAIP-2; rails from config.
-4. Print key, tx hashes, explorer links, and the dashboard URL.
-`chainpe plan` prints plan + `paidUntil`; `chainpe upgrade --periods 1` does `approve` + `subscribe` (key local).
+2. No provider: `registerProvider(agentId)`. Provider with another `agentId`: `setAgentId(agentId)`.
+3. Service absent or inactive: `registerService` (needs a free slot). Active and different, including a stale `agentId` snapshot: `updateService`. Active and identical: nothing.
+4. Print key, tx hashes, explorer links, and the dashboard URL if `CHAINPE_DASHBOARD_URL` is set.
+
+`endpoint` is the config's `publicUrl`, never `targetUrl`: publishing the backend would let buyers skip payment, permanently.
+`publicUrl` must be https (`--allow-http` on testnet only), not a private host, and not the backend's origin. Hostnames are checked as
+written, so a public name that resolves to a private address is not caught. `acceptsExact` follows the same rule as the 402: only at $0.01 or more.
+
+`chainpe plan` prints plan + `paidUntil`. `chainpe upgrade --periods 1` asks to confirm (`--yes` skips), approves exactly `price * periods`, subscribes, and checks `paidUntil` moved (key local).
+`chainpe list` shows active services (`--all`, `--mine`, `--json`), reads 25 per page, and strips control characters: on-chain strings are untrusted.
 
 ## Acceptance
 

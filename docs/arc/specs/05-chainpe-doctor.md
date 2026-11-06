@@ -35,7 +35,14 @@ Keep each example under 1.5 KB (larger samples are dropped by common indexers).
 | 11 | Test payment settles and backend answers 2xx (optional `--pay`, uses buyer key) |
 | 12 | Service visible in Circle Discovery API (`?payTo=<wallet>`, matching `resource` exactly) — info only; listing is manual |
 
-Output: table + score; `--json` for the dashboard; exits 1 if any required check fails.
+Files are named after the config (`arc-testnet.openapi.json`, `.x402.json`, `.discovery.json`, `.samples.json`). Doctor writes them when
+missing and keeps them otherwise, so an edit shows up as drift; `--regenerate`, `--sample` and `--pay` overwrite them. The proxy answers these
+paths and `/.well-known/agent.json` itself, on GET and HEAD only, and never forwards them to the backend.
+
+Each check is `pass`, `warn`, `fail`, `unknown`, `skip` or `info`. `unknown` means it could not get an answer (RPC or network): never a pass,
+and never reported as "not registered". Required: 1-4, 6, 7, 9, 10, and 11 when `--pay` ran. 5 and 8 only warn, 12 is info. Doctor needs no key, except `--pay`.
+
+Output: table + score; `--json` for the dashboard; exits 1 if any required check fails or is unknown. `allGreen` in the report is true only if everything that ran passed.
 On success print the Circle "Get listed" intake fields: endpoint URL, payout wallet, description,
 OpenAPI URL. Heartbeat sends the JSON result to chainpe-cloud (spec 08).
 
