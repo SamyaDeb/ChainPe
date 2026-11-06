@@ -350,8 +350,8 @@ describe("unpaid requests", () => {
 describe("free paths", () => {
   it("skip payment for discovery documents and OPTIONS", async () => {
     const url = await startProxy({});
-    expect((await fetch(`${url}/.well-known/x402`)).status).toBe(200);
-    expect((await fetch(`${url}/openapi.json`)).status).toBe(200);
+    expect((await fetch(`${url}/.well-known/x402`)).status).not.toBe(402);
+    expect((await fetch(`${url}/openapi.json`)).status).not.toBe(402);
     expect((await fetch(`${url}/weather`, { method: "OPTIONS" })).status).toBeLessThan(300);
     expect((await fetch(`${url}/chainpe-admin/stats`)).status).toBe(200);
   });

@@ -6,6 +6,7 @@
  * next(): the backend is reached only after settlement has completed.
  */
 
+import fs from "fs/promises";
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import { createProxyMiddleware, type Options as ProxyOptions } from "http-proxy-middleware";
@@ -17,7 +18,9 @@ import { isBatchPayment } from "@circle-fin/x402-batching/server";
 
 import type { ChainPeConfig, PaymentEvent, RouteConfig } from "../types.js";
 import { createRoutesConfig, formatRoutesForDisplay } from "./routeConfig.js";
+import { buildAgentCard } from "../agentCard.js";
 import { getNetwork } from "../chains.js";
+import { AGENT_CARD_PATH } from "../erc8004.js";
 import { formatUsdc } from "../evm.js";
 import { analytics } from "./analytics.js";
 import { paymentIdentifierFor } from "./circleFacilitator.js";
@@ -32,10 +35,9 @@ export interface ProxyServerOptions {
   facilitator: FacilitatorClient;
   /** Needed when the gateway rail is enabled. */
   gateway?: GatewayTerms;
+  /** Files `chainpe doctor` generated. Unset or missing files answer 404. */
+  documents?: { openapi?: string; x402?: string };
 }
-
-/** Discovery documents that stay free. Exact matches, so a path cannot smuggle in a paid route. */
-const FREE_PATHS = new Set(["/.well-known/x402", "/openapi.json"]);
 
 const RECENT_PAYMENTS_IN_STATS = 10;
 
@@ -98,8 +100,54 @@ function toPaymentEvent(
   }
 }
 
+/**
+ * Answers the free discovery documents here, from the proxy. They must never fall
+ * through to the reverse proxy: that would reach the backend without a payment.
+ * Exact matches, so a path cannot smuggle in a paid route.
+ */
+function discoveryDocuments(config: ChainPeConfig, documents: ProxyServerOptions["documents"]) {
+  const readFile = (file?: string) => async () => (file ? fs.readFile(file, "utf-8") : undefined);
+  const sources = new Map<string, () => Promise<string | undefined>>([
+    ["/.well-known/x402", readFile(documents?.x402)],
+    ["/openapi.json", readFile(documents?.openapi)],
+    [
+      AGENT_CARD_PATH,
+      async () => {
+        const card = buildAgentCard(config);
+        return card && JSON.stringify(card, null, 2);
+      },
+    ],
+  ]);
+  return (req: Request, res: Response, next: NextFunction) => {
+    const source = sources.get(req.path);
+    if (!source) {
+      next();
+      return;
+    }
+    res.setHeader("Allow", "GET, HEAD, OPTIONS");
+    if (req.method === "OPTIONS") {
+      res.status(204).end();
+      return;
+    }
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      res.status(405).json({ error: "Method Not Allowed" });
+      return;
+    }
+    source().then(
+      (body) => {
+        if (body === undefined) res.status(404).json({ error: "Not generated. Run `chainpe doctor`." });
+        else res.type("application/json").send(body);
+      },
+      (err: NodeJS.ErrnoException) => {
+        if (err.code !== "ENOENT") logger.warn(`Could not read ${req.path}: ${err.message}`);
+        res.status(404).json({ error: "Not generated. Run `chainpe doctor`." });
+      }
+    );
+  };
+}
+
 export function createProxyServer(options: ProxyServerOptions): Express {
-  const { config, additionalRoutes, onPayment, facilitator, gateway } = options;
+  const { config, additionalRoutes, onPayment, facilitator, gateway, documents } = options;
   const app = express();
 
   app.use(cors({ exposedHeaders: ["PAYMENT-REQUIRED", "PAYMENT-RESPONSE", "X-CHAINPE-AGENT-ID"] }));
@@ -189,6 +237,8 @@ export function createProxyServer(options: ProxyServerOptions): Express {
     logger.info(`  ${r.path} → ${r.price} ${r.token} (${r.rails.join(", ")})`);
   }
 
+  app.use(discoveryDocuments(config, documents));
+
   // Payment tracking runs first so that refused payments are recorded too.
   app.use((req: Request, res: Response, next: NextFunction) => {
     const signature = req.get("payment-signature");
@@ -218,7 +268,7 @@ export function createProxyServer(options: ProxyServerOptions): Express {
   );
   const paymentGate = paymentMiddleware(routesConfig, resourceServer);
   app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.method === "OPTIONS" || FREE_PATHS.has(req.path)) {
+    if (req.method === "OPTIONS") {
       next();
       return;
     }

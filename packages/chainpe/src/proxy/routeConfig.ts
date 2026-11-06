@@ -47,7 +47,7 @@ function toMoney(price: string): string {
 }
 
 /** Accepts "GET /path" or "/path" (any method). */
-function toRouteKey(path: string): string {
+export function toRouteKey(path: string): string {
   return path.includes(" ") ? path : `* ${path}`;
 }
 
