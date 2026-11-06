@@ -123,6 +123,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIssue(next)
   }, [])
 
+  // A restored live session may belong to a wallet account that changed while the page was closed.
+  const [restoredAddress] = useState<string | null>(() => (USE_MOCK ? null : (session?.address ?? null)))
+  useEffect(() => {
+    const provider = getProvider()
+    if (!restoredAddress || !provider) return
+    let cancelled = false
+    provider
+      .request({ method: 'eth_accounts' })
+      .then((accounts) => {
+        const first = accounts[0]
+        // An empty list means a locked wallet: leave the session alone.
+        if (cancelled || !first) return
+        if (!isAddressEqual(first, restoredAddress as `0x${string}`)) {
+          clearAll({ kind: 'session_ended', message: 'Your wallet account changed, so you were signed out.' })
+        }
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [restoredAddress, clearAll])
+
   const startSession = useCallback((s: Session) => {
     setActiveToken(s.token)
     saveSession(s)

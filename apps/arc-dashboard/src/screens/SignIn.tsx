@@ -1,6 +1,7 @@
 import { Loader2, Wallet } from 'lucide-react'
 import { useAuth, type AuthIssue, type MockScenario, type SignInStep } from '@/auth/AuthContext'
 import { MockBanner } from '@/components/MockBanner'
+import { StudioMark } from '@/components/StudioMark'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Card } from '@/components/ui/Card'
 import { CommandBlock } from '@/components/ui/Copy'
@@ -121,6 +122,9 @@ function Shell({ children }: { children: React.ReactNode }) {
         <ThemeToggle />
       </div>
       <main className="flex flex-1 items-start justify-center px-4 pb-16 pt-4 sm:items-center">{children}</main>
+      <footer className="flex justify-center px-4 pb-6">
+        <StudioMark />
+      </footer>
     </div>
   )
 }

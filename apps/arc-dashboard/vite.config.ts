@@ -47,6 +47,17 @@ export default defineConfig(({ mode }) => {
       },
       dedupe: ['react', 'react-dom'],
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id: string) {
+            if (/node_modules\/(viem|ox|abitype|@noble)\//.test(id)) return 'web3'
+            if (/node_modules\/(react|react-dom)\//.test(id)) return 'react'
+            return undefined
+          },
+        },
+      },
+    },
     server: {
       allowedHosts: true,
       cors: true,

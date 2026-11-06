@@ -10,7 +10,7 @@ import { Card, PageHeader, SectionTitle, Tile } from '@/components/ui/Card'
 import { EmptyState, LockedCard, ResourceView } from '@/components/ui/States'
 import { useNow } from '@/hooks/useNow'
 import { useResource } from '@/hooks/useResource'
-import { formatRate, formatUsdc, formatUsdcExact, parseAtomic, permille } from '@/lib/money'
+import { formatRate, formatUsdc, parseAtomic, permille } from '@/lib/money'
 import { fillSeries } from '@/lib/series'
 
 const POLL_MS = 3000
@@ -68,7 +68,7 @@ function GatewayBalances() {
               {rows.map((s) => (
                 <li key={s.key} className="flex items-baseline justify-between gap-4 py-2 text-sm">
                   <span className="min-w-0 break-words">{s.name}</span>
-                  <span className="font-semibold tabular-nums">{formatUsdcExact(s.gatewayBalanceAtomic)}</span>
+                  <span className="font-semibold tabular-nums">{formatUsdc(s.gatewayBalanceAtomic)}</span>
                 </li>
               ))}
             </ul>
@@ -105,7 +105,15 @@ export function Overview() {
           {(s) => (
             <>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <Tile label="Verified revenue" value={formatUsdc(s.revenue.totalVerifiedAtomic)} hint="Verified payments, self-pay excluded" />
+                <Tile
+                  label="Verified revenue"
+                  value={formatUsdc(s.revenue.totalVerifiedAtomic)}
+                  hint={
+                    (parseAtomic(s.revenue.gateway.pendingBatchAtomic) ?? 0n) > 0n
+                      ? `Includes ${formatUsdc(s.revenue.gateway.pendingBatchAtomic)} Gateway pending, which can still fail`
+                      : 'Verified payments, self-pay excluded'
+                  }
+                />
                 <Tile label="Exact rail" value={formatUsdc(s.revenue.exactAtomic)} hint="Verified against a USDC transfer on Arc" />
                 <Tile label="Gateway settled" value={formatUsdc(s.revenue.gateway.settledAtomic)} hint="Verified against Circle's record" />
                 <Tile
@@ -125,7 +133,7 @@ export function Overview() {
               </div>
 
               <Card>
-                <SectionTitle>Verified revenue per {s.series.unit}</SectionTitle>
+                <SectionTitle>Verified revenue per {s.series.unit}, including Gateway pending</SectionTitle>
                 {s.series.points.length === 0 ? (
                   <EmptyState title="No calls in this range" body="Start your proxy to see paid calls arrive here." command="chainpe start" />
                 ) : (

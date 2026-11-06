@@ -4,6 +4,7 @@ import { CreditCard, HeartPulse, LayoutDashboard, LogOut, Receipt, Server, Setti
 import { useAuth } from '@/auth/AuthContext'
 import { Link, usePath } from '@/lib/router'
 import { MockBanner } from './MockBanner'
+import { StudioMark } from './StudioMark'
 import { ThemeToggle } from './ThemeToggle'
 import { AddressView } from './ui/Address'
 import { PlanBadge, Pill } from './ui/Badges'
@@ -89,6 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
               <ThemeToggle />
             </div>
+            <StudioMark className="self-start" />
           </div>
         </aside>
 
@@ -110,7 +112,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </div>
           </div>
-          <main className="mx-auto w-full max-w-5xl min-w-0 flex-1 p-4 pb-28 sm:p-6 sm:pb-6">{children}</main>
+          <main className="mx-auto w-full max-w-5xl min-w-0 flex-1 p-4 pb-28 sm:p-6 sm:pb-6">{children}
+            <div className="mt-6 sm:hidden">
+              <StudioMark />
+            </div>
+          </main>
         </div>
       </div>
 

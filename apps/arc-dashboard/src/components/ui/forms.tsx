@@ -49,7 +49,7 @@ interface Option<V extends string> {
   locked?: boolean
 }
 
-/** A radio group drawn as a segmented control. */
+/** A group of toggle buttons drawn as a segmented control. It wraps instead of scrolling. */
 export function Segmented<V extends string>({
   label,
   value,
@@ -62,15 +62,14 @@ export function Segmented<V extends string>({
   onChange: (v: V) => void
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex max-w-full overflow-x-auto rounded-md border border-edge bg-surface p-1">
+    <div role="group" aria-label={label} className="inline-flex max-w-full flex-wrap gap-1 rounded-md border border-edge bg-surface p-1">
       {options.map((o) => {
         const active = o.value === value
         return (
           <button
             key={o.value}
             type="button"
-            role="radio"
-            aria-checked={active}
+            aria-pressed={active}
             onClick={() => onChange(o.value)}
             className={clsx(
               'min-h-9 shrink-0 rounded px-3 text-sm font-medium',

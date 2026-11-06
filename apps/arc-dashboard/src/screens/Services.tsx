@@ -10,7 +10,7 @@ import { CopyButton } from '@/components/ui/Copy'
 import { EmptyState, LockedCard, ResourceView } from '@/components/ui/States'
 import { useNow } from '@/hooks/useNow'
 import { useResource } from '@/hooks/useResource'
-import { formatUsdcExact, parseAtomic } from '@/lib/money'
+import { formatUsdc, parseAtomic } from '@/lib/money'
 import { ago, ONLINE_WINDOW_MS } from '@/lib/time'
 
 function Heartbeat({ at, now }: { at: string | null; now: number }) {
@@ -51,7 +51,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 }
 
 function ServiceCard({ s, now, agent }: { s: ServiceItem; now: number; agent: string }) {
-  const price = parseAtomic(s.priceAtomic) !== null ? formatUsdcExact(s.priceAtomic) : `${s.price} (could not be read as USDC)`
+  const price = parseAtomic(s.priceAtomic) !== null ? formatUsdc(s.priceAtomic) : `${s.price} (could not be read as USDC)`
   return (
     <Card as="article">
       <div className="flex flex-wrap items-start justify-between gap-2">

@@ -82,12 +82,19 @@ async function toError(res: Response): Promise<ApiError> {
   return new ApiError(code, message, res.status, retryAfter(res))
 }
 
+const REQUEST_TIMEOUT_MS = 20000
+
+function isTimeout(e: unknown): boolean {
+  return typeof e === 'object' && e !== null && (e as { name?: unknown }).name === 'TimeoutError'
+}
+
 function createFetchTransport(getToken: () => string | null): Transport {
   return async ({ method, path, query, body, expect = 'json' }) => {
     const headers: Record<string, string> = { Accept: expect === 'blob' ? 'text/csv' : 'application/json' }
     const token = getToken()
     if (token) headers.Authorization = `Bearer ${token}`
     if (body !== undefined) headers['Content-Type'] = 'application/json'
+    const signal = AbortSignal.timeout(REQUEST_TIMEOUT_MS)
     let res: Response
     try {
       res = await fetch(buildUrl(path, query), {
@@ -96,12 +103,15 @@ function createFetchTransport(getToken: () => string | null): Transport {
         body: body === undefined ? undefined : JSON.stringify(body),
         credentials: 'omit',
         cache: 'no-store',
+        signal,
       })
-    } catch {
+      if (!res.ok) throw await toError(res)
+      return expect === 'blob' ? await res.blob() : ((await res.json()) as unknown)
+    } catch (e) {
+      if (e instanceof ApiError) throw e
+      if (isTimeout(e)) throw new ApiError('network_error', 'The ChainPe service did not answer in time.', 0)
       throw new ApiError('network_error', 'Could not reach the ChainPe service.', 0)
     }
-    if (!res.ok) throw await toError(res)
-    return expect === 'blob' ? res.blob() : ((await res.json()) as unknown)
   }
 }
 

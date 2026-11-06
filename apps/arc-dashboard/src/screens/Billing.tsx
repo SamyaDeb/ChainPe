@@ -3,7 +3,7 @@ import { isAddress, type Address } from 'viem'
 import { Check, CheckCircle2, CircleDashed, Loader2, MinusCircle, AlertTriangle, XCircle } from 'lucide-react'
 import { useAuth } from '@/auth/AuthContext'
 import { useMe } from '@/auth/useMe'
-import { useUpgrade, type Step, type StepState } from '@/billing/useUpgrade'
+import { CATCHING_UP, useUpgrade, type Step, type StepState } from '@/billing/useUpgrade'
 import { TxLink } from '@/components/ui/Address'
 import { PlanBadge } from '@/components/ui/Badges'
 import { Card, Note, PageHeader, SectionTitle } from '@/components/ui/Card'
@@ -12,7 +12,7 @@ import { ResourceView } from '@/components/ui/States'
 import { useResource } from '@/hooks/useResource'
 import { accountsAbi, MAX_PERIODS, PERIOD_DAYS, usdcAbi } from '@/lib/accounts'
 import { ACCOUNTS_ADDRESS, ARC_NETWORK, USDC_ADDRESS, USE_MOCK } from '@/lib/env'
-import { formatUsdcExact } from '@/lib/money'
+import { formatUsdc, formatUsdcExact } from '@/lib/money'
 import { formatDate } from '@/lib/time'
 import { addArcTestnet, errorText, getProvider, isUserRejection, publicClient } from '@/lib/wallet'
 
@@ -68,6 +68,8 @@ interface ChainState {
   price: bigint
   balance: bigint | null
   allowance: bigint | null
+  /** planOf(address): 1 = Pro, 0 = Free. Null when it was not read. */
+  onchainPlan: number | null
 }
 
 function configProblem(): string | null {
@@ -106,9 +108,9 @@ function Purchase({ chain, reload }: { chain: ChainState; reload: () => void }) 
           <dt className="text-muted">Total</dt>
           <dd className="text-right text-base font-semibold tabular-nums">{formatUsdcExact(total)} USDC</dd>
           <dt className="text-muted">Your USDC balance</dt>
-          <dd className="text-right tabular-nums">{chain.balance === null ? 'Not shown in sample mode' : `${formatUsdcExact(chain.balance)} USDC`}</dd>
+          <dd className="text-right tabular-nums">{chain.balance === null ? 'Not shown in sample mode' : `${formatUsdc(chain.balance)} USDC`}</dd>
           <dt className="text-muted">Allowance for ChainPe</dt>
-          <dd className="text-right tabular-nums">{chain.allowance === null ? '\u2014' : `${formatUsdcExact(chain.allowance)} USDC`}</dd>
+          <dd className="text-right tabular-nums">{chain.allowance === null ? '\u2014' : `${formatUsdc(chain.allowance)} USDC`}</dd>
         </dl>
       </div>
 
@@ -120,10 +122,19 @@ function Purchase({ chain, reload }: { chain: ChainState; reload: () => void }) 
       {USE_MOCK ? <p className="mt-3 text-sm text-muted">Paying is turned off in sample mode. Run with a live backend to upgrade.</p> : null}
       {!hasWallet ? <p className="mt-3 text-sm text-muted">No browser wallet was found. Install MetaMask or Rabby to pay with USDC.</p> : null}
 
-      <Button variant="primary" className="mt-4" disabled={USE_MOCK || !hasWallet || short || upgrade.running} onClick={() => void upgrade.run(periods)}>
+      <Button variant="primary" className="mt-4" disabled={USE_MOCK || !hasWallet || short || upgrade.running || upgrade.sent} onClick={() => void upgrade.run(periods)}>
         {upgrade.running ? <Loader2 size={16} className="animate-spin" aria-hidden /> : null}
         {verb}: pay {formatUsdcExact(total)} USDC
       </Button>
+      {upgrade.sent ? (
+        <div role="status" className="mt-3 flex flex-wrap items-center gap-3 rounded-md border border-warn bg-warn-soft px-3 py-2 text-sm text-warn">
+          <span className="min-w-0 flex-1">Your subscription transaction was sent and its result is not known yet. Paying again is turned off until it is.</span>
+          <Button disabled={upgrade.checking} onClick={() => void upgrade.recheck()}>
+            {upgrade.checking ? <Loader2 size={16} className="animate-spin" aria-hidden /> : null}
+            Check again
+          </Button>
+        </div>
+      ) : null}
 
       {upgrade.started ? (
         <ol aria-label="Upgrade progress" className="mt-4 divide-y divide-line rounded-md border border-line px-3">
@@ -169,13 +180,14 @@ export function Billing() {
     `billing-chain-${address ?? ''}`,
     async () => {
       const price = await publicClient.readContract({ address: ACCOUNTS_ADDRESS as Address, abi: accountsAbi, functionName: 'proPricePerPeriod' })
-      if (USE_MOCK || !address) return { price, balance: null, allowance: null }
+      if (USE_MOCK || !address) return { price, balance: null, allowance: null, onchainPlan: null }
       const owner = address as Address
-      const [balance, allowance] = await Promise.all([
+      const [balance, allowance, onchainPlan] = await Promise.all([
         publicClient.readContract({ address: USDC_ADDRESS as Address, abi: usdcAbi, functionName: 'balanceOf', args: [owner] }),
         publicClient.readContract({ address: USDC_ADDRESS as Address, abi: usdcAbi, functionName: 'allowance', args: [owner, ACCOUNTS_ADDRESS as Address] }),
+        publicClient.readContract({ address: ACCOUNTS_ADDRESS as Address, abi: accountsAbi, functionName: 'planOf', args: [owner] }),
       ])
-      return { price, balance, allowance }
+      return { price, balance, allowance, onchainPlan }
     },
     { enabled: problem === null },
   )
@@ -194,6 +206,14 @@ export function Billing() {
             </div>
             <AddNetwork />
           </div>
+          {chain.data?.onchainPlan != null ? (
+            <p className="mt-3 text-sm text-muted">On-chain plan: {chain.data.onchainPlan === 1 ? 'Pro' : 'Free'}</p>
+          ) : null}
+          {chain.data?.onchainPlan === 1 && me.plan === 'free' ? (
+            <p role="status" className="mt-1 text-sm font-medium text-warn">
+              {CATCHING_UP}
+            </p>
+          ) : null}
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <FeatureList title="Free" items={FREE_FEATURES} />
             <FeatureList title="Pro" items={PRO_FEATURES} />

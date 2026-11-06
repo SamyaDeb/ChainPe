@@ -45,20 +45,21 @@ export function useResource<T>(key: string, fetcher: () => Promise<T>, options: 
 
   useEffect(() => {
     if (!enabled) return
-    const flags: { cancelled: boolean; busy: boolean; first: boolean; timer: number | undefined } = {
+    const flags: { cancelled: boolean; busy: boolean; first: boolean; timer: number | undefined; stop: boolean } = {
       cancelled: false,
       busy: false,
       first: true,
       timer: undefined,
+      stop: false,
     }
 
     const schedule = (delay: number) => {
       window.clearTimeout(flags.timer)
-      if (!flags.cancelled && pollMs) flags.timer = window.setTimeout(() => void run(), delay)
+      if (!flags.cancelled && !flags.stop && pollMs) flags.timer = window.setTimeout(() => void run(), delay)
     }
 
     const run = async () => {
-      if (flags.busy || flags.cancelled) return
+      if (flags.busy || flags.cancelled || flags.stop) return
       if (!flags.first && document.visibilityState !== 'visible') {
         schedule(pollMs ?? 0)
         return
@@ -73,6 +74,8 @@ export function useResource<T>(key: string, fetcher: () => Promise<T>, options: 
       } catch (e) {
         if (flags.cancelled) return
         if (handleError(e)) return
+        // A plan limit will not change by asking again, so polling stops here.
+        if (isApiError(e) && e.code === 'plan_required') flags.stop = true
         const wait = isApiError(e) && e.retryAfterSec !== null ? e.retryAfterSec * 1000 : RETRY_DELAY_MS
         delay = Math.max(delay, wait)
         setState((s) => ({

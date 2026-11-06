@@ -22,7 +22,7 @@ const columns: Array<Column<ReputationItem>> = [
   { header: 'Rated by', cell: (r) => <AddressView address={r.client} /> },
   {
     header: 'Paid you?',
-    cell: (r) => (r.fromPayer ? <Pill tone="ok">Paid you</Pill> : <Pill tone="neutral">Never paid</Pill>),
+    cell: (r) => (r.fromPayer ? <Pill tone="ok">Paid you</Pill> : <Pill tone="neutral">No verified payment</Pill>),
   },
   { header: 'Tags', cell: (r) => [r.tag1, r.tag2].filter((t): t is string => !!t).join(', ') || <span className="text-muted">{'\u2014'}</span> },
   { header: 'Time', cell: (r) => formatDateTime(r.blockTs) },
@@ -50,7 +50,7 @@ function Ratings({ d }: { d: ReputationData }) {
           </p>
         </Card>
         <Card>
-          <p className="text-sm font-medium text-muted">All ratings, including wallets that never paid: anyone can rate an agent</p>
+          <p className="text-sm font-medium text-muted">All ratings, including wallets with no verified payment: anyone can rate an agent</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">{avg(d.allAverage)}</p>
           <p className="mt-1 text-sm text-muted">
             {d.allCount} {d.allCount === 1 ? 'rating' : 'ratings'} in total
