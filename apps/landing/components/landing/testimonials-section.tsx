@@ -148,7 +148,7 @@ export function TestimonialsSection() {
         <div className="flex gap-16 items-center marquee">
           {[...Array(2)].map((_, setIdx) => (
             <div key={setIdx} className="flex gap-16 items-center shrink-0">
-              {["chainpe-sdk", "chainpe-ai-tools", "chainpe", "chainpe-wallet-mcp", "ChainPeRegistry", "PolicyVault", "ERC-8004", "ICM/Teleporter"].map(
+              {["@chainpe/sdk", "@chainpe/ai-tools", "@chainpe/cli", "@chainpe/wallet-mcp", "ChainPeRegistry", "PolicyVault", "ERC-8004", "ICM/Teleporter"].map(
                 (company) => (
                   <span
                     key={`${setIdx}-${company}`}

@@ -1,5 +1,5 @@
 {
-  "name": "chainpe-agent",
+  "name": "@chainpe/agent",
   "version": "3.0.0",
   "description": "ChainPe Agent SDK \u2014 Pre-built AI agent with x402 payment capabilities on Avalanche C-Chain",
   "type": "module",

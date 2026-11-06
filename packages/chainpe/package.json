@@ -1,5 +1,5 @@
 {
-  "name": "chainpe",
+  "name": "@chainpe/cli",
   "version": "3.0.0",
   "description": "ChainPe Provider CLI — Monetize any API with x402 micropayments on Arc",
   "type": "module",
