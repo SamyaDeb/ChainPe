@@ -12,8 +12,8 @@ No real money is involved. Everything runs on Arc testnet.
 ## 1. Get the code
 
 ```sh
-git clone https://github.com/SamyaDeb/ChainPeAvax.git
-cd ChainPeAvax
+git clone https://github.com/SamyaDeb/ChainPe.git
+cd ChainPe
 git checkout arc
 npm install
 npm run build:cli

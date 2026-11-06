@@ -12,7 +12,7 @@ Prize: "Arc Studio Continuity Track: Bring Your Project to Arc" (ETHGlobal Mumba
 | Architecture diagram | Done | [README](../../README.md#how-it-works), [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Video demo and presentation | **You record it** | [DEMO-SCRIPT.md](DEMO-SCRIPT.md) |
 | Documentation | Done | [docs/arc/README.md](README.md) |
-| Public GitHub repo | Done (branch `arc`) | https://github.com/SamyaDeb/ChainPeAvax |
+| Public GitHub repo | Done (branch `arc`) | https://github.com/SamyaDeb/ChainPe |
 | Before / during the hackathon | Done | [README section](../../README.md#before-and-during-the-hackathon) |
 
 ## Done

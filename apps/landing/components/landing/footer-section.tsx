@@ -11,10 +11,10 @@ const footerLinks = {
     { name: "Security", href: "#security" },
   ],
   Developers: [
-    { name: "Documentation", href: "https://github.com/SamyaDeb/ChainPeAvax/tree/arc/docs/arc" },
-    { name: "GitHub", href: "https://github.com/SamyaDeb/ChainPeAvax" },
+    { name: "Documentation", href: "https://github.com/SamyaDeb/ChainPe/tree/arc/docs/arc" },
+    { name: "GitHub", href: "https://github.com/SamyaDeb/ChainPe" },
     { name: "Live demo", href: "https://chainpe-arc-demo-production.up.railway.app" },
-    { name: "Proof of payments", href: "https://github.com/SamyaDeb/ChainPeAvax/blob/arc/docs/arc/PROOF.md" },
+    { name: "Proof of payments", href: "https://github.com/SamyaDeb/ChainPe/blob/arc/docs/arc/PROOF.md" },
   ],
   Ecosystem: [
     { name: "Arc", href: "https://www.arc.io" },
@@ -25,13 +25,13 @@ const footerLinks = {
   Legal: [
     { name: "Privacy Policy", href: "#" },
     { name: "Terms of Service", href: "#" },
-    { name: "Contract review", href: "https://github.com/SamyaDeb/ChainPeAvax/blob/arc/docs/arc/reviews/chainpe-accounts-review.md" },
+    { name: "Contract review", href: "https://github.com/SamyaDeb/ChainPe/blob/arc/docs/arc/reviews/chainpe-accounts-review.md" },
   ],
 };
 
 const socialLinks = [
   { name: "X (Twitter)", href: "#" },
-  { name: "GitHub", href: "https://github.com/SamyaDeb/ChainPeAvax" },
+  { name: "GitHub", href: "https://github.com/SamyaDeb/ChainPe" },
   { name: "Discord", href: "#" },
 ];
 

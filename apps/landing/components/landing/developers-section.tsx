@@ -6,8 +6,8 @@ import { Copy, Check } from "lucide-react";
 const codeExamples = [
   {
     label: "Install",
-    code: `git clone https://github.com/SamyaDeb/ChainPeAvax
-cd ChainPeAvax && git checkout arc
+    code: `git clone https://github.com/SamyaDeb/ChainPe
+cd ChainPe && git checkout arc
 npm install && npm run build:cli`,
   },
   {
@@ -211,11 +211,11 @@ export function DevelopersSection() {
             
             {/* Links */}
             <div className="mt-6 flex items-center gap-6 text-sm">
-              <a href="https://github.com/SamyaDeb/ChainPeAvax/tree/arc/docs/arc" className="text-foreground hover:underline underline-offset-4">
+              <a href="https://github.com/SamyaDeb/ChainPe/tree/arc/docs/arc" className="text-foreground hover:underline underline-offset-4">
                 Read the docs
               </a>
               <span className="text-foreground/20">|</span>
-              <a href="https://github.com/SamyaDeb/ChainPeAvax" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
+              <a href="https://github.com/SamyaDeb/ChainPe" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
                 View on GitHub
               </a>
               <span className="text-foreground/20">|</span>

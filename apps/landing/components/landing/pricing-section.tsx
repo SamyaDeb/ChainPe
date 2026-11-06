@@ -16,7 +16,7 @@ const plans = [
       "MIT licensed",
     ],
     cta: "View GitHub",
-    href: "https://github.com/SamyaDeb/ChainPeAvax",
+    href: "https://github.com/SamyaDeb/ChainPe",
     popular: false,
   },
   {
@@ -135,7 +135,7 @@ export function PricingSection() {
         {/* Bottom Note */}
         <p className="mt-12 text-center text-sm text-muted-foreground">
           Note: on Arc, gas is paid in USDC. Circle's facilitator pays settlement gas; Gateway withdrawals carry a small fee.{" "}
-          <a href="https://github.com/SamyaDeb/ChainPeAvax/blob/arc/docs/arc/BUSINESS-MODEL.md" className="underline underline-offset-4 hover:text-foreground transition-colors">
+          <a href="https://github.com/SamyaDeb/ChainPe/blob/arc/docs/arc/BUSINESS-MODEL.md" className="underline underline-offset-4 hover:text-foreground transition-colors">
             Read the business model
           </a>
         </p>

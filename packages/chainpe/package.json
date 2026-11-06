@@ -11,13 +11,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SamyaDeb/ChainPeAvax.git",
+    "url": "git+https://github.com/SamyaDeb/ChainPe.git",
     "directory": "packages/chainpe"
   },
   "bugs": {
-    "url": "https://github.com/SamyaDeb/ChainPeAvax/issues"
+    "url": "https://github.com/SamyaDeb/ChainPe/issues"
   },
-  "homepage": "https://github.com/SamyaDeb/ChainPeAvax#readme",
+  "homepage": "https://github.com/SamyaDeb/ChainPe#readme",
   "author": "ChainPe",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

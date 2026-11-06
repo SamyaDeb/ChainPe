@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/chainpe-agent.svg)](https://www.npmjs.com/package/chainpe-agent)
 
-> **This package still targets Avalanche.** It was called `@chainpeavax/agent` before this release, and its code is unchanged apart from the name. Arc support is planned. For Arc today, use the [`chainpe`](https://www.npmjs.com/package/chainpe) CLI.
+> **This package still targets Avalanche.** Arc support is planned. For Arc today, use the [`chainpe`](https://www.npmjs.com/package/chainpe) CLI.
 
 **Pre-built AI Agent with x402 Payment Capabilities on Avalanche**
 

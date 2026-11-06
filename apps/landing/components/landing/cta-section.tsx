@@ -62,14 +62,14 @@ export function CtaSection() {
 
                 <div className="flex flex-col sm:flex-row items-start gap-4">
                   <a
-                    href="https://github.com/SamyaDeb/ChainPeAvax/tree/arc/docs/arc"
+                    href="https://github.com/SamyaDeb/ChainPe/tree/arc/docs/arc"
                     className="inline-flex items-center justify-center bg-foreground hover:bg-foreground/90 text-background px-8 h-14 text-base font-medium rounded-md transition-colors group"
                   >
                     Read the docs
                     <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
                   </a>
                   <a
-                    href="https://github.com/SamyaDeb/ChainPeAvax"
+                    href="https://github.com/SamyaDeb/ChainPe"
                     className="inline-flex items-center justify-center h-14 px-8 text-base font-medium rounded-md border border-foreground/20 hover:bg-foreground/5 transition-colors"
                   >
                     View GitHub
@@ -77,7 +77,7 @@ export function CtaSection() {
                 </div>
 
                 <p className="text-sm text-muted-foreground mt-8 font-mono">
-                  git clone github.com/SamyaDeb/ChainPeAvax
+                  git clone github.com/SamyaDeb/ChainPe
                 </p>
               </div>
 

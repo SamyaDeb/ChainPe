@@ -90,7 +90,7 @@ Use a third wallet for that test: the smoke test made the buyer wallet a provide
 - [ ] If a production Circle key arrives: deploy `ChainPeAccounts` on mainnet, one real mainnet payment.
 - [ ] `chainpe doctor` → submit Circle "Get listed" form.
 - [ ] SUBMISSION.md checklist, README "Before / During", architecture diagram, video.
-- [ ] Fix site copy: "native AVAX" → USDC; remove placeholder testimonial and "0.99% uptime"; GitHub links → `SamyaDeb/ChainPeAvax`; changelog dates.
+- [ ] Fix site copy: "native AVAX" → USDC; remove placeholder testimonial and "0.99% uptime"; GitHub links → `SamyaDeb/ChainPe`; changelog dates.
 
 ## Commit discipline
 

@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/chainpe-ai-tools.svg)](https://www.npmjs.com/package/chainpe-ai-tools)
 
-> **This package still targets Avalanche.** It was called `@chainpeavax/ai-tools` before this release, and its code is unchanged apart from the name. Arc support is planned. For Arc today, use the [`chainpe`](https://www.npmjs.com/package/chainpe) CLI.
+> **This package still targets Avalanche.** Arc support is planned. For Arc today, use the [`chainpe`](https://www.npmjs.com/package/chainpe) CLI.
 
 **Drop-in ChainPe tools for AI agents** — let any Vercel AI SDK or LangChain agent
 **discover, pay for, and rate** HTTP APIs and other agents per request in USDC on

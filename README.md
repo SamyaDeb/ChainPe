@@ -48,8 +48,8 @@ Circle settles Gateway payments in batches. ChainPe offers both, and the agent p
 The Arc version is on the `arc` branch and is not on npm yet, so build it from source.
 
 ```sh
-git clone https://github.com/SamyaDeb/ChainPeAvax.git
-cd ChainPeAvax && git checkout arc
+git clone https://github.com/SamyaDeb/ChainPe.git
+cd ChainPe && git checkout arc
 npm install && npm run build:cli
 alias chainpe="node $(pwd)/packages/chainpe/dist/cli.js"
 ```
@@ -82,7 +82,7 @@ A step-by-step guide for a first payment: [docs/arc/TRY-IT.md](docs/arc/TRY-IT.m
 
 ChainPe first ran on Avalanche C-Chain mainnet. It had the x402 proxy CLI, an SDK, AI framework tools,
 an MCP wallet for Claude, on-chain reputation, and a hosted facilitator and indexer.
-That version is kept at the tag [`avalanche-june-2026`](https://github.com/SamyaDeb/ChainPeAvax/tree/avalanche-june-2026),
+That version is kept at the tag [`avalanche-june-2026`](https://github.com/SamyaDeb/ChainPe/tree/avalanche-june-2026),
 and its README is in [docs/avalanche/README.md](docs/avalanche/README.md).
 
 Proof from June 17, 2026: a real 0.01 USDC payment ([tx](https://snowtrace.io/tx/0x953923f2b653953b4f8b0d5ea1925361a0c967a8cb9b2a542814b7d564d92006))

@@ -130,7 +130,7 @@ export function HeroSection() {
               size="lg" 
               variant="outline" 
               className="h-14 px-8 text-base rounded-full border-foreground/20 hover:bg-foreground/5"
-              onClick={() => window.location.href = 'https://github.com/SamyaDeb/ChainPeAvax/tree/arc/docs/arc'}
+              onClick={() => window.location.href = 'https://github.com/SamyaDeb/ChainPe/tree/arc/docs/arc'}
             >
               Read the docs
             </Button>
