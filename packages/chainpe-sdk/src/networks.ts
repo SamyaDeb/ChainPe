@@ -28,7 +28,7 @@ const NETWORKS: Record<ChainPeNetwork, NetworkInfo> = {
     chain: arcTestnet,
     caip2: 'eip155:5042002',
     gatewayChain: 'arcTestnet',
-    rpcUrl: () => process.env.ARC_TESTNET_RPC_URL ?? 'https://rpc.testnet.arc.io',
+    rpcUrl: () => process.env.ARC_TESTNET_RPC_URL || 'https://rpc.testnet.arc.io',
     explorer: 'https://explorer.testnet.arc.io',
     accounts: '0xD315322c9D83A6f50A04236A2a242e0259bfB580',
     reputation: '0x8004B663056A597Dffe9eCcC1965A193B7388713'
@@ -37,7 +37,7 @@ const NETWORKS: Record<ChainPeNetwork, NetworkInfo> = {
     chain: arc,
     caip2: 'eip155:5042',
     gatewayChain: 'arc',
-    rpcUrl: () => process.env.ARC_RPC_URL ?? 'https://rpc.mainnet.arc.io',
+    rpcUrl: () => process.env.ARC_RPC_URL || 'https://rpc.mainnet.arc.io',
     explorer: 'https://explorer.arc.io',
     reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63'
   }
@@ -100,7 +100,7 @@ export function resolveAccountsAddress(
   explicit?: string
 ): `0x${string}` | undefined {
   const candidate =
-    explicit ?? process.env.CHAINPE_ACCOUNTS_ADDRESS ?? info(network).accounts
+    explicit || process.env.CHAINPE_ACCOUNTS_ADDRESS || info(network).accounts
   return candidate ? getAddress(candidate) : undefined
 }
 
@@ -110,7 +110,7 @@ export function resolveReputationRegistry(
   explicit?: string
 ): `0x${string}` {
   return getAddress(
-    explicit ?? process.env.ERC8004_REPUTATION_REGISTRY ?? info(network).reputation
+    explicit || process.env.ERC8004_REPUTATION_REGISTRY || info(network).reputation
   )
 }
 

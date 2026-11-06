@@ -2,6 +2,13 @@
 
 All notable changes to ChainPe are documented here.
 
+## [3.1.1] — 2026-11-06 (Arc)
+
+`@chainpearc/cli` 3.1.1, `@chainpearc/sdk` 0.4.1 and `@chainpearc/wallet-mcp` 0.4.1.
+
+### Fixed
+- An empty `CHAINPE_ACCOUNTS_ADDRESS`, `ERC8004_REPUTATION_REGISTRY` or RPC URL now means "use the default". Claude Desktop sends blank settings as empty text, which broke search and payments in the wallet extension.
+
 ## [3.1.0] — 2026-11-06 (Arc)
 
 Packages: `@chainpearc/cli` 3.1.0, `@chainpearc/sdk` 0.4.0, `@chainpearc/ai-tools` 0.4.0, `@chainpearc/wallet-mcp` 0.4.0, and `@chainpearc/agent` 3.1.0, its first release on Arc.

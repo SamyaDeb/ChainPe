@@ -227,3 +227,15 @@ describe('ChainPe.fetch / pay', () => {
     await expect(cp.depositGateway('0')).rejects.toThrow(/Invalid amount/)
   })
 })
+
+describe('empty settings', () => {
+  afterEach(() => vi.unstubAllEnvs())
+
+  it('treat an empty address or RPC URL as not set, as Claude Desktop sends blank fields', () => {
+    vi.stubEnv('CHAINPE_ACCOUNTS_ADDRESS', '')
+    vi.stubEnv('ERC8004_REPUTATION_REGISTRY', '')
+    const cp = new ChainPe({ privateKey: TEST_KEY, accountsAddress: '', reputationRegistry: '' })
+    expect(cp.accountsAddress).toBe('0xD315322c9D83A6f50A04236A2a242e0259bfB580')
+    expect(cp.reputationRegistry).toBe('0x8004B663056A597Dffe9eCcC1965A193B7388713')
+  })
+})
