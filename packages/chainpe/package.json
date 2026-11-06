@@ -4,7 +4,7 @@
   "description": "ChainPe Provider CLI — Monetize any API with x402 micropayments on Arc",
   "type": "module",
   "bin": {
-    "chainpe": "./dist/cli.js"
+    "chainpe": "dist/cli.js"
   },
   "publishConfig": {
     "access": "public"
