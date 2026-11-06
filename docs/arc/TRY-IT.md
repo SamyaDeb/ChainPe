@@ -6,23 +6,14 @@ No real money is involved. Everything runs on Arc testnet.
 ## What you need
 
 - Node.js 22.18 or newer (`node -v`)
-- Git
 - 5 minutes
 
-## 1. Get the code
+## 1. Install ChainPe
 
 ```sh
-git clone https://github.com/SamyaDeb/ChainPe.git
-cd ChainPe
-git checkout arc
-npm install
-npm run build:cli
-```
-
-On Linux, if the build fails with a missing `rollup` or `esbuild` package, run this once and build again:
-
-```sh
-npm install --no-save @esbuild/linux-x64@0.27.7 @rollup/rollup-linux-x64-gnu@4.62.0
+mkdir chainpe-try && cd chainpe-try
+npm init -y
+npm install @chainpearc/cli
 ```
 
 ## 2. Make a fresh test wallet
@@ -30,9 +21,7 @@ npm install --no-save @esbuild/linux-x64@0.27.7 @rollup/rollup-linux-x64-gnu@4.6
 Use a new wallet just for this. Never use a wallet that holds real money.
 
 ```sh
-cd packages/chainpe
 node -e "const {generatePrivateKey,privateKeyToAccount}=require('viem/accounts');const k=generatePrivateKey();console.log('address:',privateKeyToAccount(k).address);console.log('key:    ',k)"
-cd ../..
 ```
 
 Keep the key private. Copy the address.
@@ -49,7 +38,7 @@ On Arc, gas is also paid in USDC, so this one faucet drop covers everything.
 
 ```sh
 export CHAINPE_PRIVATE_KEY=<your test key>
-node packages/chainpe/dist/cli.js fetch \
+npx chainpe fetch \
   "https://chainpe-arc-demo-production.up.railway.app/forecast?city=Mumbai" \
   --network arc-testnet --rail exact --max 0.02
 ```

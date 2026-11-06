@@ -46,14 +46,11 @@ Circle settles Gateway payments in batches. ChainPe offers both, and the agent p
 
 ## Try it in 5 minutes
 
-The Arc version is on the `arc` branch and is not on npm yet, so build it from source.
-
 ```sh
-git clone https://github.com/SamyaDeb/ChainPe.git
-cd ChainPe && git checkout arc
-npm install && npm run build:cli
-alias chainpe="node $(pwd)/packages/chainpe/dist/cli.js"
+npm install -g @chainpearc/cli
 ```
+
+The command is `chainpe`. It needs Node.js 22.18 or newer.
 
 **Sell your API (provider):**
 
