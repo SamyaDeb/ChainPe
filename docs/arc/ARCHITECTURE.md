@@ -109,7 +109,7 @@ Sources: [Arc contract addresses](https://docs.arc.io/arc/references/contract-ad
 | GatewayWallet | `0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE` | `0x0077777d7EBA4688BDeF3E311b846F25870A19B9` |
 | GatewayMinter | `0x2222222d7164433c4C09B0b0D809a9b52C04C205` | `0x0022222ABE238Cc2C7Bb1f21003F0a260052475B` |
 | Permit2 | `0x000000000022D473030F116dDEE9F6B43aC78BA3` | same |
-| ChainPeAccounts | not deployed | `0xD315322c9D83a6f50A04236A2a242e0259bfB580` |
+| ChainPeAccounts | not deployed | `0xD315322c9D83A6f50A04236A2a242e0259bfB580` |
 
 EVM differences that bite (from Arc docs): gas is paid in USDC; mempool floor `maxFeePerGas` 20 gwei;
 sends to `address(0)` revert; blocklisted addresses revert; finality < 1 s (no confirmation waits);

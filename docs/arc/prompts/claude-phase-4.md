@@ -15,7 +15,7 @@ node_modules/@x402/core rather than guessing APIs (`decodePaymentRequiredHeader`
 
 State (verified 2026-11-06, re-check anything you depend on)
 - Branch `arc`, CLI 3.0.0-arc.0. 126 CLI tests pass, tsc clean. 101 Foundry tests pass, 100% contract coverage.
-- ChainPeAccounts, Arc testnet: 0xD315322c9D83a6f50A04236A2a242e0259bfB580. Owner and treasury
+- ChainPeAccounts, Arc testnet: 0xD315322c9D83A6f50A04236A2a242e0259bfB580. Owner and treasury
   0x3b8a312fac101E7163F9701457d8Dc46cE8fd30a. Pro = 1 USDC per 30 days. Source verified. Runtime bytecode matches a
   local compile once immutables are filled. Studio workspace and contracts-arc match. ABI in src/abi matches.
 - Live state you inherit from the smoke test. It changes the design:

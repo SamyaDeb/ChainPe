@@ -2,7 +2,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { explorerTxUrl, fromX402Network, getNetwork, parseNetwork } from "../src/chains.js";
+import { isAddress } from "viem";
+import { explorerTxUrl, fromX402Network, getNetwork, NETWORKS, parseNetwork } from "../src/chains.js";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "../src");
 
@@ -48,6 +49,16 @@ describe("ChainPeAccounts address", () => {
   it("is set on testnet only", () => {
     expect(getNetwork("arc-testnet").accountsAddress).toMatch(/^0x[0-9a-fA-F]{40}$/);
     expect(getNetwork("arc").accountsAddress).toBeUndefined();
+  });
+});
+
+describe("address constants", () => {
+  it("are all valid EIP-55, because viem refuses a bad checksum at call time", () => {
+    for (const info of Object.values(NETWORKS)) {
+      for (const address of [info.usdc, info.accountsAddress, info.identityRegistry, info.reputationRegistry]) {
+        if (address) expect(isAddress(address, { strict: true }), address).toBe(true);
+      }
+    }
   });
 });
 

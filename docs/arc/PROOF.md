@@ -3,7 +3,7 @@
 Every live artefact from the ChainPe port to Arc, oldest first. Times are IST, taken from the block timestamp where
 there is a transaction. Chain: Arc testnet (`eip155:5042002`).
 
-ChainPeAccounts source is verified on the explorer: [0xD315322c9D83a6f50A04236A2a242e0259bfB580](https://explorer.testnet.arc.io/address/0xD315322c9D83a6f50A04236A2a242e0259bfB580). Arc Studio workspace: https://studio.arc.io/app/6872b96e-b3c0-4cdb-abe3-5f17865cdf5a.
+ChainPeAccounts source is verified on the explorer: [0xD315322c9D83A6f50A04236A2a242e0259bfB580](https://explorer.testnet.arc.io/address/0xD315322c9D83A6f50A04236A2a242e0259bfB580). Arc Studio workspace: https://studio.arc.io/app/6872b96e-b3c0-4cdb-abe3-5f17865cdf5a.
 
 | Date (IST) | What | Tx / transfer id | Explorer |
 |---|---|---|---|
@@ -15,7 +15,7 @@ ChainPeAccounts source is verified on the explorer: [0xD315322c9D83a6f50A04236A2
 | 2026-11-06 02:07 | Seller withdrawal of 0.001 USDC from Gateway (mint) | `0x0d45e8f011e835740846014329bf6c8aaab49df350a77ad0cdc62b82642652a7` | [view](https://explorer.testnet.arc.io/tx/0x0d45e8f011e835740846014329bf6c8aaab49df350a77ad0cdc62b82642652a7) |
 | 2026-11-06 02:07 | Seller `withdraw --all`, 0.003 USDC (mint) | `0x0a8980435809e3cab8f664ee92a8da553fa572f709f4a89272ad57610eedf3bf` | [view](https://explorer.testnet.arc.io/tx/0x0a8980435809e3cab8f664ee92a8da553fa572f709f4a89272ad57610eedf3bf) |
 | 2026-11-06 02:15 | ChainPeAccounts run 1 deployed through Arc Studio (superseded: no `payTo` check) | `0x346e9bc5e3524fb0b0ccc6bd0b845dab67927775d866f36367b3758ad2b3f430` | [view](https://explorer.testnet.arc.io/tx/0x346e9bc5e3524fb0b0ccc6bd0b845dab67927775d866f36367b3758ad2b3f430) |
-| 2026-11-06 02:25 | **ChainPeAccounts run 1b deployed through Arc Studio, current**: `0xD315322c9D83a6f50A04236A2a242e0259bfB580` | `0xc6fc0f559ded0557ac36e2f306d6cbe311f6be2d614ebb0318d15bef72f12497` | [view](https://explorer.testnet.arc.io/tx/0xc6fc0f559ded0557ac36e2f306d6cbe311f6be2d614ebb0318d15bef72f12497) |
+| 2026-11-06 02:25 | **ChainPeAccounts run 1b deployed through Arc Studio, current**: `0xD315322c9D83A6f50A04236A2a242e0259bfB580` | `0xc6fc0f559ded0557ac36e2f306d6cbe311f6be2d614ebb0318d15bef72f12497` | [view](https://explorer.testnet.arc.io/tx/0xc6fc0f559ded0557ac36e2f306d6cbe311f6be2d614ebb0318d15bef72f12497) |
 | 2026-11-06 02:28 | Seller `registerProvider(0)` | `0x1950154bc3ee4dbc1226e94ca6106f23ad647643b761d152a2ea92ee240f6ff1` | [view](https://explorer.testnet.arc.io/tx/0x1950154bc3ee4dbc1226e94ca6106f23ad647643b761d152a2ea92ee240f6ff1) |
 | 2026-11-06 02:28 | Seller `registerService(demo-weather)` on Free | `0xf9d165829e53cac583ad72802ad0b40b413e12143a45c37be3c55057be12a22a` | [view](https://explorer.testnet.arc.io/tx/0xf9d165829e53cac583ad72802ad0b40b413e12143a45c37be3c55057be12a22a) |
 | 2026-11-06 02:28 | Seller second `registerService` on Free, **reverted as designed** (`ServiceLimitReached`) | `0xcc100a22ff530adeacc2ebea431f332cf7bf499a34c386f42e445251d55cd9c0` | [view](https://explorer.testnet.arc.io/tx/0xcc100a22ff530adeacc2ebea431f332cf7bf499a34c386f42e445251d55cd9c0) |

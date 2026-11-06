@@ -5,7 +5,7 @@
  * interface at `usdc` has 6, so amounts always go through the ERC-20.
  */
 import { arc, arcTestnet } from "viem/chains";
-import type { Chain } from "viem";
+import { getAddress, type Chain } from "viem";
 
 export type ChainPeNetwork = "arc-testnet" | "arc";
 
@@ -54,8 +54,7 @@ function withEndpoints(chain: Chain, rpcUrl: string, explorer: string): Chain {
 
 const ARC_TESTNET_RPC = process.env.ARC_TESTNET_RPC_URL ?? "https://rpc.testnet.arc.io";
 const ARC_TESTNET_EXPLORER = "https://explorer.testnet.arc.io";
-const ARC_TESTNET_ACCOUNTS = (process.env.CHAINPE_ACCOUNTS_ADDRESS ??
-  "0xD315322c9D83a6f50A04236A2a242e0259bfB580") as `0x${string}`;
+const ARC_TESTNET_ACCOUNTS = getAddress(process.env.CHAINPE_ACCOUNTS_ADDRESS ?? "0xD315322c9D83A6f50A04236A2a242e0259bfB580");
 const ARC_RPC = process.env.ARC_RPC_URL ?? "https://rpc.mainnet.arc.io";
 const ARC_EXPLORER = "https://explorer.arc.io";
 
