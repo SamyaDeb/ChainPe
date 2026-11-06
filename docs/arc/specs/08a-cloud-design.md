@@ -1,13 +1,13 @@
 # Spec 08a: `chainpe-cloud` design (F0)
 
-**Status:** awaiting approval. Nothing in `services/chainpe-cloud` exists yet.
+**Status:** approved 2026-11-06, all six recommendations (D1-D6). Implemented in `services/chainpe-cloud`.
 
-Where this differs from spec 08, this note wins once approved, and spec 08 gets updated to match.
+Where this differs from spec 08, this note wins.
 
 Evidence is one of: **ran** (executed on 2026-11-06 against Arc testnet or Circle), **docs** (Arc docs MCP), **source**
 (read in the repo or `node_modules`), or **unverified**.
 
-## Decisions needed
+## Decisions (approved as recommended)
 
 | # | Question | Recommendation |
 |---|---|---|
@@ -131,14 +131,19 @@ provider declares. So verified revenue is reliable for a provider's own accounti
 
 | Probe | Result |
 |---|---|
-| Max `getLogs` range | Refuses between 9,921 and 10,000 blocks: `requested range too large` |
+| Max `getLogs` range | Refuses between 9,921 and 10,000 blocks: code `-32012`, `requested range too large` |
+| Max `getLogs` results | 2,000: code `-32012`, `query exceeds max results 2000, retry with the range a-b` |
+| Rate limit | HTTP 429, code `-32005`, `rate limit exceeded`, from the 4th `getLogs` in about 600 ms |
 | Unfiltered system Transfers | 4,026 logs in 1,000 blocks, so a filter on `to` is required |
 | `to` filter with 1,000 addresses | Works |
 | Block rate | 1.97 blocks/s. About 44,000 blocks since the deploy block |
 | `blockTimestamp` in `getLogs` | Present, so no `getBlock` per log. Used if present, with a `getBlock` fallback |
 
-**Chunking.** Start at 2,000 blocks, the size Arc's docs recommend. Halve on a range error (floor 100), double back up after success, and use exponential
-backoff to 60 s on other errors.
+**Chunking.** Start at 2,000 blocks, the size Arc's docs recommend. Halve only on the two `-32012` refusals (floor 100) and double back up after success. A 429
+never shrinks a chunk, since a smaller range would not help: it backs off exponentially to 60 s, like other errors. `getLogs` calls are spaced 400 ms apart, and catching up waits 1 s between chunks.
+
+**viem drops `args` when it is given `events` (plural).** A filtered read must use `event`, or the node returns every Transfer on Arc. A local run against the real RPC found this, because the
+simulated chain applied the filter anyway. A test now checks the actual `eth_getLogs` topics.
 
 **One chunk, one transaction, in this order:**
 

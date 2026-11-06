@@ -11,6 +11,8 @@
 | `CHAINPE_SELLER_PRIVATE_KEY` | Key of the payout wallet in `config.json`. Set it yourself in the Railway dashboard. It never goes in this repo |
 | `RAILWAY_DOCKERFILE_PATH` | `examples/arc-demo/Dockerfile` |
 | `CIRCLE_API_KEY` | Optional on testnet. Without it the proxy uses Circle's keyless trial, which is limited per payout wallet |
+| `CHAINPE_CLOUD_URL` | Optional. The chainpe-cloud URL, for the provider dashboard |
+| `CHAINPE_INGEST_KEY` | Optional, with the one above. From `chainpe login`, in `~/.chainpe/config.json`. Treat it as a secret |
 
 Railway sets `PORT` itself. Build from the repo root, not from this folder. `publicUrl` in `config.json` must equal the
 service's domain: if Railway gives a different one, change it and regenerate.

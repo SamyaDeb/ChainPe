@@ -1,5 +1,9 @@
 # Spec 08 — `chainpe-cloud` API
 
+> **Superseded in part by [08a](./08a-cloud-design.md), which is what was built.** Main changes: a 12 h bearer token instead of a 7-day cookie, SIWE with two
+> domains, the system USDC emitter instead of `0x3600…`, Gateway revenue verified against Circle's records, and `plan_required` as HTTP 403. The API is in
+> `services/chainpe-cloud/openapi.yaml`.
+
 **Goal:** backend for registered providers: wallet auth, ingest from proxies, Arc indexing, and
 scoped read APIs for the dashboard. Start from `services/chainpe-indexer` (Node, Drizzle, Postgres)
 — copy to `services/chainpe-cloud`, keep the old indexer for Avalanche.

@@ -45,15 +45,17 @@ Do not use plain `paymentMiddleware` + proxy, because it settles after the handl
   latencyMs: number; backendStatus?: number }
 ```
 
-Telemetry: batch POST to `${cloudUrl}/v1/ingest/events` every 5 s or 50 events, `Authorization: Bearer <ingest key>`;
-retry with backoff; drop after 24 h. Off with `--no-telemetry` or no ingest key.
+Telemetry: batch POST to `${cloudUrl}/v1/ingest/events` every 2 s (spec 08a D4) or 50 events, `Authorization: Bearer <ingest key>`;
+retry with backoff; drop after 24 h. A refused batch is narrowed down, so only the bad event is dropped. Off with `--no-telemetry` or no ingest key.
+Credentials come from `CHAINPE_CLOUD_URL` + `CHAINPE_INGEST_KEY`, then `~/.chainpe/config.json` (0600). `chainpe login` writes only that file and ignores
+`CHAINPE_CONFIG`, which can point at a committed example.
 
 ## Known limitations
 
 - Settlement runs before the backend, so a buyer stays charged if the backend then returns 5xx or is
   unreachable. There is no automatic refund; `/chainpe-admin/stats` counts these as `chargedButBackendFailed`.
-- Gateway payments are served before their batch lands. A transfer that later ends `failed` would leave the
-  seller unpaid; nothing reconciles this yet.
+- Gateway payments are served before their batch lands. A transfer that later ends `failed` leaves the seller unpaid. `chainpe-cloud` shows it as failed
+  and out of revenue; without telemetry, nothing reconciles it.
 - Pending payments live in memory. If the proxy restarts while one is pending, a retry is sent to Circle
   again and refused once it has completed.
 
