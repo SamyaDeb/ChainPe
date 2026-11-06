@@ -5,6 +5,11 @@ FROM node:22-slim
 
 WORKDIR /app
 COPY package.json package-lock.json ./
+# npm ci checks the lock file against every workspace, so each one's manifest must be here, though only the CLI is built.
+COPY packages/chainpe-agent/package.json ./packages/chainpe-agent/package.json
+COPY packages/chainpe-ai-tools/package.json ./packages/chainpe-ai-tools/package.json
+COPY packages/chainpe-sdk/package.json ./packages/chainpe-sdk/package.json
+COPY packages/chainpe-wallet/package.json ./packages/chainpe-wallet/package.json
 COPY packages/chainpe ./packages/chainpe
 COPY examples/weather-api ./examples/weather-api
 COPY examples/arc-demo ./examples/arc-demo
