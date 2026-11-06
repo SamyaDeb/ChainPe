@@ -34,7 +34,12 @@ export function errorMessage(error: unknown): { title: string; body: string } {
         return { title: 'Something went wrong', body: error.message }
     }
   }
-  return { title: 'Something went wrong', body: error instanceof Error ? error.message : 'Unknown error.' }
+  if (error instanceof Error) {
+    // viem puts a one-line summary in shortMessage. Its full message is long and technical.
+    const short = (error as { shortMessage?: unknown }).shortMessage
+    return { title: 'Something went wrong', body: typeof short === 'string' ? short : error.message }
+  }
+  return { title: 'Something went wrong', body: 'Unknown error.' }
 }
 
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {

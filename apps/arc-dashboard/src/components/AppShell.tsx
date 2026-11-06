@@ -3,6 +3,7 @@ import clsx from 'clsx'
 import { CreditCard, HeartPulse, LayoutDashboard, LogOut, Receipt, Server, Settings, Star, Users, type LucideIcon } from 'lucide-react'
 import { useAuth } from '@/auth/AuthContext'
 import { Link, usePath } from '@/lib/router'
+import { MobileNav } from './MobileNav'
 import { MockBanner } from './MockBanner'
 import { StudioMark } from './StudioMark'
 import { ThemeToggle } from './ThemeToggle'
@@ -25,6 +26,10 @@ export const NAV: NavItem[] = [
   { path: '/billing', label: 'Billing', icon: CreditCard },
   { path: '/settings', label: 'Settings', icon: Settings },
 ]
+
+const byPath = (paths: string[]): NavItem[] => paths.map((p) => NAV.find((n) => n.path === p)).filter((n): n is NavItem => !!n)
+const MOBILE_MAIN = byPath(['/', '/payments', '/services', '/reputation'])
+const MOBILE_MORE = byPath(['/buyers', '/health', '/billing', '/settings'])
 
 function Brand() {
   return (
@@ -54,6 +59,16 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-dvh flex-col">
+      <a
+        href="#main-content"
+        onClick={(e) => {
+          e.preventDefault()
+          document.getElementById('main-content')?.focus()
+        }}
+        className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-accent-fg"
+      >
+        Skip to content
+      </a>
       {mock ? <MockBanner /> : null}
       <div className="flex flex-1">
         <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col justify-between border-r border-line bg-surface p-4 sm:flex">
@@ -112,7 +127,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </div>
           </div>
-          <main className="mx-auto w-full max-w-5xl min-w-0 flex-1 p-4 pb-28 sm:p-6 sm:pb-6">{children}
+          <main id="main-content" tabIndex={-1} className="focus-visible:outline-none mx-auto w-full max-w-5xl min-w-0 flex-1 p-4 pb-28 sm:p-6 sm:pb-6">{children}
             <div className="mt-6 sm:hidden">
               <StudioMark />
             </div>
@@ -120,25 +135,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-20 flex overflow-x-auto border-t border-line bg-surface sm:hidden">
-        {NAV.map((item) => {
-          const active = path === item.path
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              aria-current={active ? 'page' : undefined}
-              className={clsx(
-                'flex min-h-14 min-w-20 flex-1 shrink-0 flex-col items-center justify-center gap-0.5 px-2 text-xs font-medium',
-                active ? 'text-accent' : 'text-muted',
-              )}
-            >
-              <item.icon size={20} aria-hidden />
-              <span className="whitespace-nowrap">{item.label === 'Listing health' ? 'Health' : item.label}</span>
-            </Link>
-          )
-        })}
-      </nav>
+      <MobileNav path={path} main={MOBILE_MAIN} more={MOBILE_MORE} />
     </div>
   )
 }

@@ -34,9 +34,15 @@ function Heartbeat({ at, now }: { at: string | null; now: number }) {
   )
 }
 
-function agentText(id: string | null, status: AgentIdStatus): string {
+function agentText(id: string | null, status: AgentIdStatus): ReactNode {
   if (status === 'owned' && id) return `#${id}`
-  if (status === 'none') return 'None. Run `chainpe identity`'
+  if (status === 'none') {
+    return (
+      <>
+        None. Run <code className="font-mono">chainpe identity</code>
+      </>
+    )
+  }
   if (status === 'not_owner') return 'This wallet no longer owns the agent'
   return 'Ownership could not be checked'
 }
@@ -50,7 +56,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function ServiceCard({ s, now, agent }: { s: ServiceItem; now: number; agent: string }) {
+function ServiceCard({ s, now, agent }: { s: ServiceItem; now: number; agent: ReactNode }) {
   const price = parseAtomic(s.priceAtomic) !== null ? formatUsdc(s.priceAtomic) : `${s.price} (could not be read as USDC)`
   return (
     <Card as="article">

@@ -41,7 +41,7 @@ export function BarChart({ bars, unit }: { bars: Bar[]; unit: 'hour' | 'day' }) 
           )
         })}
       </svg>
-      <figcaption className="mt-1 flex justify-between gap-2 text-xs text-muted">
+      <figcaption className="mt-1 flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs text-muted">
         <span>{first ? fmt(first.t) : ''}</span>
         <span>Peak {formatUsdc(peak)} per {unit}</span>
         <span>{last ? fmt(last.t) : ''}</span>

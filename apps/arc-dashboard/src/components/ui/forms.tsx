@@ -77,7 +77,7 @@ export function Segmented<V extends string>({
             )}
           >
             {o.label}
-            {o.locked ? <span className="ml-1 text-xs opacity-80">(Pro)</span> : null}
+            {o.locked ? <span className="ml-1 text-xs">(Pro)</span> : null}
           </button>
         )
       })}

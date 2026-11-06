@@ -9,21 +9,21 @@ The fixes go through Studio (`prompts/studio-02b-fixes.md`) so the workspace sta
 
 | # | Severity | Area | Finding | Status |
 |---|---|---|---|---|
-| 1 | High | Money | Upgrade: if a receipt wait fails after the tx is sent, the error reads as a failure and the pay button is live again, so a retry can pay twice | run 2b |
-| 2 | Medium | Trust | "Verified revenue" uses `totalVerifiedAtomic`, which the API computes as exact + settled + **pending**. With a separate pending tile beside it, it reads as if pending were excluded. The chart has the same issue | run 2b |
-| 3 | Medium | Spec | Billing never reads `planOf()`. The ABI fragment exists but nothing calls it (H1 requires it) | run 2b |
-| 4 | Medium | Security | No `frame-ancestors`: a meta CSP cannot set it, so the page can be framed over wallet-triggering buttons | run 2b |
-| 5 | Medium | Reliability | `fetch` has no timeout. A hung request stalls the no-overlap poller for good, and a hung logout never clears the session | run 2b |
-| 6 | Medium | Accuracy | "Never paid" overclaims: `fromPayer` is also false for wallets whose payments are unverified or self-pay | run 2b |
-| 7 | Medium | Money format | Gateway balance, service price and Billing balance/allowance use the exact formatter, not the 6 dp / 2 dp rule | run 2b |
-| 8 | Low | Isolation | A restored session is not compared with the wallet's current account after a reload (`accountsChanged` only fires live). Data stays scoped to the token, but the UI can show one address while the wallet is on another | run 2b |
-| 9 | Low | Billing | A low-balance or RPC error before approval is shown on the "Switch network" step | run 2b |
-| 10 | Low | Efficiency | A `plan_required` answer keeps polling every 6 s forever | run 2b |
-| 11 | Low | Accessibility | Light-mode `ok` on `ok-soft` is 4.43:1, under AA. Dark mode and all other text pairs pass | run 2b |
-| 12 | Low | Accessibility | The range picker declares `role="radio"` without the arrow-key behaviour that role promises | run 2b |
-| 13 | Low | Layout | The fixed "Built with Arc Studio" pill covers table rows at 375 px | run 2b |
-| 14 | Low | Layout | Bottom tabs scroll with no affordance at 375 px: Billing and Settings start off-screen. "All time" is clipped in the range picker | run 3 |
-| 15 | Low | Bundle | One 532 KB chunk (164 KB gzip): viem, ox and noble make up most of it. No unused SDK is bundled. Vendor chunks silence the warning and help caching | run 2b |
+| 1 | High | Money | Upgrade: if a receipt wait fails after the tx is sent, the error reads as a failure and the pay button is live again, so a retry can pay twice | Fixed in run 2b |
+| 2 | Medium | Trust | "Verified revenue" uses `totalVerifiedAtomic`, which the API computes as exact + settled + **pending**. With a separate pending tile beside it, it reads as if pending were excluded. The chart has the same issue | Fixed in run 2b |
+| 3 | Medium | Spec | Billing never reads `planOf()`. The ABI fragment exists but nothing calls it (H1 requires it) | Fixed in run 2b |
+| 4 | Medium | Security | No `frame-ancestors`: a meta CSP cannot set it, so the page can be framed over wallet-triggering buttons | Fixed in run 2b |
+| 5 | Medium | Reliability | `fetch` has no timeout. A hung request stalls the no-overlap poller for good, and a hung logout never clears the session | Fixed in run 2b |
+| 6 | Medium | Accuracy | "Never paid" overclaims: `fromPayer` is also false for wallets whose payments are unverified or self-pay | Fixed in run 2b |
+| 7 | Medium | Money format | Gateway balance, service price and Billing balance/allowance use the exact formatter, not the 6 dp / 2 dp rule | Fixed in run 2b |
+| 8 | Low | Isolation | A restored session is not compared with the wallet's current account after a reload (`accountsChanged` only fires live). Data stays scoped to the token, but the UI can show one address while the wallet is on another | Fixed in run 2b |
+| 9 | Low | Billing | A low-balance or RPC error before approval is shown on the "Switch network" step | Fixed in run 2b |
+| 10 | Low | Efficiency | A `plan_required` answer keeps polling every 6 s forever | Fixed in run 2b |
+| 11 | Low | Accessibility | Light-mode `ok` on `ok-soft` is 4.43:1, under AA. Dark mode and all other text pairs pass | Fixed in run 2b |
+| 12 | Low | Accessibility | The range picker declares `role="radio"` without the arrow-key behaviour that role promises | Fixed in run 2b |
+| 13 | Low | Layout | The fixed "Built with Arc Studio" pill covers table rows at 375 px | Fixed in run 2b |
+| 14 | Low | Layout | Bottom tabs scroll with no affordance at 375 px: Billing and Settings start off-screen. "All time" is clipped in the range picker | Fixed in run 3 |
+| 15 | Low | Bundle | One 532 KB chunk (164 KB gzip): viem, ox and noble make up most of it. No unused SDK is bundled. Vendor chunks silence the warning and help caching | Fixed in run 2b |
 
 ## Checked, no issue
 
