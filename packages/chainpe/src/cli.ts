@@ -11,9 +11,6 @@ import * as p from "@clack/prompts";
 import chalk from "chalk";
 import gradient from "gradient-string";
 import ora from "ora";
-import fs from "fs/promises";
-import path from "path";
-import os from "os";
 
 import type { ChainPeConfig, ChainPeNetwork } from "./types.js";
 import { isValidAddress, getUsdcBalance, formatUsdc } from "./evm.js";
@@ -29,15 +26,22 @@ import {
   startProxyServer,
 } from "./proxy/index.js";
 import { setLogLevel } from "./logger.js";
+import { loadConfig, saveConfig } from "./config.js";
 import { runFetchCommand, runDiscoverCommand, runDepositCommand } from "./commands/consume.js";
 import { runBalanceCommand, runWithdrawCommand } from "./commands/seller.js";
+import {
+  runDeregisterCommand,
+  runIdentityCommand,
+  runListCommand,
+  runPlanCommand,
+  runRegisterCommand,
+  runUpgradeCommand,
+} from "./commands/provider.js";
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-const CONFIG_DIR = path.join(os.homedir(), ".chainpe");
-const CONFIG_FILE = process.env.CHAINPE_CONFIG ?? path.join(CONFIG_DIR, "config.json");
 const VERSION = "3.0.0-arc.0";
 
 const chainpeGradient = gradient(["#E84142", "#FF6B6B", "#FFD93D"]);
@@ -66,23 +70,6 @@ function printSection(title: string): void {
   console.log();
   console.log(chalk.cyan.bold(`▸ ${title}`));
   console.log(chalk.gray("─".repeat(50)));
-}
-
-// ============================================================================
-// File operations
-// ============================================================================
-
-async function loadConfig(): Promise<ChainPeConfig | null> {
-  try {
-    return JSON.parse(await fs.readFile(CONFIG_FILE, "utf-8")) as ChainPeConfig;
-  } catch {
-    return null;
-  }
-}
-
-async function saveConfig(config: ChainPeConfig): Promise<void> {
-  await fs.mkdir(path.dirname(CONFIG_FILE), { recursive: true });
-  await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2));
 }
 
 // ============================================================================
@@ -139,6 +126,7 @@ async function runInit(): Promise<void> {
   printSection("Service Configuration");
 
   const targetUrl = await prompt(p.text({ message: "Your API URL (the backend ChainPe will proxy)", placeholder: "http://localhost:3000", validate: validateUrl }));
+  const publicUrl = await prompt(p.text({ message: "Public HTTPS URL of this proxy, published on-chain. Never your backend. Leave empty if not deployed yet", placeholder: "https://api.example.com" }));
   const serviceName = await prompt(p.text({ message: "Service name (for registry listing)", placeholder: "My AI Agent API", validate: (v) => (!v || v.length < 3 ? "Name must be at least 3 characters" : undefined) }));
   const serviceDescription = await prompt(p.text({ message: "Service description", placeholder: "AI-powered research assistant", validate: (v) => (!v || v.length < 10 ? "Description must be at least 10 characters" : undefined) }));
   const tags = await prompt(p.text({ message: "Tags (comma-separated, for discovery)", placeholder: "ai, research, documents" }));
@@ -176,6 +164,7 @@ async function runInit(): Promise<void> {
     serviceDescription: serviceDescription as string,
     tags: (tags as string).split(",").map((t) => t.trim()).filter(Boolean),
     targetUrl: targetUrl as string,
+    ...(publicUrl ? { publicUrl: publicUrl as string } : {}),
     pricePerRequest: pricePerRequest as string,
     paymentToken: "USDC",
     walletAddress: walletAddress,
@@ -258,22 +247,6 @@ async function runStart(options: {
     console.log(chalk.red(`✗ Failed to start server: ${(error as Error).message}`));
     process.exit(1);
   }
-}
-
-// ============================================================================
-// register
-// ============================================================================
-
-async function runRegister(): Promise<void> {
-  exitRegistryNotOnArc();
-}
-
-async function runDeregister(): Promise<void> {
-  exitRegistryNotOnArc();
-}
-
-async function runList(): Promise<void> {
-  exitRegistryNotOnArc();
 }
 
 // ============================================================================
@@ -364,12 +337,6 @@ async function sellerContext(networkOption?: string): Promise<{ walletAddress: s
   }
 }
 
-/** Registry commands need the Arc contracts, which arrive in Phase 4. */
-function exitRegistryNotOnArc(): never {
-  console.log(chalk.yellow("  Service registration is not available on Arc yet."));
-  process.exit(1);
-}
-
 function shortAddr(addr: string): string {
   return `${chalk.cyan(addr.slice(0, 6))}…${chalk.cyan(addr.slice(-4))}`;
 }
@@ -393,9 +360,48 @@ program
   .option("--facilitator-url <url>", "Override the Circle facilitator URL (advanced)")
   .option("--rails <rails>", "Payment rails to accept: exact,gateway (default: config, then both)")
   .action(runStart);
-program.command("register").description("Register / update your service on-chain").action(runRegister);
-program.command("deregister").description("Remove your service from the on-chain registry").action(runDeregister);
-program.command("list").description("List all services registered on-chain").action(runList);
+const NETWORK_FLAG = "arc | arc-testnet (default: $CHAINPE_NETWORK, then config)";
+program
+  .command("identity")
+  .description("Find or mint this wallet's ERC-8004 identity")
+  .option("-n, --network <network>", NETWORK_FLAG)
+  .option("--agent-id <id>", "Use this agentId, which the wallet must own")
+  .option("--update-uri", "Point the token's URI at this service's agent card")
+  .option("--new", "Mint another identity even if the wallet already has one")
+  .option("--allow-http", "Allow an http publicUrl (arc-testnet only)")
+  .action(runIdentityCommand);
+program
+  .command("register")
+  .description("Create or update your provider account and service on ChainPeAccounts")
+  .option("-n, --network <network>", NETWORK_FLAG)
+  .option("--allow-http", "Allow an http publicUrl (arc-testnet only)")
+  .action(runRegisterCommand);
+program
+  .command("deregister")
+  .description("Deactivate a service. Its history stays on-chain")
+  .option("-n, --network <network>", NETWORK_FLAG)
+  .option("--name <name>", "Service name (default: the one in your config)")
+  .action(runDeregisterCommand);
+program
+  .command("list")
+  .description("List services registered on ChainPeAccounts")
+  .option("-n, --network <network>", NETWORK_FLAG)
+  .option("--mine", "Only this wallet's services")
+  .option("--all", "Include inactive services")
+  .option("--json", "Print JSON")
+  .action(runListCommand);
+program
+  .command("plan")
+  .description("Show your plan, paid-until date and service limit")
+  .option("-n, --network <network>", NETWORK_FLAG)
+  .action(runPlanCommand);
+program
+  .command("upgrade")
+  .description("Pay for Pro in USDC. Approves exactly the amount")
+  .option("-n, --network <network>", NETWORK_FLAG)
+  .option("--periods <n>", "30-day periods to buy, 1 to 12 (default 1)")
+  .option("-y, --yes", "Do not ask for confirmation")
+  .action(runUpgradeCommand);
 program
   .command("status")
   .description("Show current configuration and status")
