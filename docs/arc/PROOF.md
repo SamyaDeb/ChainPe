@@ -46,6 +46,9 @@ ChainPeAccounts source is verified on the explorer: [0xD315322c9D83A6f50A04236A2
 | 2026-11-06 17:17 | That provider registers, logs in to chainpe-cloud, and a buyer pays it 3 times ($0.05 each); chainpe-cloud shows 3 of 3 verified, $0.15 revenue | `0x0e9fe9a00f80c45da3929b3edbe5179c1fa39c68448ed25196c551f8993029ef` | [view](https://explorer.testnet.arc.io/tx/0x0e9fe9a00f80c45da3929b3edbe5179c1fa39c68448ed25196c551f8993029ef) |
 | 2026-11-06 17:18 | The provider opts in to the usage fee: approve to ChainPeFees | `0x217ae9afdf62071c32648cf22fbdee354ad0bd3c09d12403e5242f705cce3068` | [view](https://explorer.testnet.arc.io/tx/0x217ae9afdf62071c32648cf22fbdee354ad0bd3c09d12403e5242f705cce3068) |
 | 2026-11-06 17:33 | chainpe-cloud collects the 1% fee (0.0015 USDC on $0.15 of verified revenue) through ChainPeFees | `0x88b1f5fa54f97ab0cf8324eb9db793b71ab23e9a91bc06a83977188378aafbb5` | [view](https://explorer.testnet.arc.io/tx/0x88b1f5fa54f97ab0cf8324eb9db793b71ab23e9a91bc06a83977188378aafbb5) |
+| 2026-11-06 18:02 | Autonomous `hire-best` script swaps through Bolt: 0.660455 EURC measured on-chain against 0.660455 quoted | `0xe463fa9f09a558c464ca29e5701cd34ffa6ead6b5e6f24eccf9f6d62ca692c3c` | [view](https://explorer.testnet.arc.io/tx/0xe463fa9f09a558c464ca29e5701cd34ffa6ead6b5e6f24eccf9f6d62ca692c3c) |
+| 2026-11-06 18:02 | That script posts its measured score, 100, to ERC-8004 | `0xe3169f03d477eb6dcb2034f89fd84cb1fdf5696740d8af5506a52c95854e1c60` | [view](https://explorer.testnet.arc.io/tx/0xe3169f03d477eb6dcb2034f89fd84cb1fdf5696740d8af5506a52c95854e1c60) |
+| 2026-11-06 18:21 | Claude Desktop, through the MCP wallet, pays the best-rated swap agent 0.01 USDC for a live quote | `0xd375f8377527f3e914458c8470f78dc69e16e57d149c1b268e7aa3ea23503535` | [view](https://explorer.testnet.arc.io/tx/0xd375f8377527f3e914458c8470f78dc69e16e57d149c1b268e7aa3ea23503535) |
 
 ## Live services
 
