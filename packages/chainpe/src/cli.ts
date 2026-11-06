@@ -181,7 +181,6 @@ async function runInit(): Promise<void> {
     walletAddress: walletAddress,
     proxyPort: parseInt(proxyPort as string, 10),
     network,
-    registryAddress: process.env.CHAINPE_REGISTRY_ADDRESS,
     logLevel: "normal",
   };
 

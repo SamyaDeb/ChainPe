@@ -50,43 +50,22 @@ export interface ChainPeConfig {
   // Routes priced differently from pricePerRequest, e.g. { path: "GET /weather", ... }.
   routes?: RouteConfig[];
 
-  // Deployed ChainPeRegistry contract address (0x...)
-  registryAddress?: string;
+  // The HTTPS URL buyers connect to: this proxy, never targetUrl. Published
+  // on-chain as the service endpoint and in the ERC-8004 agent URI.
+  publicUrl?: string;
 
-  // ERC-8004 agent identity for this service (persisted on register). When set,
-  // the proxy advertises it on 402 responses so consumers can leave reputation
-  // feedback without scanning the registry. Override via CHAINPE_AGENT_ID.
+  // Circle Discovery category for this service, used by `chainpe doctor`.
+  category?: string;
+
+  // ERC-8004 agent identity for this service (persisted by `chainpe identity`).
+  // When set, the proxy advertises it so consumers can leave reputation feedback
+  // without scanning the registry. Override via CHAINPE_AGENT_ID.
   agentId?: string;
 
   // Optional settings
   logLevel?: "verbose" | "normal" | "quiet";
   adminKey?: string;
   rateLimit?: number;
-}
-
-// ============================================================================
-// Registry Types
-// ============================================================================
-
-export interface ServiceRegistration {
-  id: string; // "<developer>:<name>"
-  name: string;
-  description: string;
-  tags: string[];
-  endpoint: string; // Full URL to the x402-protected endpoint
-  pricePerRequest: string;
-  paymentToken: PaymentToken;
-  walletAddress: string; // payTo (0x)
-  developer: string; // 0x address that registered
-  network: ChainPeNetwork;
-  agentId?: string; // ERC-8004 agent identity (optional)
-  createdAt: string; // ISO timestamp
-  updatedAt: string; // ISO timestamp
-}
-
-export interface Registry {
-  version: string;
-  services: ServiceRegistration[];
 }
 
 // ============================================================================
@@ -98,6 +77,8 @@ export interface RouteConfig {
   pricePerRequest: string; // Human-readable USDC
   paymentToken: PaymentToken;
   description?: string;
+  // Query parameters, name → description, documented by `chainpe doctor`.
+  query?: Record<string, string>;
 }
 
 // ============================================================================

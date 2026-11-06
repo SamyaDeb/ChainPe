@@ -54,18 +54,11 @@ export {
   parseUsdc,
 } from "./evm.js";
 
-// On-Chain Registry
-export {
-  ChainPeRegistryClient,
-  onChainToServiceRegistration,
-  resolveRegistryAddress,
-  CHAINPE_REGISTRY_ABI,
-} from "./registry.js";
-export type { RegistrationResult, OnChainService } from "./registry.js";
-
-// Browser / MetaMask registration handoff
-export { registerViaBrowser } from "./wallet-connect-browser.js";
-export type { BrowserRegisterParams, BrowserRegisterResult } from "./wallet-connect-browser.js";
+// Provider accounts and identity on Arc
+export { AccountsReader, AccountsWriter, accountsAddress, serviceKey } from "./accounts.js";
+export type { OnChainService, ProviderAccount, ServiceInput } from "./accounts.js";
+export { ensureIdentity, IDENTITY_REGISTRY_ABI } from "./erc8004.js";
+export { chainPeAccountsAbi } from "./abi/ChainPeAccounts.js";
 
 // Logger
 export { logger, setLogLevel, getLogLevel, logPayment, logRequest, logServerStart } from "./logger.js";
