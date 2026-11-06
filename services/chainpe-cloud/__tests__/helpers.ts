@@ -4,7 +4,8 @@ import { encodeAbiParameters, encodeEventTopics, parseAbi, verifyMessage, type A
 import { generatePrivateKey, privateKeyToAccount, type PrivateKeyAccount } from 'viem/accounts'
 import request from 'supertest'
 import { createApp, type Limits } from '../src/app.js'
-import type { ChainReader, ProviderOnChain } from '../src/chain.js'
+import { createFees, type FeeConfig, type Fees } from '../src/fees.js'
+import type { ChainReader, FeeChain, FeeCollection, ProviderOnChain } from '../src/chain.js'
 import { createDb, runMigrations } from '../src/db.js'
 import { createProviderViews } from '../src/plan.js'
 import { createSessions } from '../src/session.js'
@@ -29,7 +30,7 @@ export async function resetDb(): Promise<void> {
     await runMigrations(db)
     migrated = true
   }
-  await db.execute(sql`TRUNCATE providers, services, subscriptions, siwe_nonces, revoked_sessions, ingest_keys,
+  await db.execute(sql`TRUNCATE fee_accounts, fee_accruals, fee_batches, providers, services, subscriptions, siwe_nonces, revoked_sessions, ingest_keys,
     payment_events, onchain_transfers, gateway_transfers, feedback, heartbeats, my_wallets, indexer_state`)
 }
 
@@ -83,7 +84,69 @@ export class FakeChain implements ChainReader {
   }
 }
 
+/** Stands in for ChainPeFees and USDC. It keeps the two rules that matter: the allowance, and one collection per batch. */
+export class FakeFeeChain implements FeeChain {
+  allowances = new Map<string, bigint>()
+  balances = new Map<string, bigint>()
+  collected = new Map<string, FeeCollection>()
+  canCollect = true
+  down = false
+  /** Sent and then lost: the transaction lands, but the service never hears back. */
+  crashAfterSend = false
+  revertNext = false
+  sends = 0
+
+  private guard(): void {
+    if (this.down) throw new Error('RPC unreachable')
+  }
+  async allowance(provider: `0x${string}`): Promise<bigint> {
+    this.guard()
+    return this.allowances.get(provider.toLowerCase()) ?? 0n
+  }
+  async balance(provider: `0x${string}`): Promise<bigint> {
+    this.guard()
+    return this.balances.get(provider.toLowerCase()) ?? 1_000_000_000n
+  }
+  async batchCollected(batchId: `0x${string}`): Promise<boolean> {
+    this.guard()
+    return this.collected.has(batchId)
+  }
+  async collect(c: FeeCollection): Promise<`0x${string}`> {
+    this.guard()
+    this.sends++
+    if (this.collected.has(c.batchId)) throw new Error('BatchAlreadyCollected')
+    if (this.revertNext) {
+      this.revertNext = false
+      return `0x${'dead'.padEnd(64, '0')}`
+    }
+    const key = c.provider.toLowerCase()
+    this.allowances.set(key, (this.allowances.get(key) ?? 0n) - c.feeAtomic)
+    this.collected.set(c.batchId, c)
+    if (this.crashAfterSend) {
+      this.crashAfterSend = false
+      throw new Error('connection lost')
+    }
+    return `0x${this.sends.toString(16).padStart(64, 'f')}`
+  }
+  async receiptStatus(hash: `0x${string}`): Promise<'success' | 'reverted'> {
+    this.guard()
+    return hash.startsWith('0xdead') ? 'reverted' : 'success'
+  }
+}
+
+export const FEE_CONFIG: FeeConfig = {
+  contract: '0x00000000000000000000000000000000000fee00',
+  freeBps: 100,
+  proBps: 50,
+  collectAtAtomic: 1_000_000n,
+  collectMinAtomic: 50_000n,
+  lockAtAtomic: 5_000_000n,
+  startAt: null,
+}
+
 export interface Harness {
+  feeChain: FakeFeeChain
+  fees?: Fees
   app: ReturnType<typeof createApp>
   chain: FakeChain
   clock: { offset: number; now(): number }
@@ -93,7 +156,7 @@ export interface Harness {
 
 const OPEN_LIMITS: Limits = { nonce: 100_000, verify: 100_000, ingestKey: 100_000, ingestIp: 100_000, read: 100_000 }
 
-export function harness(limits: Limits = OPEN_LIMITS): Harness {
+export function harness(limits: Limits = OPEN_LIMITS, feeConfig?: FeeConfig): Harness {
   const chain = new FakeChain()
   const clock = {
     offset: 0,
@@ -104,10 +167,13 @@ export function harness(limits: Limits = OPEN_LIMITS): Harness {
   const now = () => clock.now()
   const views = createProviderViews(db, chain, now)
   const wakes = { count: 0 }
+  const feeChain = new FakeFeeChain()
+  const fees = feeConfig ? createFees({ db, views, chain: feeChain, config: feeConfig, now, log: () => undefined }) : undefined
   const app = createApp({
     db,
     chain,
     views,
+    fees,
     sessions: createSessions(db, SECRET, now),
     corsOrigins: [`https://${DASH_DOMAIN}`],
     chainId: CHAIN_ID,
@@ -117,7 +183,7 @@ export function harness(limits: Limits = OPEN_LIMITS): Harness {
     onEvents: () => wakes.count++,
     now,
   })
-  return { app, chain, clock, views, wakes }
+  return { app, chain, clock, views, wakes, feeChain, fees }
 }
 
 export const newAccount = (): PrivateKeyAccount => privateKeyToAccount(generatePrivateKey())

@@ -9,7 +9,9 @@ import addFormats from 'ajv-formats'
 import request from 'supertest'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { auth, event, harness, newAccount, resetDb, type Harness } from './helpers.js'
+import { eq } from 'drizzle-orm'
+import { feeAccounts, feeAccruals, feeBatches } from '../src/schema.js'
+import { auth, db, event, FEE_CONFIG, harness, newAccount, resetDb, type Harness } from './helpers.js'
 import { seedProvider, type Seeded } from './seed.js'
 
 const spec = parseYaml(fs.readFileSync(new URL('../openapi.yaml', import.meta.url), 'utf-8'))
@@ -116,6 +118,26 @@ describe('every documented endpoint matches openapi.yaml', () => {
     await call('health-free', '/v1/me/health', 'get', 200, { token: free.token })
     const csv = await request(h.app).get('/v1/me/payments.csv').set(...auth(free.token))
     expect(csv.status).toBe(403)
+  })
+
+  it('fees', async () => {
+    await call('fees-disabled', '/v1/me/fees', 'get', 200, { token: free.token })
+    const withFees = harness(undefined, FEE_CONFIG)
+    const seller = await seedProvider(withFees, {})
+    withFees.feeChain.allowances.set(seller.address, 20_000_000n)
+    const at = new Date('2026-11-06T10:00:00.000Z')
+    await db.insert(feeAccounts).values({ provider: seller.address, enrolledAt: at })
+    const batchId = `0x${'b'.repeat(64)}`
+    await db.insert(feeBatches).values({ id: batchId, provider: seller.address, revenueAtomic: '100000000', feeAtomic: '1000000', status: 'collected', txHash: `0x${'c'.repeat(64)}`, createdAt: at, updatedAt: at })
+    await db.insert(feeAccruals).values([
+      { provider: seller.address, eventId: 'fixture-collected', revenueAtomic: '100000000', feeBps: 100, feeAtomic: '1000000', accruedAt: at, batchId },
+      { provider: seller.address, eventId: 'fixture-owed', revenueAtomic: '25000000', feeBps: 100, feeAtomic: '250000', accruedAt: at },
+    ])
+    const res = await request(withFees.app).get('/v1/me/fees').set(...auth(seller.token)).expect(200)
+    record('fees-active', schemaOf('/v1/me/fees', 'get', 200), res.body)
+    await db.update(feeAccruals).set({ feeAtomic: '5000000' }).where(eq(feeAccruals.eventId, 'fixture-owed'))
+    const locked = await request(withFees.app).get('/v1/me/payments').set(...auth(seller.token)).expect(403)
+    record('error-fees-due', 'Error', locked.body)
   })
 
   it('health', async () => {

@@ -5,6 +5,7 @@ import { ipKeyGenerator, rateLimit } from 'express-rate-limit'
 import { sql } from 'drizzle-orm'
 import type { ChainReader } from './chain.js'
 import type { Db } from './db.js'
+import type { Fees } from './fees.js'
 import type { ProviderViews } from './plan.js'
 import { authRoutes } from './routes/auth.js'
 import { ingestRoutes } from './routes/ingest.js'
@@ -27,6 +28,7 @@ export interface AppOptions {
   chain: ChainReader
   sessions: Sessions
   views: ProviderViews
+  fees?: Fees
   corsOrigins: string[]
   chainId: number
   dashboardDomain: string
@@ -91,7 +93,7 @@ export function createApp(options: AppOptions): express.Express {
     '/v1',
     authRoutes({ db, chain, sessions, chainId: options.chainId, dashboardDomain: options.dashboardDomain, cliDomain: options.cliDomain, now }),
     ingestRoutes({ db, chain, caip2: `eip155:${options.chainId}`, requireKey: guardedKey, onEvents: options.onEvents, now }),
-    meRoutes({ db, views, sessions, readLimit: limiter(limits.read, (req) => req.provider ?? byIp(req)), now })
+    meRoutes({ db, views, sessions, fees: options.fees, readLimit: limiter(limits.read, (req) => req.provider ?? byIp(req)), now })
   )
 
   app.use((_req, res) => {

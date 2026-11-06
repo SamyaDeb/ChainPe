@@ -8,6 +8,13 @@
       "when": 1793936633343,
       "tag": "0000_silky_young_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793950029212,
+      "tag": "0001_black_daredevil",
+      "breakpoints": true
     }
   ]
 }

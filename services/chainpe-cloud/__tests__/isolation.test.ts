@@ -18,6 +18,7 @@ const READS: { path: string; openapi?: string }[] = [
   { path: '/v1/me/reputation' },
   { path: '/v1/me/health' },
   { path: '/v1/me/wallets' },
+  { path: '/v1/me/fees' },
   { path: '/v1/keys' },
 ]
 
