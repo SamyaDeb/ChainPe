@@ -61,8 +61,11 @@ chainpe init                          # your API URL, price and payout wallet
 chainpe start --network arc-testnet   # the paying proxy, in front of your API
 chainpe identity                      # an ERC-8004 identity for your service
 chainpe register                      # your provider account on Arc
+chainpe login                         # connects this machine to the dashboard
 chainpe doctor                        # checks you are ready for agents and Circle's marketplace
 ```
+
+Going public and keeping your key safe: [packages/chainpe/README.md](packages/chainpe/README.md#go-public).
 
 **ERC-8004** is a standard on-chain registry for agent identities and ratings.
 

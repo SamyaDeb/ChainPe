@@ -31,8 +31,8 @@ refuses Arc mainnet without the flag.
 A developer can go from install to a working setup without help.
 
 - Make `chainpe login` use the production cloud URL by default.
-- Make `chainpe init` generate `routes`, so the OpenAPI check can pass.
-- Make `chainpe doctor` print the values for Circle's form.
+- Make `chainpe init` generate `routes`, which the OpenAPI check needs along with a sample from `--pay` or `--sample`.
+- `chainpe doctor` already prints the values for Circle's form once every required check passes.
 - Add a short guide to the README covering public HTTPS hosting, key safety and `chainpe login`.
 - Publish `@chainpe/cli` 3.0.0, then deprecate `@chainpeavax/cli`.
 

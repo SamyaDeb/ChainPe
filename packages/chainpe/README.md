@@ -28,15 +28,31 @@ export CHAINPE_SELLER_PRIVATE_KEY=<the payout wallet's key>
 chainpe start --network arc-testnet   # the paying proxy, on port 4402 by default
 ```
 
-Every request to the proxy now needs a payment. The key has to be on the machine running the proxy, because Circle requires the seller to sign. Use a wallet that only receives payments, and never commit its key.
+Every request to the proxy now needs a payment.
 
-To make your service visible to agents and show up in the dashboard, give the proxy a public HTTPS address, then:
+## Go public
+
+Agents need to reach the proxy, so run it somewhere with a public HTTPS address. Any host that runs Node or Docker works; [this Dockerfile](https://github.com/SamyaDeb/ChainPe/blob/arc/examples/arc-demo/Dockerfile) is what the demo API uses. Set that address as `publicUrl` in `~/.chainpe/config.json`, then:
 
 ```bash
 chainpe identity     # an ERC-8004 identity for your service
 chainpe register     # your provider account on Arc
+chainpe login        # connects this machine to the dashboard, on Arc testnet
 chainpe doctor       # checks you are ready for agents and Circle's Agent Marketplace
 ```
+
+Restart the proxy after `chainpe login`. Your payments then appear at https://chainpe.vercel.app/dashboard. On a hosted proxy, set `CHAINPE_CLOUD_URL` and `CHAINPE_INGEST_KEY` from the values `chainpe login` saves.
+
+Circle's marketplace needs each route's response fields, so `chainpe doctor` needs a real answer from your API. Run `chainpe doctor --pay` with a funded buyer key in `CHAINPE_PRIVATE_KEY`, which spends one payment per route, or pass an example response with `--sample <file>`. Run it where the proxy can read the documents it writes, then restart the proxy.
+
+When every required check passes, `chainpe doctor` prints the values for [Circle's listing form](https://forms.gle/7YFzvdmMcn1JH5tF6). Circle reviews listings by hand. Until yours is approved, agents can still pay you at your URL.
+
+## Keep your key safe
+
+- The payout wallet's key has to be on the machine running the proxy, because Circle requires the seller to sign each settlement.
+- Use a wallet only for receiving payments, and move earnings out with `chainpe withdraw`.
+- Keep the key in your host's secret settings. Never commit it or put it in a file that gets uploaded.
+- `chainpe login` saves an ingest key in `~/.chainpe/config.json`. It only lets a proxy report payments, but treat it as a secret too.
 
 ## Pay an API
 
