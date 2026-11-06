@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { isAddress } from "viem";
 import { assertMainnetAllowed, explorerTxUrl, fromX402Network, getNetwork, NETWORKS, parseNetwork } from "../src/chains.js";
+import { parsePaidRoutes } from "../src/proxy/routeConfig.js";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "../src");
 
@@ -73,5 +74,27 @@ describe("Arc-only source", () => {
     const files = readdirSync(SRC, { recursive: true, encoding: "utf8" }).filter((f) => f.endsWith(".ts"));
     const hits = files.filter((f) => /\bAVAX\b/.test(readFileSync(join(SRC, f), "utf8")));
     expect(hits).toEqual([]);
+  });
+});
+
+describe("parsePaidRoutes", () => {
+  it("reads methods and paths, at one price", () => {
+    expect(parsePaidRoutes("GET /weather, post /v1/search, /forecast", "0.01")).toEqual([
+      { path: "GET /weather", pricePerRequest: "0.01", paymentToken: "USDC" },
+      { path: "POST /v1/search", pricePerRequest: "0.01", paymentToken: "USDC" },
+      { path: "GET /forecast", pricePerRequest: "0.01", paymentToken: "USDC" },
+    ]);
+  });
+
+  it("is empty for no input, and drops repeats", () => {
+    expect(parsePaidRoutes("", "0.01")).toEqual([]);
+    expect(parsePaidRoutes(" , ", "0.01")).toEqual([]);
+    expect(parsePaidRoutes("/a, GET /a", "0.01")).toHaveLength(1);
+  });
+
+  it("rejects anything that is not a route", () => {
+    for (const bad of ["weather", "FETCH /weather", "GET weather", "GET /a /b"]) {
+      expect(() => parsePaidRoutes(bad, "0.01")).toThrow(/is not a route/);
+    }
   });
 });

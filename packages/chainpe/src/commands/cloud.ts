@@ -1,7 +1,7 @@
 /** `chainpe login` and `chainpe logout`. The seller key is read from the environment, used in memory and never printed. */
 import chalk from "chalk";
 import { getNetwork, parseNetwork } from "../chains.js";
-import { assertCloudUrl, clearCloudCredentials, credentialsPath, readStoredCredentials, saveCloudCredentials } from "../cloud/credentials.js";
+import { assertCloudUrl, chooseCloudUrl, clearCloudCredentials, credentialsPath, readStoredCredentials, saveCloudCredentials } from "../cloud/credentials.js";
 import { loginAndCreateKey, revokeKey } from "../cloud/login.js";
 import { loadConfig } from "../config.js";
 import { resolveSellerSigner } from "../proxy/circleFacilitator.js";
@@ -10,7 +10,7 @@ async function signerContext(networkOption?: string) {
   const config = await loadConfig();
   if (!config) throw new Error("No configuration found. Run `chainpe init` first, or set CHAINPE_CONFIG.");
   const network = parseNetwork(networkOption ?? process.env.CHAINPE_NETWORK ?? config.network);
-  return { signer: resolveSellerSigner(config.walletAddress), chainId: getNetwork(network).chainId };
+  return { network, signer: resolveSellerSigner(config.walletAddress), chainId: getNetwork(network).chainId };
 }
 
 export interface LoginFlags {
@@ -21,10 +21,8 @@ export interface LoginFlags {
 export async function runLoginCommand(flags: LoginFlags): Promise<void> {
   try {
     const stored = await readStoredCredentials();
-    const raw = flags.cloudUrl ?? process.env.CHAINPE_CLOUD_URL ?? stored?.cloudUrl;
-    if (!raw) throw new Error("No chainpe-cloud URL. Pass --cloud-url <url> or set CHAINPE_CLOUD_URL.");
-    const cloudUrl = assertCloudUrl(raw);
-    const { signer, chainId } = await signerContext(flags.network);
+    const { network, signer, chainId } = await signerContext(flags.network);
+    const cloudUrl = assertCloudUrl(chooseCloudUrl(network, flags.cloudUrl, process.env.CHAINPE_CLOUD_URL, stored?.cloudUrl));
     const { id, key, prefix } = await loginAndCreateKey({ cloudUrl, signer, chainId });
     await saveCloudCredentials({ cloudUrl, ingestKey: key, keyId: id, keyPrefix: prefix });
     console.log(chalk.green(`  ✓ Signed in to ${cloudUrl} as ${signer.address}`));

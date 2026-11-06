@@ -51,6 +51,22 @@ export function toRouteKey(path: string): string {
   return path.includes(" ") ? path : `* ${path}`;
 }
 
+const ROUTE_METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE"]);
+
+/** Reads "GET /weather, POST /v1/search" into routes at one price. A path with no method is GET. Throws on anything else. */
+export function parsePaidRoutes(input: string, price: string): ChainPeRouteConfig[] {
+  const routes = new Map<string, ChainPeRouteConfig>();
+  for (const entry of input.split(",").map((part) => part.trim()).filter(Boolean)) {
+    const parts = entry.split(/\s+/);
+    const [method, path] = parts.length === 1 ? ["GET", parts[0]] : [parts[0].toUpperCase(), parts[1]];
+    if (parts.length > 2 || !ROUTE_METHODS.has(method) || !path.startsWith("/")) {
+      throw new Error(`"${entry}" is not a route. Write it like GET /weather or POST /v1/search.`);
+    }
+    routes.set(`${method} ${path}`, { path: `${method} ${path}`, pricePerRequest: price, paymentToken: "USDC" });
+  }
+  return [...routes.values()];
+}
+
 /** Tells the buyer why a settlement failed, as JSON in the 402 body. */
 const settlementFailedResponseBody: SettlementFailedResponseBody = (_context, failure) => {
   const status = failure.extensions?.["settlement-status"] as { paymentId?: string } | undefined;
