@@ -49,10 +49,51 @@ When every required check passes, `chainpe doctor` prints the values for [Circle
 
 ## Keep your key safe
 
-- The payout wallet's key has to be on the machine running the proxy, because Circle requires the seller to sign each settlement.
-- Use a wallet only for receiving payments, and move earnings out with `chainpe withdraw`.
-- Keep the key in your host's secret settings. Never commit it or put it in a file that gets uploaded.
+The payout wallet's key has to be on the machine running the proxy, because Circle requires the seller to sign each settlement. Anyone who breaks into that machine can take what the wallet holds, so keep that small:
+
+- **Use a wallet only for receiving payments.** Never your main wallet, and never one that holds other funds.
+- **Move earnings out often.** Gateway earnings stay in Circle Gateway until you run `chainpe withdraw --all`. Exact-rail earnings land in the wallet itself: send them on to a wallet whose key never touches a server, from any wallet app.
+- **Keep the key in your host's secret settings.** Never commit it or put it in a file that gets uploaded.
+- **Rotate if in doubt.** Make a new wallet, update `walletAddress`, run `chainpe register` again, and move what is left.
 - `chainpe login` saves an ingest key in `~/.chainpe/config.json`. It only lets a proxy report payments, but treat it as a secret too.
+
+## Routes and prices
+
+`chainpe init` asks which paths to list. Each one is a route in `~/.chainpe/config.json`, with its own price:
+
+```json
+"routes": [
+  { "path": "GET /weather", "pricePerRequest": "0.001", "paymentToken": "USDC", "description": "Current weather" },
+  { "path": "GET /forecast", "pricePerRequest": "0.01", "paymentToken": "USDC" }
+]
+```
+
+With routes listed, any other path answers `404` and costs the caller nothing. To charge `pricePerRequest` for every other path instead, set `"chargeUnlistedPaths": true`. With no routes, every path costs `pricePerRequest`. A price below $0.01 can only be paid through Circle Gateway.
+
+## Sell an MCP server
+
+Put the proxy in front of an MCP server that speaks Streamable HTTP, and add:
+
+```json
+"mcp": { "path": "/mcp", "tools": { "get_forecast": "0.01", "ping": "0" }, "toolPrice": "0.005" }
+```
+
+- Clients connect, list tools and read resources for free. Only `tools/call` is paid.
+- A tool in `tools` costs its own price; `"0"` makes it free. Any other tool costs `toolPrice`, or `pricePerRequest` if that is not set.
+- Send one tool call per request. A JSON-RPC batch containing a tool call is refused, because it can't be priced.
+- Responses pass through unchanged, including server-sent events.
+
+A buyer pays with any x402 client, such as `@chainpearc/sdk`, or Claude with `@chainpearc/wallet-mcp`.
+
+**A server that only speaks stdio** needs an HTTP bridge in front of it first, such as [supergateway](https://www.npmjs.com/package/supergateway):
+
+```bash
+npx -y supergateway --stdio "node my-server.js" --outputTransport streamableHttp --port 8000
+```
+
+Then set `targetUrl` to `http://localhost:8000`.
+
+**Selling an agent** works the same way as any API: give it an HTTP endpoint, list that path as a route, and set its price.
 
 ## Pay an API
 
@@ -95,7 +136,7 @@ Run `chainpe <command> --help` for the options.
 
 ## Limits
 
-- Only HTTP is proxied. WebSocket upgrades are not, because they would skip the payment check.
+- Only HTTP is proxied. WebSocket upgrades are not, because they would skip the payment check. MCP over Streamable HTTP works.
 - There are no refunds yet. If your API fails after a payment, the buyer is still charged.
 
 ## Links
