@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { mapCircleItem, mergeListings, searchCircle } from '../src/discovery.js'
+import { isRelevant, mapCircleItem, mergeListings, searchCircle } from '../src/discovery.js'
 import type { ChainPeService } from '../src/types.js'
 
 const TESTNET = 'eip155:5042002'
@@ -80,5 +80,28 @@ describe('mergeListings', () => {
     const chain = service({ source: 'chainpe', endpoint: 'https://a.test', walletAddress: '0xaaa' })
     const circle = service({})
     expect(mergeListings([circle], [chain])).toEqual([circle])
+  })
+})
+
+describe('isRelevant', () => {
+  const svc = (over: Partial<ChainPeService>): ChainPeService => ({
+    id: 'x', name: 'Quicknode', description: 'JSON-RPC proxy for injective-testnet', tags: ['rpc'], endpoint: 'https://x402.quicknode.com/injective-testnet/',
+    pricePerRequest: '0.0001', paymentToken: 'USDC', walletAddress: '0x1', network: 'arc-testnet', rails: ['gateway'], source: 'circle', ...over
+  })
+
+  it('drops a listing that shares no word with the query', () => {
+    expect(isRelevant(svc({}), 'Live Test')).toBe(false)
+    expect(isRelevant(svc({}), 'weather')).toBe(false)
+  })
+
+  it('keeps a listing that names a query word, or its plural', () => {
+    expect(isRelevant(svc({ description: 'Weather forecasts' }), 'weather')).toBe(true)
+    expect(isRelevant(svc({ name: 'Forecasts API' }), 'forecast')).toBe(true)
+    expect(isRelevant(svc({}), 'rpc')).toBe(true)
+  })
+
+  it('keeps everything for an empty or very short query', () => {
+    expect(isRelevant(svc({}), undefined)).toBe(true)
+    expect(isRelevant(svc({}), 'ai')).toBe(true)
   })
 })

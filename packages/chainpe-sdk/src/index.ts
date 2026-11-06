@@ -15,6 +15,7 @@ export { ChainPe, railPolicy } from './chainpe.js'
 
 export {
   discoverServices,
+  isRelevant,
   searchCircle,
   mapCircleItem,
   mergeListings,

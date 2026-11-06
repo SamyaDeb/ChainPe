@@ -96,7 +96,26 @@ export async function searchCircle(
   const res = await fetch(url, { signal: AbortSignal.timeout(15_000) })
   if (!res.ok) throw new Error(`Circle Discovery answered ${res.status}.`)
   const body = (await res.json()) as { items?: CircleItem[] }
-  return (body.items ?? []).flatMap(item => mapCircleItem(item, network) ?? [])
+  return (body.items ?? [])
+    .flatMap(item => mapCircleItem(item, network) ?? [])
+    .filter(service => isRelevant(service, options.query))
+}
+
+/** Words of 3+ letters in a search, lower case. */
+function queryWords(query?: string): string[] {
+  return (query ?? '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 3)
+}
+
+/**
+ * Circle's search can return listings that share no word with the query. Keeps a
+ * listing only when one of its words is a query word, or that word plus "s". Pure.
+ */
+export function isRelevant(service: ChainPeService, query?: string): boolean {
+  const words = queryWords(query)
+  if (words.length === 0) return true
+  const text = [service.name, service.description, service.category ?? '', service.endpoint, ...service.tags].join(' ').toLowerCase()
+  const tokens = new Set(text.split(/[^a-z0-9]+/))
+  return words.some(w => tokens.has(w) || tokens.has(`${w}s`) || (w.endsWith('s') && tokens.has(w.slice(0, -1))))
 }
 
 /** Drops a ChainPe listing when Circle already lists that provider on the same host. Pure. */

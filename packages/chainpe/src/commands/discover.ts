@@ -61,6 +61,14 @@ export function mapCircleItem(item: CircleItem, network: ChainPeNetwork): FoundS
   };
 }
 
+/** Keeps a listing only when one of its words is a query word (or that word plus "s"). */
+export function isRelevant(service: FoundService, query?: string): boolean {
+  const words = (query ?? "").toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 3);
+  if (words.length === 0) return true;
+  const tokens = new Set([service.name, service.description, service.endpoint].join(" ").toLowerCase().split(/[^a-z0-9]+/));
+  return words.some((w) => tokens.has(w) || tokens.has(`${w}s`) || (w.endsWith("s") && tokens.has(w.slice(0, -1))));
+}
+
 async function searchCircle(network: ChainPeNetwork, filters: DiscoverFilters): Promise<FoundService[]> {
   const url = new URL(CIRCLE_DISCOVERY_URL);
   url.searchParams.set("network", getNetwork(network).caip2);
@@ -70,7 +78,7 @@ async function searchCircle(network: ChainPeNetwork, filters: DiscoverFilters): 
   const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
   if (!res.ok) throw new Error(`Circle Discovery answered ${res.status}.`);
   const body = (await res.json()) as { items?: CircleItem[] };
-  return (body.items ?? []).flatMap((item) => mapCircleItem(item, network) ?? []);
+  return (body.items ?? []).flatMap((item) => mapCircleItem(item, network) ?? []).filter((service) => isRelevant(service, filters.query));
 }
 
 async function listChainPe(network: ChainPeNetwork, filters: DiscoverFilters): Promise<FoundService[]> {
