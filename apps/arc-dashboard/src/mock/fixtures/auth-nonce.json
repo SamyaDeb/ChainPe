@@ -1,0 +1,5 @@
+{
+  "nonce": "77d502ae9f3bb945281657138838babc94c428a66cc318b6060a17dfbfbab42c7c1a2829627d9ea81313c159a53ddab5",
+  "message": "app.chainpe.test wants you to sign in with your Ethereum account:\n0xecdE73F5E12FC0093E4f0a5a1a13fF22A7f6BBF7\n\nSign in to ChainPe. This does not move funds or cost gas.\n\nURI: https://app.chainpe.test\nVersion: 1\nChain ID: 5042002\nNonce: 77d502ae9f3bb945281657138838babc94c428a66cc318b6060a17dfbfbab42c7c1a2829627d9ea81313c159a53ddab5\nIssued At: 2026-11-06T03:51:15.085Z\nExpiration Time: 2026-11-06T03:56:15.085Z",
+  "expiresAt": "2026-11-06T03:56:15.085Z"
+}

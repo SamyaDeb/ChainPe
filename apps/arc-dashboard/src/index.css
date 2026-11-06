@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --c-bg: 246 247 249;
+  --c-surface: 255 255 255;
+  --c-subtle: 240 242 245;
+  --c-line: 224 228 234;
+  --c-edge: 118 128 142;
+  --c-ink: 20 24 31;
+  --c-muted: 91 101 115;
+  --c-accent: 29 78 216;
+  --c-accent-fg: 255 255 255;
+  --c-accent-soft: 232 239 253;
+  --c-ok: 21 128 61;
+  --c-ok-soft: 228 245 234;
+  --c-warn: 146 84 6;
+  --c-warn-soft: 253 243 220;
+  --c-bad: 185 28 28;
+  --c-bad-soft: 253 232 232;
+  color-scheme: light;
+}
+
+:root.dark {
+  --c-bg: 13 17 23;
+  --c-surface: 22 27 34;
+  --c-subtle: 33 38 45;
+  --c-line: 48 54 61;
+  --c-edge: 125 133 144;
+  --c-ink: 230 237 243;
+  --c-muted: 154 164 178;
+  --c-accent: 110 168 254;
+  --c-accent-fg: 13 17 23;
+  --c-accent-soft: 24 41 69;
+  --c-ok: 63 185 80;
+  --c-ok-soft: 20 46 28;
+  --c-warn: 226 168 50;
+  --c-warn-soft: 54 41 14;
+  --c-bad: 255 123 114;
+  --c-bad-soft: 60 24 24;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background-color: rgb(var(--c-bg));
+  color: rgb(var(--c-ink));
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+:focus-visible {
+  outline: 2px solid rgb(var(--c-accent));
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
