@@ -15,7 +15,7 @@ Build order and acceptance criteria: `docs/arc/BUILD-PLAN.md`.
   - nanopayments → Circle Gateway via `@circle-fin/x402-batching`
   - discovery → Circle Discovery API (`https://api.circle.com/v2/x402/discovery/resources`)
   - identity/reputation → Arc's canonical ERC-8004 registries (addresses in `docs/arc/ARCHITECTURE.md`)
-- The CLI (`packages/chainpe`) is Arc-only: `arc` and `arc-testnet`, settled through Circle. Avalanche (`avalanche`, `fuji`) was removed from it because Circle's services don't cover Avalanche. `@chainpearc/sdk`, `@chainpearc/ai-tools` and `@chainpearc/wallet-mcp` are Arc-only too. `@chainpearc/agent` still targets Avalanche until its Arc work lands, and must not be published before then.
+- The CLI (`packages/chainpe`) is Arc-only: `arc` and `arc-testnet`, settled through Circle. Avalanche (`avalanche`, `fuji`) was removed from it because Circle's services don't cover Avalanche. Every published package (`@chainpearc/cli`, `sdk`, `ai-tools`, `wallet-mcp`, `agent`) is Arc-only. Keep Avalanche out of them.
 - x402 v1 (`x402`, `x402-express`, `x402-fetch` 1.2.0) has **no Arc**. Use x402 v2 (`@x402/core`, `@x402/evm`, `@x402/express`, `@x402/fetch` 2.30.x).
 - Arc gas is USDC. Native USDC = 18 decimals, ERC-20 USDC (`0x3600…0000`) = 6 decimals. Always use the ERC-20 interface for amounts.
 - Never forward a request to the provider backend before settlement is final. On `exact` that is `completed` (not `pending`). On Gateway it is settle `success: true` with a transfer id: funds are locked and the batch lands later (`docs/arc/specs/03a-gateway-design.md`).

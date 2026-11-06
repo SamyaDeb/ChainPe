@@ -1,228 +1,144 @@
 /**
- * Call Paid API Tool
- * AI tool for calling x402-protected APIs with automatic payment
+ * callPaidApi: calls a URL, paying an x402 402 in USDC on Arc within the task's
+ * budget. The price is checked before anything is signed.
  */
-
 import { tool } from "ai";
 import { z } from "zod";
-import * as fs from "fs/promises";
-import * as path from "path";
-import * as os from "os";
+import { ChainPe } from "@chainpearc/sdk";
+import type { ChainPeNetwork, PaymentRail, PaymentReceipt } from "../types.js";
 
-import type { PaymentClient } from "../payment.js";
-import type { RegistryClient } from "../registry.js";
-import type { ServiceInfo, Registry, ChainPeNetwork } from "../types.js";
-import { giveFeedback } from "../reputation.js";
+/** Longest response body handed back to the model. */
+const MAX_BODY_CHARS = 8000;
+
+/** Tracks one task's spending and the calls already made. */
+export class RunBudget {
+  private spentAtomic = 0n;
+  private readonly seen = new Map<string, unknown>();
+  readonly receipts: PaymentReceipt[] = [];
+
+  constructor(
+    private readonly maxPerCall: string,
+    private readonly maxPerRun: string
+  ) {}
+
+  /** The most one payment may cost now, or undefined when the task's budget is used up. */
+  cap(): string | undefined {
+    const left = toAtomic(this.maxPerRun) - this.spentAtomic;
+    const cap = left < toAtomic(this.maxPerCall) ? left : toAtomic(this.maxPerCall);
+    return cap > 0n ? fromAtomic(cap) : undefined;
+  }
+
+  record(receipt: PaymentReceipt): void {
+    this.spentAtomic += toAtomic(receipt.amount);
+    this.receipts.push(receipt);
+  }
+
+  spent(): string {
+    return fromAtomic(this.spentAtomic);
+  }
+
+  /** The earlier result of an identical call, so the same thing is never paid for twice in a task. */
+  earlier(key: string): unknown {
+    return this.seen.get(key);
+  }
+
+  remember(key: string, result: unknown): void {
+    this.seen.set(key, result);
+  }
+}
+
+export function toAtomic(usdc: string): bigint {
+  const [whole, frac = ""] = usdc.trim().split(".");
+  return BigInt(whole || "0") * 1_000_000n + BigInt((frac + "000000").slice(0, 6));
+}
+
+export function fromAtomic(atomic: bigint): string {
+  const frac = (atomic % 1_000_000n).toString().padStart(6, "0").replace(/0+$/, "");
+  return `${atomic / 1_000_000n}${frac ? `.${frac}` : ""}`;
+}
 
 export interface CallPaidApiToolOptions {
-  paymentClient: PaymentClient;
-  registryClient: RegistryClient;
-  providerHint?: string;
-  /** Enables auto on-chain reputation feedback after a successful paid call. */
-  privateKey?: string;
-  network?: ChainPeNetwork;
+  privateKey: string;
+  network: ChainPeNetwork;
+  rails?: PaymentRail[];
+  accountsAddress?: string;
   reputationRegistry?: string;
+  budget: RunBudget;
+  onPayment?: (receipt: PaymentReceipt) => void;
 }
 
-// Track paid calls to prevent duplicates within same session
-const paidCallCache = new Map<string, { success: boolean; data: unknown; paid: boolean }>();
-
-/**
- * Reset the paid call cache (call at start of each agent run)
- */
-export function resetPaidCallCache(): void {
-  paidCallCache.clear();
-}
-
-/**
- * Find service by name from local registry
- */
-async function findServiceByName(name: string): Promise<ServiceInfo | undefined> {
-  try {
-    const registryPath = path.join(os.homedir(), ".chainpe", "registry.json");
-    const content = await fs.readFile(registryPath, "utf-8");
-    const registry: Registry = JSON.parse(content);
-    return registry.services?.find(
-      (s) => s.name.toLowerCase() === name.toLowerCase()
-    );
-  } catch {
-    return undefined;
-  }
-}
-
-/**
- * Load developer address from provider config (if exists locally)
- */
-async function getLocalDeveloperAddress(): Promise<string | undefined> {
-  try {
-    const configPath = path.join(os.homedir(), ".chainpe", "config.json");
-    const content = await fs.readFile(configPath, "utf-8");
-    const config = JSON.parse(content);
-    return config.walletAddress;
-  } catch {
-    return undefined;
-  }
-}
-
-/**
- * Creates a tool for calling paid APIs with automatic x402 payment
- */
 export function createCallPaidApiTool(options: CallPaidApiToolOptions) {
-  const { paymentClient, registryClient, providerHint, privateKey, network, reputationRegistry } =
-    options;
-
   return tool({
     description:
-      "Call a paid AI service API. This tool automatically handles x402 USDC payments on Avalanche. Use the 'discoverService' tool first to find available services.",
+      "Call a paid service URL. If it answers 402 Payment Required, this pays it automatically in USDC on Arc, " +
+      "within the task's budget, and returns the result. Each call can cost money: call a URL once, and only " +
+      "after finding it with discoverService.",
     inputSchema: z.object({
-      serviceName: z
-        .string()
-        .describe("The name of the service to call (from discoverService results)"),
-      path: z
-        .string()
-        .optional()
-        .default("/")
-        .describe("API path to call (default: '/')"),
-      method: z
-        .enum(["GET", "POST", "PUT", "DELETE"])
-        .optional()
-        .default("POST")
-        .describe("HTTP method"),
-      body: z
-        .record(z.string(), z.unknown())
-        .optional()
-        .describe("Request body (for POST/PUT requests)"),
+      url: z.string().url().describe("The full URL, including the path and any query, e.g. https://api.example.com/weather?city=Paris"),
+      method: z.enum(["GET", "POST", "PUT", "DELETE", "PATCH"]).optional().default("GET"),
+      body: z.record(z.string(), z.unknown()).optional().describe("JSON body, for POST, PUT and PATCH"),
     }),
-    execute: async ({ serviceName, path, method, body }) => {
-      // Smart path defaulting: If LLM forgets to set proper path, infer from service name
-      let effectivePath = path || "/";
-      
-      // Fix: If LLM passes a full URL as path, extract just the path portion
-      if (effectivePath.startsWith("http://") || effectivePath.startsWith("https://")) {
-        try {
-          const url = new URL(effectivePath);
-          effectivePath = url.pathname + url.search;
-        } catch {
-          effectivePath = "/";
-        }
-      }
-      
-      // If path is just "/" or empty, infer from service name
-      if (effectivePath === "/" || effectivePath === "") {
-        const svcLower = serviceName.toLowerCase();
-        if (["btc", "eth", "sol", "algo", "avax"].includes(svcLower)) {
-          effectivePath = `/crypto?symbol=${serviceName.toUpperCase()}`;
-        } else if (svcLower.includes("bitcoin")) {
-          effectivePath = "/btc"; // Bitcoin API endpoint
-        } else if (svcLower.includes("weather")) {
-          effectivePath = "/weather?city=New%20York"; // Default city
-        } else if (svcLower.includes("market")) {
-          effectivePath = "/market/summary";
-        }
-      }
-      
-      // PREVENT DOUBLE PAYMENTS: Check if we already made a paid call for this service+path
-      const cacheKey = `${serviceName.toLowerCase()}:${effectivePath}:${method}`;
-      console.log(`[callPaidApi] Cache check - key: "${cacheKey}", cached: ${paidCallCache.has(cacheKey)}`);
-      const cachedResult = paidCallCache.get(cacheKey);
-      if (cachedResult) {
-        console.log(`[callPaidApi] ✓ Returning cached result for "${serviceName}" (preventing duplicate payment)`);
-        return {
-          success: cachedResult.success,
-          data: cachedResult.data,
-          paid: false, // Not paying again
-          cached: true,
-          note: "Result from previous call - no additional payment made"
-        };
-      }
-      
-      console.log(`[callPaidApi] No cache hit - proceeding with API call for "${serviceName}"`);
-      
-      // Debug logging (can be removed for production)
-      // console.log(`[callPaidApi] Called with: serviceName="${serviceName}", path="${effectivePath}" (original: "${path}"), method="${method}"`);
-      
-      // If provider hint exists, try it first before using the LLM's serviceName
-      const namesToTry = providerHint ? [providerHint, serviceName] : [serviceName];
-      
-      let service: ServiceInfo | undefined;
-      
-      for (const nameToTry of namesToTry) {
-        // First try local registry
-        service = await findServiceByName(nameToTry);
-        
-        if (!service) {
-          // Try on-chain registry with local developer address
-          const developerAddr = await getLocalDeveloperAddress();
-          
-          if (developerAddr) {
-            service = await registryClient.findByName(nameToTry, developerAddr);
-          }
-        }
-        
-        if (service) {
-          break; // Found it!
-        }
-      }
+    execute: async ({ url, method, body }) => {
+      const key = `${method} ${url} ${body ? JSON.stringify(body) : ""}`;
+      const earlier = options.budget.earlier(key);
+      if (earlier) return { ...(earlier as object), note: "Same call as before in this task, so it was not paid again." };
 
-      if (!service) {
-        return {
-          success: false,
-          error: `Service "${serviceName}" not found in registry`,
-          suggestion: "Use the discoverService tool to find available services",
-        };
+      const cap = options.budget.cap();
+      if (!cap) {
+        return { success: false, error: `The task's budget is used up (${options.budget.spent()} USDC spent). Answer with what you have.` };
       }
-
       try {
-        // Make the paid API call
-        const response = await paymentClient.callService(service, effectivePath, {
-          method: method as "GET" | "POST" | "PUT" | "DELETE",
-          body,
+        const client = new ChainPe({
+          privateKey: options.privateKey,
+          network: options.network,
+          rails: options.rails,
+          accountsAddress: options.accountsAddress,
+          reputationRegistry: options.reputationRegistry,
+          maxPerCall: cap,
         });
-
-        // Cache the successful result to prevent duplicate payments
-        paidCallCache.set(cacheKey, {
-          success: true,
-          data: response.data,
-          paid: response.paid ?? false,
-        });
-
-        // On-chain reputation: leave a positive ERC-8004 score for the
-        // provider's agent after a successful paid call. Best-effort.
-        let reputation: { agentId: string; score: number; txHash: string } | undefined;
-        if (response.paid && privateKey && network && service.agentId && service.agentId !== "0") {
-          try {
-            const txHash = await giveFeedback(privateKey, network, service.agentId, 100, {
-              endpoint: service.endpoint,
-              tag: "x402-success",
-              reputationRegistry,
-            });
-            reputation = { agentId: service.agentId, score: 100, txHash };
-          } catch {
-            /* self-feedback / network / no-registry — non-fatal */
-          }
+        const init: RequestInit = { method };
+        if (body && method !== "GET") {
+          init.body = JSON.stringify(body);
+          init.headers = { "content-type": "application/json" };
+        }
+        const { response, payment, agentId } = await client.request(url, init);
+        const text = await response.text();
+        let data: unknown = text.length > MAX_BODY_CHARS ? `${text.slice(0, MAX_BODY_CHARS)}…(truncated)` : text;
+        try {
+          if (text.length <= MAX_BODY_CHARS) data = JSON.parse(text);
+        } catch {
+          /* Not JSON: keep the text. */
         }
 
-        return {
-          success: true,
+        let receipt: PaymentReceipt | undefined;
+        if (payment) {
+          const parsed = new URL(url);
+          receipt = {
+            txId: payment.txHash,
+            transferId: payment.transferId,
+            amount: payment.amount,
+            token: "USDC",
+            rail: payment.rail,
+            recipient: payment.recipient,
+            timestamp: new Date(),
+            service: parsed.origin,
+            path: `${parsed.pathname}${parsed.search}`,
+            agentId,
+          };
+          options.budget.record(receipt);
+          options.onPayment?.(receipt);
+        }
+        const result = {
+          success: response.ok,
           status: response.status,
-          data: response.data,
-          paid: response.paid,
-          payment: response.paymentReceipt
-            ? {
-                amount: response.paymentReceipt.amount,
-                token: response.paymentReceipt.token,
-                recipient: response.paymentReceipt.recipient,
-              }
-            : undefined,
-          reputation,
+          data,
+          paid: Boolean(payment),
+          payment: receipt && { amount: `${receipt.amount} USDC`, rail: receipt.rail, txId: receipt.txId, transferId: receipt.transferId },
         };
+        if (response.ok) options.budget.remember(key, result);
+        return result;
       } catch (error) {
-        return {
-          success: false,
-          error: `API call failed: ${(error as Error).message}`,
-          serviceName,
-          endpoint: service.endpoint,
-        };
+        return { success: false, error: `Call failed: ${(error as Error).message}` };
       }
     },
   });

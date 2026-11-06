@@ -1,199 +1,75 @@
-# chainpe-agent
+# @chainpearc/agent
 
 [![npm](https://img.shields.io/npm/v/@chainpearc/agent.svg)](https://www.npmjs.com/package/@chainpearc/agent)
 
-> **This package still targets Avalanche.** Arc support is planned. For Arc today, use the [`@chainpearc/cli`](https://www.npmjs.com/package/@chainpearc/cli) CLI.
+**An AI agent that finds paid APIs, pays for them per call in USDC on Arc, and uses the results.**
 
-**Pre-built AI Agent with x402 Payment Capabilities on Avalanche**
+Ask it a question. It searches Circle's Discovery API and ChainPe's on-chain listings, picks a service, pays within your limits and answers. It works with Groq, OpenAI, Anthropic, Gemini, or a local model through Ollama.
 
-ChainPe Agent is an AI agent SDK that can discover, pay for, and use monetized API services. Built on the Vercel AI SDK with support for OpenAI and Anthropic.
+> **Runs on Arc testnet.** ChainPe has not been tested with real USDC on Arc mainnet, so the agent refuses it unless `ALLOW_MAINNET=true` is set.
 
-## Installation
+## Install
 
 ```bash
 npm install -g @chainpearc/agent
 ```
 
-Or as a library:
+Node.js 22.18 or newer.
 
-```bash
-npm install @chainpearc/agent
-```
-
-## Quick Start
-
-### Prerequisites
-
-Before you start, you'll need:
-1. **LLM API Key** - Get a free Groq API key at https://console.groq.com/
-2. **AVAX** - Available on major exchanges (Coinbase, Binance, Kraken, etc.)
-3. **Avalanche Wallet** - Generate a new wallet or use existing private key
-
-### 1. Initialize Configuration
+## Set up
 
 ```bash
 chainpe-agent init
 ```
 
-This interactive wizard will ask you for:
-- **LLM Mode**: Local (Ollama) or Cloud API
-- **LLM Provider**: Groq (free), OpenAI, Anthropic, or Google Gemini
-- **Model selection**: Recommended models shown first
-- **API key**: Your LLM provider API key
-- **Avalanche wallet private key**: private key (0x…) (for automatic payments)
-- **Preferred payment token**: USDC
+The wizard asks for:
 
-### 2. Check Status
+- **A model:** local (Ollama) or a provider and its API key.
+- **A wallet:** import a key or generate one. Use a new wallet just for the agent. The key is stored in your OS keychain, never in a file.
+- **Spending limits:** the most to pay for one call (default 0.10 USDC) and for one task (default 1.00 USDC).
 
-```bash
-chainpe-agent status
-```
+Then get free test USDC at https://faucet.circle.com (pick Arc Testnet). On Arc, the same USDC pays for gas.
 
-### 3. Run Tasks
+## Use it
 
 ```bash
-chainpe-agent run "Find a weather service and get the weather for San Francisco"
+chainpe-agent run "What is the weather in Mumbai?"
+chainpe-agent services weather      # see what the agent can find
+chainpe-agent status                # model, wallet, balance and limits
 ```
+
+`--provider <name>` makes the agent use only the service with that name.
+
+## In code
+
+```ts
+import { ChainPeAgent } from '@chainpearc/agent'
+
+const agent = await ChainPeAgent.fromConfig()
+const result = await agent.run('What is the weather in Mumbai?', {
+  onPayment: (receipt) => console.log(`Paid ${receipt.amount} USDC to ${receipt.service}`)
+})
+console.log(result.text, result.payments)
+```
+
+On a server with no keychain, pass the config and key directly: `new ChainPeAgent({ config, privateKey })`.
+
+## How it spends
+
+- A price above the per-call limit, or above what is left of the task's limit, is refused **before** anything is signed.
+- The same call is never paid for twice in one task.
+- It pays from a Circle Gateway deposit when that covers the price, and from the wallet otherwise.
+- It does not rate providers on its own. Use `giveFeedback` from `@chainpearc/sdk` to rate one.
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `chainpe-agent init` | Interactive setup wizard |
-| `chainpe-agent status` | Show config and wallet balance |
-| `chainpe-agent services` | List available services |
-| `chainpe-agent run <task>` | Execute a task with the agent |
-
-## Programmatic Usage
-
-```typescript
-import { ChainPeAgent } from "@chainpearc/agent";
-
-// Create agent (reads config from ~/.chainpe/agent.json)
-const agent = new ChainPeAgent();
-
-// List available services
-const services = await agent.listServices();
-console.log(services);
-
-// Run a task
-const result = await agent.run(
-  "Find a research service and summarize quantum computing",
-  {
-    maxSteps: 5,
-    verbose: true,
-    onPayment: (receipt) => {
-      console.log(`Paid ${receipt.amount} ${receipt.token}`);
-    }
-  }
-);
-
-console.log(result.text);
-console.log(`Total spent: ${result.payments.totalSpent.AVAX} AVAX`);
-```
-
-## How It Works
-
-```
-User Task → AI Agent → Discovers Services → Pays via x402 → Gets Response
-                ↓
-           On-Chain Registry (Avalanche)
-```
-
-1. Agent receives a task from user
-2. Agent queries on-chain registry for relevant services
-3. Agent calls service, receives 402 Payment Required
-4. Agent signs x402 payment authorization
-5. Service returns data, agent processes and responds
-
-## Configuration
-
-The agent stores config in `~/.chainpe/agent.json`:
-
-### Example: Using Groq (Free Tier)
-
-```json
-{
-  "llm": {
-    "mode": "api",
-    "provider": "groq",
-    "model": "qwen/qwen3-32b",
-    "apiKey": "gsk_..."
-  },
-  "wallet": {
-    "private key": "your twenty five word avalanche private key phrase here...",
-    "address": "YOUR_ALGO_ADDRESS..."
-  },
-  "payment": {
-    "preferredToken": "AVAX"
-  },
-  "network": "avalanche"
-}
-```
-
-### Example: Using OpenAI
-
-```json
-{
-  "llm": {
-    "mode": "api",
-    "provider": "openai",
-    "model": "gpt-4o",
-    "apiKey": "sk-..."
-  },
-  "wallet": {
-    "private key": "your twenty five word avalanche private key phrase here...",
-    "address": "YOUR_ALGO_ADDRESS..."
-  },
-  "payment": {
-    "preferredToken": "AVAX"
-  },
-  "network": "avalanche"
-}
-```
-
-### Example: Using Local Ollama
-
-```json
-{
-  "llm": {
-    "mode": "local",
-    "provider": "openai",
-    "model": "qwen2.5:7b",
-    "apiKey": "ollama",
-    "baseURL": "http://localhost:11434/v1"
-  },
-  "wallet": {
-    "private key": "your twenty five word avalanche private key phrase here...",
-    "address": "YOUR_ALGO_ADDRESS..."
-  },
-  "payment": {
-    "preferredToken": "AVAX"
-  },
-  "network": "avalanche"
-}
-```
-
-## Supported LLMs
-
-- **Groq** (Recommended for free tier): llama-3.3-70b, qwen/qwen3-32b
-- **OpenAI**: gpt-4o, gpt-4-turbo, gpt-3.5-turbo
-- **Anthropic**: claude-3-5-sonnet, claude-3-opus, claude-3-sonnet
-- **Google Gemini**: gemini-2.0-flash, gemini-1.5-pro
-- **Local (Ollama)**: Any Ollama model (free, runs locally)
-
-### Getting API Keys
-
-- **Groq** (Free): https://console.groq.com/ - Fast inference, generous free tier
-- **OpenAI**: https://platform.openai.com/api-keys
-- **Anthropic**: https://console.anthropic.com/
-- **Google AI**: https://aistudio.google.com/app/apikey
-
-## Requirements
-
-- Node.js >= 18
-- LLM API key (Groq recommended for free tier) OR local Ollama installation
-- Avalanche wallet with AVAX (available on major exchanges)
+| Command | What it does |
+|---|---|
+| `chainpe-agent init` | Set up the model, wallet and limits |
+| `chainpe-agent run <task>` | Run a task |
+| `chainpe-agent services [query]` | Find paid services on Arc |
+| `chainpe-agent status` | Show the configuration and balance |
+| `chainpe-agent security` | Show how the key is stored |
 
 ## License
 

@@ -1,6 +1,5 @@
 /**
- * AI Tools Index
- * Exports all Vercel AI SDK tools for the ChainPe agent
+ * The agent's Vercel AI SDK tools.
  */
 
 export {
@@ -9,10 +8,6 @@ export {
   type DiscoverServiceToolOptions,
 } from "./discoverService.js";
 
-export {
-  createCallPaidApiTool,
-  resetPaidCallCache,
-  type CallPaidApiToolOptions,
-} from "./callPaidApi.js";
+export { createCallPaidApiTool, RunBudget, type CallPaidApiToolOptions } from "./callPaidApi.js";
 
 export { createCallFreeApiTool } from "./callFreeApi.js";
