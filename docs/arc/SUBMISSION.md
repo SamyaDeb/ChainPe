@@ -32,8 +32,8 @@ Prize: "Arc Studio Continuity Track: Bring Your Project to Arc" (ETHGlobal Mumba
 - [ ] Make the Arc Studio workspace viewable by judges, or note how they get access
 - [ ] Submit the Circle form ([LISTING.md](LISTING.md)); then say "submitted" in the README
 - [x] Build the landing site (`cd apps/landing && npm install && npm run build`) and redeploy chainpe.vercel.app
-- [ ] Merge `arc` into `main` (or set `arc` as the default branch) so judges see the new README first
-- [ ] Update the commit count in the README just before you submit
+- [x] Merge `arc` into `main` (PR #3) so judges see the Arc README first
+- [x] README states "more than 150 commits" with the command to check, so it stays true
 - [ ] Record the video ([DEMO-SCRIPT.md](DEMO-SCRIPT.md))
 - [ ] Submit on ETHGlobal and name the prize
 
@@ -51,6 +51,6 @@ ChainPe ran on Avalanche in June. This weekend we rebuilt it on Arc with Arc Stu
 |---|---|
 | Who is the user? | Developers who sell API calls, MCP tools or agents. Not shops. |
 | Why not just follow Circle's seller guide? | No code changes, any language, both payment options, listing checks, ratings and a dashboard. |
-| How do you make money? | Today, the Pro dashboard plan, paid in USDC on Arc. Next, a usage fee of 1% of verified revenue, or 0.5% on Pro. The service code is built, but the fee contract is not deployed yet. Buyers still pay the developer's wallet directly. |
-| What did you build this weekend? | The README "During" table, the Studio log, and 79 commits after the June tag. |
+| How do you make money? | Today, the Pro dashboard plan, paid in USDC on Arc. Next, an opt-in usage fee of 1% of verified revenue, or 0.5% on Pro. `ChainPeFees` is deployed on testnet and has collected a real fee. Buyers still pay the developer's wallet directly. |
+| What did you build this weekend? | The README "Before and during" section, the Studio log, and more than 150 commits after the June tag. |
 | What about shops and merchants? | Card networks will bring agent shoppers to shops. Agents already pay developers per call in USDC. |
