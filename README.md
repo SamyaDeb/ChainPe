@@ -1,7 +1,6 @@
 
 <p align="center">
-  <img src="<img width="400" height="400" alt="chainpe logo" src="https://github.com/user-attachments/assets/05334350-f297-45ac-9371-1a704a04a961" />
-" width="85" alt="ChainPe Logo" />
+  <img src="https://github.com/user-attachments/assets/05334350-f297-45ac-9371-1a704a04a961" width="85" alt="ChainPe Logo" />
 </p>
 
 <h1 align="center">ChainPe</h1>
