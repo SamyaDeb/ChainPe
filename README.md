@@ -1,12 +1,8 @@
-
 <p align="center">
-  <img src="<img width="400" height="400" alt="chainpe logo" src="https://github.com/user-attachments/assets/05334350-f297-45ac-9371-1a704a04a961" />
-" width="85" alt="ChainPe Logo" />
+  <img src="docs/assets/chainpe-logo.jpg" width="100" alt="ChainPe logo">
 </p>
 
 <h1 align="center">ChainPe</h1>
-
-
 
 **The payment and trust layer for software that buys from software.**
 
