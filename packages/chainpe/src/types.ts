@@ -50,6 +50,13 @@ export interface ChainPeConfig {
   // Routes priced differently from pricePerRequest, e.g. { path: "GET /weather", ... }.
   routes?: RouteConfig[];
 
+  // With `routes` set, a path that matches none of them answers 404 and costs
+  // nothing. Set this to charge pricePerRequest for every other path instead.
+  chargeUnlistedPaths?: boolean;
+
+  // An MCP server behind the proxy (Streamable HTTP). Only `tools/call` is paid.
+  mcp?: McpConfig;
+
   // The HTTPS URL buyers connect to: this proxy, never targetUrl. Published
   // on-chain as the service endpoint and in the ERC-8004 agent URI.
   publicUrl?: string;
@@ -71,6 +78,15 @@ export interface ChainPeConfig {
 // ============================================================================
 // Route Configuration
 // ============================================================================
+
+export interface McpConfig {
+  /** The MCP endpoint on the backend. Default "/mcp". */
+  path?: string;
+  /** Tool name → human USDC price. "0" makes a tool free. */
+  tools?: Record<string, string>;
+  /** Price of a tool not in `tools`. Default: pricePerRequest. */
+  toolPrice?: string;
+}
 
 export interface RouteConfig {
   path: string;

@@ -168,10 +168,11 @@ describe("free discovery paths", () => {
     expect(backendCalls).toEqual([]);
   });
 
-  it("do not open anything next to them: near matches stay behind the payment gate", async () => {
-    const { url } = await start(config());
-    for (const path of ["/openapi.json/", "/OPENAPI.JSON", "/openapi.jsonx", "/.well-known/agent.json/x", "/.well-known/x402x"]) {
-      expect((await fetch(`${url}${path}`)).status, path).toBe(402);
+  it("do not open anything next to them: near matches never reach the backend", async () => {
+    const near = ["/openapi.json/", "/OPENAPI.JSON", "/openapi.jsonx", "/.well-known/agent.json/x", "/.well-known/x402x"];
+    for (const [overrides, status] of [[{}, 404], [{ chargeUnlistedPaths: true }, 402]] as const) {
+      const { url } = await start(config(overrides));
+      for (const path of near) expect((await fetch(`${url}${path}`)).status, path).toBe(status);
     }
     expect(backendCalls).toEqual([]);
   });

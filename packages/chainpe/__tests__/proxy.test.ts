@@ -38,7 +38,7 @@ const TERMS: GatewayTerms = {
 const TRANSFER_ID = "0eecd4bf-15f4-4bea-8eab-284e7385fb4f";
 const accepted: SettleResponse = { success: true, transaction: TRANSFER_ID, network: NETWORK, payer: buyer.address };
 
-const backendCalls: Array<{ url?: string; headers: IncomingHttpHeaders }> = [];
+const backendCalls: Array<{ url?: string; headers: IncomingHttpHeaders; body?: string }> = [];
 let backendStatus = 200;
 let backend: Server;
 let proxy: Server | undefined;
@@ -48,9 +48,15 @@ const listen = (server: Server) =>
 
 beforeAll(async () => {
   backend = http.createServer((req, res) => {
-    backendCalls.push({ url: req.url, headers: req.headers });
-    res.writeHead(backendStatus, { "content-type": "application/json" });
-    res.end(JSON.stringify({ ok: true }));
+    const call: (typeof backendCalls)[number] = { url: req.url, headers: req.headers };
+    backendCalls.push(call);
+    const chunks: Buffer[] = [];
+    req.on("data", (chunk: Buffer) => chunks.push(chunk));
+    req.on("end", () => {
+      call.body = Buffer.concat(chunks).toString("utf8");
+      res.writeHead(backendStatus, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: true }));
+    });
   });
   await listen(backend);
 });
@@ -119,7 +125,7 @@ async function startProxy(
 function payingFetch() {
   const sent: string[] = [];
   const recording: typeof fetch = async (input, init) => {
-    const signature = new Request(input, init).headers.get("payment-signature");
+    const signature = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).get("payment-signature");
     if (signature) sent.push(signature);
     return fetch(input, init);
   };
@@ -133,7 +139,7 @@ function payingFetch() {
 function railFetch(rail: RailChoice, gatewayAvailable = 0n, max = "1") {
   const sent: string[] = [];
   const recording: typeof fetch = async (input, init) => {
-    const signature = new Request(input, init).headers.get("payment-signature");
+    const signature = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).get("payment-signature");
     if (signature) sent.push(signature);
     return fetch(input, init);
   };
@@ -684,5 +690,91 @@ describe("/chainpe-admin/stats", () => {
     await payingFetch().pay(`${url}/weather`);
     await vi.waitFor(() => expect(analytics.getRecentPayments()).toHaveLength(1));
     expect(analytics.getRecentPayments()[0]).toMatchObject({ status: "pending", paymentId: "pay_1" });
+  });
+});
+
+describe("paths outside the listed routes", () => {
+  it("answer 404 and cost nothing", async () => {
+    const url = await startProxy({}, { routes: ROUTES });
+    const res = await fetch(`${url}/nothing-here`);
+    expect(res.status).toBe(404);
+    expect(res.headers.get("payment-required")).toBeNull();
+    expect((await fetch(`${url}/cheap`)).status).toBe(402);
+    expect((await fetch(`${url}/cheap`, { method: "POST" })).status).toBe(404);
+    expect(backendCalls).toHaveLength(0);
+  });
+
+  it("are charged at the default price with chargeUnlistedPaths", async () => {
+    const url = await startProxy({}, { routes: ROUTES, chargeUnlistedPaths: true });
+    expect((await fetch(`${url}/nothing-here`)).status).toBe(402);
+    expect(backendCalls).toHaveLength(0);
+  });
+
+  it("are all charged when no routes are listed", async () => {
+    const url = await startProxy({});
+    expect((await fetch(`${url}/anything`)).status).toBe(402);
+  });
+});
+
+describe("an MCP server behind the proxy", () => {
+  const MCP = { tools: { forecast: "0.02", ping: "0" } };
+  const rpc = (url: string, body: unknown, init: RequestInit = {}) =>
+    fetch(`${url}/mcp`, { method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream" }, body: JSON.stringify(body), ...init });
+  const call = (name: string) => ({ jsonrpc: "2.0", id: 3, method: "tools/call", params: { name, arguments: { city: "Pune" } } });
+
+  it("lets a client connect and list tools for free, and passes the body on unchanged", async () => {
+    const url = await startProxy({}, { mcp: MCP, routes: ROUTES });
+    const init = { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "t", version: "1" } } };
+    expect((await rpc(url, init)).status).toBe(200);
+    expect((await rpc(url, { jsonrpc: "2.0", id: 2, method: "tools/list" })).status).toBe(200);
+    expect((await fetch(`${url}/mcp`)).status).toBe(200);
+    expect(backendCalls.map((c) => c.url)).toEqual(["/mcp", "/mcp", "/mcp"]);
+    expect(JSON.parse(backendCalls[0].body ?? "")).toEqual(init);
+  });
+
+  it("charges a tool call at that tool's price, and other tools at the default", async () => {
+    const url = await startProxy({}, { mcp: MCP });
+    const priced = await rpc(url, call("forecast"));
+    expect(priced.status).toBe(402);
+    expect(decodePaymentRequiredHeader(priced.headers.get("payment-required") as string).accepts[0].amount).toBe("20000");
+    const other = await rpc(url, call("anything"));
+    expect(decodePaymentRequiredHeader(other.headers.get("payment-required") as string).accepts[0].amount).toBe("10000");
+    expect(backendCalls).toHaveLength(0);
+  });
+
+  it("serves a free tool without payment", async () => {
+    const url = await startProxy({}, { mcp: MCP });
+    expect((await rpc(url, call("ping"))).status).toBe(200);
+    expect(backendCalls).toHaveLength(1);
+  });
+
+  it("forwards a paid tool call with its body after settlement, and records the tool", async () => {
+    const url = await startProxy({ settle: vi.fn().mockResolvedValue(settled) }, { mcp: MCP });
+    const res = await payingFetch().pay(`${url}/mcp`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(call("forecast")) });
+    expect(res.status).toBe(200);
+    expect(backendCalls).toHaveLength(1);
+    expect(JSON.parse(backendCalls[0].body ?? "")).toEqual(call("forecast"));
+    await vi.waitFor(() => expect(analytics.getRecentPayments()[0]?.route).toBe("/mcp/tools/forecast"));
+  });
+
+  it("refuses a batch with a tool call, and malformed JSON, without reaching the backend", async () => {
+    const url = await startProxy({}, { mcp: MCP });
+    const batch = await rpc(url, [{ jsonrpc: "2.0", id: 1, method: "tools/list" }, call("forecast")]);
+    expect(batch.status).toBe(400);
+    expect((await fetch(`${url}/mcp`, { method: "POST", headers: { "content-type": "application/json" }, body: "{" })).status).toBe(400);
+    expect(backendCalls).toHaveLength(0);
+  });
+});
+
+describe("a Gateway signature that fails", () => {
+  it("tells the buyer they need a Gateway-capable client", async () => {
+    const failed: SettleResponse = { success: false, errorReason: "invalid_signature", transaction: "", network: NETWORK, payer: buyer.address };
+    const url = await startProxy({}, {}, { settle: vi.fn().mockResolvedValue(failed) });
+    const res = await railFetch("gateway").pay(`${url}/weather`);
+    expect(res.status).toBe(402);
+    const body = await res.json();
+    expect(body.reason).toBe("invalid_signature");
+    expect(body.message).toMatch(/GatewayWalletBatched/);
+    expect(backendCalls).toHaveLength(0);
   });
 });
