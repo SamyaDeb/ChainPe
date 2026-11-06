@@ -109,7 +109,7 @@ export const callSchema = {
     .enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
     .default('GET')
     .describe('HTTP method (default: GET)'),
-  headers: z.record(z.string()).optional().describe('Optional HTTP headers'),
+  headers: z.record(z.string(), z.string()).optional().describe('Optional HTTP headers'),
   body: z.string().optional().describe('Optional request body')
 }
 

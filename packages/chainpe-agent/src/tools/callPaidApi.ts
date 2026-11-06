@@ -89,7 +89,7 @@ export function createCallPaidApiTool(options: CallPaidApiToolOptions) {
         .default("POST")
         .describe("HTTP method"),
       body: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .optional()
         .describe("Request body (for POST/PUT requests)"),
     }),

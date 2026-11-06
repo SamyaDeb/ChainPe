@@ -199,7 +199,7 @@ export class ChainPeAgent {
           serviceName: z.string(),
           path: z.string().optional().default("/"),
           method: z.enum(["GET", "POST", "PUT", "DELETE"]).optional().default("GET"),
-          body: z.record(z.unknown()).optional(),
+          body: z.record(z.string(), z.unknown()).optional(),
         }),
         execute: async ({ serviceName, path, method, body }) => {
           if (!this.paymentClient || !this.registryClient) {

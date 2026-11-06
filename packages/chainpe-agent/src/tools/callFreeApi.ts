@@ -21,11 +21,11 @@ export function createCallFreeApiTool() {
         .default("GET")
         .describe("HTTP method"),
       headers: z
-        .record(z.string())
+        .record(z.string(), z.string())
         .optional()
         .describe("Additional headers to send"),
       body: z
-        .record(z.unknown())
+        .record(z.string(), z.unknown())
         .optional()
         .describe("Request body (for POST/PUT requests)"),
     }),

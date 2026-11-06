@@ -31,7 +31,7 @@ export const fetchInputSchema = z.object({
     .optional()
     .describe('HTTP method (default GET).'),
   headers: z
-    .record(z.string())
+    .record(z.string(), z.string())
     .optional()
     .describe('Optional request headers.'),
   body: z

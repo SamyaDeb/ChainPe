@@ -2,7 +2,7 @@
   "name": "chainpe-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "ChainPe \u2014 x402 payment + ERC-8004 reputation infrastructure for AI agents on Arc",
+  "description": "ChainPe — x402 payment + ERC-8004 reputation infrastructure for AI agents on Arc",
   "type": "module",
   "workspaces": [
     "packages/*"
@@ -23,13 +23,11 @@
     "test:e2e:a2a": "node e2e/agent-to-agent.mjs",
     "dev": "npm run dev --workspace=@chainpearc/cli",
     "dev:agent": "npm run dev --workspace=@chainpearc/agent",
-    
     "dev:dashboard": "npm run dev --prefix apps/dashboard",
     "dev:landing": "npm run dev --prefix apps/landing -- -p 3002",
     "dev:docs": "npm run start --prefix website",
     "dev:all": "npm run dev:docs & npm run dev:landing",
     "dev:docs:rebuild": "cd website && npm run build && rm -rf ../apps/dashboard/public/docs && cp -r build ../apps/dashboard/public/docs && rm -rf ../apps/landing/public/docs && cp -r build ../apps/landing/public/docs",
-    
     "typecheck": "npm run typecheck --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present",
     "publish:cli": "npm publish --workspace=@chainpearc/cli --access public",
@@ -56,5 +54,8 @@
   },
   "dependencies": {
     "@chainpearc/sdk": "^0.3.0"
+  },
+  "devDependencies": {
+    "zod": "^4.6.7"
   }
 }
