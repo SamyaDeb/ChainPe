@@ -213,6 +213,31 @@ export interface Wallets {
   wallets: string[]
 }
 
+export interface FeeBatch {
+  id: string
+  revenueAtomic: Atomic
+  feeAtomic: Atomic
+  status: 'pending' | 'collected' | 'failed'
+  txHash: string | null
+  createdAt: string
+}
+export interface Fees {
+  enabled: boolean
+  /** Compared with this build's own address before anything is approved. */
+  contract: string | null
+  status: 'not_enrolled' | 'active'
+  enrolledAt: string | null
+  rateBps: number
+  rates: { freeBps: number; proBps: number }
+  owedAtomic: Atomic
+  collectedAtomic: Atomic
+  /** Null when Arc could not be read. */
+  allowanceAtomic: Atomic | null
+  lockAtAtomic: Atomic
+  locked: boolean
+  batches: FeeBatch[]
+}
+
 export interface CreatedKey {
   id: string
   key: string

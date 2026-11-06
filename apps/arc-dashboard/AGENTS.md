@@ -50,6 +50,10 @@ Revenue counts verified payments only. Unverified, failed, self-pay and unattrib
 - Keep `installShareSync()` in `src/main.tsx`. `src/tracing.ts` and `src/console-capture.ts` load in dev only.
 - `scripts/` (deploy tooling) still uses two Circle SDK packages, so those stay in `package.json`.
 
+## Usage fee
+
+`src/screens/billing/FeesCard.tsx` shows the fee and asks for a USDC approval. The spender is `FEES_ADDRESS` in `src/lib/env.ts`, never a value from the API: the card refuses to approve if the API reports a different contract. Rules: `docs/arc/specs/12-usage-fees.md`.
+
 ## Install
 
 Use `npm ci`, which `vercel.json` also sets. A plain `npm install` fails with ERESOLVE, because the Solana packages that wagmi's connectors pull in clash with a peer range in the Circle SDK. To change dependencies, add `--legacy-peer-deps`. `qr` is pinned to 0.5.5 in `overrides`: RainbowKit's QR renderer asks for `~0`, and qr 0.7 rejects its `border: 0`, which crashes the page when a QR code draws.

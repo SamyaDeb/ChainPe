@@ -1,0 +1,26 @@
+{
+  "enabled": true,
+  "contract": "0x00000000000000000000000000000000000FEE00",
+  "status": "active",
+  "enrolledAt": "2026-11-06T10:00:00.000Z",
+  "rateBps": 100,
+  "rates": {
+    "freeBps": 100,
+    "proBps": 50
+  },
+  "owedAtomic": "250000",
+  "collectedAtomic": "1000000",
+  "allowanceAtomic": "20000000",
+  "lockAtAtomic": "5000000",
+  "locked": false,
+  "batches": [
+    {
+      "id": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "revenueAtomic": "100000000",
+      "feeAtomic": "1000000",
+      "status": "collected",
+      "txHash": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "createdAt": "2026-11-06T10:00:00.000Z"
+    }
+  ]
+}

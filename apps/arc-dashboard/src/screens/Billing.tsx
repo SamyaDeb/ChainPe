@@ -16,6 +16,7 @@ import { accountsAbi, MAX_PERIODS, PERIOD_DAYS, usdcAbi } from '@/lib/accounts'
 import { ACCOUNTS_ADDRESS, ARC_NETWORK, USDC_ADDRESS, USE_MOCK } from '@/lib/env'
 import { formatUsdc, formatUsdcExact } from '@/lib/money'
 import { formatDate } from '@/lib/time'
+import { FeesCard } from './billing/FeesCard'
 import { switchToArc } from '@/lib/wagmi'
 import { errorText, isUserRejection, publicClient } from '@/lib/wallet'
 
@@ -230,6 +231,7 @@ export function Billing() {
           <PlanColumn title="Pro" items={PRO_FEATURES} current={me.plan === 'pro'} />
         </div>
 
+        <FeesCard />
         {problem ? (
           <Card as="div" className="border-bad">
             <p className="font-display text-3xl tracking-tight text-ink">Billing is not configured</p>
