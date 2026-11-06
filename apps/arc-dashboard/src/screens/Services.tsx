@@ -50,8 +50,8 @@ function agentText(id: string | null, status: AgentIdStatus): ReactNode {
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0">
-      <dt className="text-xs text-muted">{label}</dt>
-      <dd className="mt-0.5 break-words text-sm text-ink">{children}</dd>
+      <dt className="font-mono text-xs text-muted">{label}</dt>
+      <dd className="mt-1 break-words text-sm text-ink">{children}</dd>
     </div>
   )
 }
@@ -62,18 +62,18 @@ function ServiceCard({ s, now, agent }: { s: ServiceItem; now: number; agent: Re
     <Card as="article">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="break-words text-base font-semibold text-ink">{s.name}</h2>
-          <p className="mt-0.5 break-words text-sm text-muted">{s.description}</p>
+          <h2 className="break-words font-display text-4xl tracking-tight text-ink lg:text-5xl">{s.name}</h2>
+          <p className="mt-2 max-w-prose break-words text-muted">{s.description}</p>
         </div>
         <Pill tone={s.active ? 'ok' : 'neutral'}>{s.active ? 'Active' : 'Inactive'}</Pill>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-2 rounded-md border border-line bg-subtle py-1 pl-3 pr-1">
+      <div className="mt-6 flex items-center justify-between gap-2 border border-ink/10 bg-subtle py-1.5 pl-4 pr-1.5">
         <code className="min-w-0 break-all font-mono text-sm">{s.endpoint}</code>
         <CopyButton value={s.endpoint} label="endpoint" />
       </div>
 
-      <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <dl className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <Row label="Price per call">{price}</Row>
         <Row label="Accepts">
           <span className="flex flex-wrap gap-1">
@@ -127,7 +127,7 @@ export function Services() {
         empty={<EmptyState title="No services listed" body="List a service and start your proxy. It appears here after its first heartbeat." command="chainpe start" />}
       >
         {(d) => (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-6">
             {d.services.map((s) => (
               <ServiceCard key={s.key} s={s} now={now} agent={agent} />
             ))}

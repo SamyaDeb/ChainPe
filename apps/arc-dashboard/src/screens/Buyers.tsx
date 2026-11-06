@@ -20,7 +20,7 @@ export function Buyers() {
 
   const columns: Array<Column<Buyer>> = [
     { header: 'Buyer', cell: (b) => <AddressView address={b.address} /> },
-    { header: 'Verified spend', cell: (b) => <span className="font-semibold tabular-nums">{formatUsdc(b.spendAtomic)}</span> },
+    { header: 'Verified spend', cell: (b) => <span className="font-display text-2xl tracking-tight">{formatUsdc(b.spendAtomic)}</span> },
     { header: 'Calls', cell: (b) => <span className="tabular-nums">{b.calls}</span> },
     ...(pro
       ? [
@@ -33,10 +33,10 @@ export function Buyers() {
   return (
     <>
       <PageHeader title="Buyers" subtitle={pro ? 'Every wallet that paid you, by verified spend.' : 'Free shows your top 5 buyers.'} />
-      <div className="mb-4">
+      <div className="mb-8">
         <RangePicker value={range} plan={me.plan} onChange={setRange} />
       </div>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-6">
         <ResourceView
           resource={buyers}
           locked={<LockedCard feature="Longer time ranges" description="30 days, 90 days and all time are part of the Pro plan." />}
@@ -45,7 +45,7 @@ export function Buyers() {
         >
           {(d) => (
             <>
-              <p className="text-sm text-muted">
+              <p className="font-mono text-sm text-muted">
                 Showing {d.buyers.length} of {d.totalBuyers} {d.totalBuyers === 1 ? 'buyer' : 'buyers'}.
               </p>
               <DataTable caption="Buyers by verified spend" columns={columns} rows={d.buyers} rowKey={(b) => b.address} />

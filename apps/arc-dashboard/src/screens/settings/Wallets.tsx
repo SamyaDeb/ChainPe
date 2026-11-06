@@ -74,7 +74,7 @@ export function Wallets() {
               {shown.length === 0 ? (
                 <p className="text-sm text-muted">No wallets listed.</p>
               ) : (
-                <ul className="flex flex-col divide-y divide-line rounded-md border border-line">
+                <ul className="flex flex-col divide-y divide-ink/10 border border-ink/10">
                   {shown.map((w) => (
                     <li key={w} className="flex items-center justify-between gap-2 px-3 py-1">
                       <AddressView address={w} />
@@ -123,7 +123,7 @@ export function Wallets() {
               ) : null}
 
               {confirming && draft !== null ? (
-                <div role="alertdialog" aria-label="Confirm replacing your wallet list" className="rounded-md border border-warn bg-warn-soft p-3">
+                <div role="alertdialog" aria-label="Confirm replacing your wallet list" className="border border-warn bg-warn-soft p-4">
                   <p className="text-sm font-semibold text-warn">Replace your wallet list?</p>
                   <p className="mt-1 text-sm text-ink">
                     Saving replaces the whole list on the server with the {draft.length} {draft.length === 1 ? 'wallet' : 'wallets'} shown. Payments from

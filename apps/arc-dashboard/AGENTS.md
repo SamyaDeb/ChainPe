@@ -14,7 +14,8 @@ Revenue counts verified payments only. Unverified, failed, self-pay and unattrib
 
 ## Tech Stack
 
-- Vite, React 18, TypeScript, Tailwind v3 (CSS variables for light/dark in `src/index.css`)
+- Vite, React 18, TypeScript, Tailwind v3 (oklch CSS variables for light/dark in `src/index.css`, matching `apps/landing`)
+- Instrument Serif, Instrument Sans, JetBrains Mono and Poppins, self-hosted through fontsource because the CSP is `font-src 'self'`
 - viem 2.57.5 pinned, injected wallet through `window.ethereum`. No wagmi, ConnectKit or react-query.
 - Contracts: Solidity 0.8.28 + Foundry in `contracts/`. Do not edit from the dashboard work.
 - Chain: Arc testnet (5042002), RPC `https://rpc.testnet.arc.io`, explorer `https://explorer.testnet.arc.io`
@@ -42,6 +43,7 @@ Revenue counts verified payments only. Unverified, failed, self-pay and unattrib
 ## Rules to keep
 
 - No inline `style` attributes (strict CSP): Tailwind classes, SVG attributes for chart sizes.
+- Motion lives in `src/index.css` and `src/components/ui/Motion.tsx`. Amounts count up as bigint, and everything respects reduced motion.
 - Render all API and onchain strings as text. No `dangerouslySetInnerHTML`. Never link `endpoint` or `feedbackUri`.
 - The address comes from the session only, never the URL. Session lives in sessionStorage only.
 - Keep `installShareSync()` in `src/main.tsx`. `src/tracing.ts` and `src/console-capture.ts` load in dev only.

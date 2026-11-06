@@ -49,14 +49,16 @@ function StepRow({ step }: { step: Step }) {
   )
 }
 
-function FeatureList({ title, items }: { title: string; items: string[] }) {
+/** One plan, laid out like a column of the landing page's pricing table. The plan you are on gets the heavy rule. */
+function PlanColumn({ title, items, current }: { title: string; items: string[]; current: boolean }) {
   return (
-    <div>
-      <p className="mb-1 text-sm font-semibold text-ink">{title}</p>
-      <ul className="flex flex-col gap-1 text-sm text-muted">
+    <div className={`relative bg-bg p-6 lg:p-10 ${current ? 'outline outline-2 -outline-offset-2 outline-ink' : ''}`}>
+      {current ? <span className="absolute left-6 top-0 -translate-y-1/2 bg-accent px-3 py-1 font-mono text-xs text-accent-fg lg:left-10">Your plan</span> : null}
+      <p className="mb-6 border-b border-ink/10 pb-6 font-display text-5xl tracking-tight text-ink lg:text-6xl">{title}</p>
+      <ul className="flex flex-col gap-3 text-sm text-muted">
         {items.map((f) => (
-          <li key={f} className="flex items-start gap-2">
-            <Check size={14} className="mt-1 shrink-0 text-ok" aria-hidden /> {f}
+          <li key={f} className="flex items-start gap-3">
+            <Check size={16} className="mt-0.5 shrink-0 text-ink" aria-hidden /> {f}
           </li>
         ))}
       </ul>
@@ -102,11 +104,11 @@ function Purchase({ chain, reload }: { chain: ChainState; reload: () => void }) 
             ))}
           </select>
         </Field>
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+        <dl className="grid grid-cols-2 items-baseline gap-x-4 gap-y-2 text-sm">
           <dt className="text-muted">Price per period</dt>
           <dd className="text-right font-medium tabular-nums">{formatUsdcExact(chain.price)} USDC</dd>
           <dt className="text-muted">Total</dt>
-          <dd className="text-right text-base font-semibold tabular-nums">{formatUsdcExact(total)} USDC</dd>
+          <dd className="text-right font-display text-4xl tracking-tight">{formatUsdcExact(total)} USDC</dd>
           <dt className="text-muted">Your USDC balance</dt>
           <dd className="text-right tabular-nums">{chain.balance === null ? 'Not shown in sample mode' : `${formatUsdc(chain.balance)} USDC`}</dd>
           <dt className="text-muted">Allowance for ChainPe</dt>
@@ -122,12 +124,12 @@ function Purchase({ chain, reload }: { chain: ChainState; reload: () => void }) 
       {USE_MOCK ? <p className="mt-3 text-sm text-muted">Paying is turned off in sample mode. Run with a live backend to upgrade.</p> : null}
       {!hasWallet ? <p className="mt-3 text-sm text-muted">No browser wallet was found. Install MetaMask or Rabby to pay with USDC.</p> : null}
 
-      <Button variant="primary" className="mt-4" disabled={USE_MOCK || !hasWallet || short || upgrade.running || upgrade.sent} onClick={() => void upgrade.run(periods)}>
+      <Button variant="primary" className="mt-6" disabled={USE_MOCK || !hasWallet || short || upgrade.running || upgrade.sent} onClick={() => void upgrade.run(periods)}>
         {upgrade.running ? <Loader2 size={16} className="animate-spin" aria-hidden /> : null}
         {verb}: pay {formatUsdcExact(total)} USDC
       </Button>
       {upgrade.sent ? (
-        <div role="status" className="mt-3 flex flex-wrap items-center gap-3 rounded-md border border-warn bg-warn-soft px-3 py-2 text-sm text-warn">
+        <div role="status" className="mt-3 flex flex-wrap items-center gap-3 border border-warn bg-warn-soft px-3 py-2 text-sm text-warn">
           <span className="min-w-0 flex-1">Your subscription transaction was sent and its result is not known yet. Paying again is turned off until it is.</span>
           <Button disabled={upgrade.checking} onClick={() => void upgrade.recheck()}>
             {upgrade.checking ? <Loader2 size={16} className="animate-spin" aria-hidden /> : null}
@@ -137,7 +139,7 @@ function Purchase({ chain, reload }: { chain: ChainState; reload: () => void }) 
       ) : null}
 
       {upgrade.started ? (
-        <ol aria-label="Upgrade progress" className="mt-4 divide-y divide-line rounded-md border border-line px-3">
+        <ol aria-label="Upgrade progress" className="mt-6 divide-y divide-ink/10 border border-ink/10 px-4">
           {upgrade.steps.map((s) => (
             <StepRow key={s.id} step={s} />
           ))}
@@ -195,9 +197,9 @@ export function Billing() {
   return (
     <>
       <PageHeader title="Billing" subtitle="Pay with USDC on Arc testnet. Only your wallet signs." />
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
         <Card>
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <PlanBadge plan={me.plan} />
               <span className="text-sm text-muted">
@@ -214,15 +216,15 @@ export function Billing() {
               {CATCHING_UP}
             </p>
           ) : null}
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <FeatureList title="Free" items={FREE_FEATURES} />
-            <FeatureList title="Pro" items={PRO_FEATURES} />
-          </div>
         </Card>
+        <div className="rise grid gap-px border border-ink/10 bg-ink/10 sm:grid-cols-2">
+          <PlanColumn title="Free" items={FREE_FEATURES} current={me.plan === 'free'} />
+          <PlanColumn title="Pro" items={PRO_FEATURES} current={me.plan === 'pro'} />
+        </div>
 
         {problem ? (
           <Card as="div" className="border-bad">
-            <p className="font-semibold text-ink">Billing is not configured</p>
+            <p className="font-display text-3xl tracking-tight text-ink">Billing is not configured</p>
             <p role="alert" className="mt-1 text-sm text-muted">{problem}</p>
           </Card>
         ) : (
