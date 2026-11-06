@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "chainpe-wallet": {
+      "command": "node",
+      "args": ["../../packages/chainpe-wallet/dist/index.js"],
+      "env": {
+        "CHAINPE_PRIVATE_KEY": "${CHAINPE_PRIVATE_KEY}",
+        "NETWORK": "arc-testnet",
+        "MAX_PER_CALL": "1.10",
+        "MAX_PER_DAY": "5.00"
+      }
+    }
+  }
+}
