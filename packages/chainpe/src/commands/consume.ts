@@ -1,6 +1,5 @@
 /**
- * Consumer-side CLI commands (curl-level): `chainpe fetch`, `chainpe deposit` and
- * `chainpe discover`.
+ * Consumer-side CLI commands (curl-level): `chainpe fetch` and `chainpe deposit`.
  *
  * `fetch` pays any x402 v2 402 on Arc in USDC, signing with the consumer wallet,
  * either from the wallet (`exact`) or from a Gateway deposit (`gateway`).
@@ -194,11 +193,6 @@ export async function runDepositCommand(amount: string, opts: DepositCommandOpti
     console.error(chalk.red(`  ✗ ${(err as Error).message}`));
     process.exit(1);
   }
-}
-
-export function runDiscoverCommand(): void {
-  console.log(chalk.yellow("  Service discovery is not available on Arc yet."));
-  process.exit(1);
 }
 
 function shortAddr(addr: string): string {

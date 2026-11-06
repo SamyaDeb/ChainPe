@@ -57,6 +57,7 @@ When every required check passes, `chainpe doctor` prints the values for [Circle
 ## Pay an API
 
 ```bash
+chainpe discover weather              # finds services on Circle and ChainPe
 export CHAINPE_PRIVATE_KEY=<a test wallet key>
 chainpe fetch "https://chainpe-arc-demo-production.up.railway.app/forecast?city=Mumbai" \
   --network arc-testnet --rail exact --max 0.02
@@ -77,6 +78,7 @@ chainpe fetch "https://chainpe-arc-demo-production.up.railway.app/forecast?city=
 | `chainpe plan` / `upgrade` | Show your plan, or pay for Pro in USDC |
 | `chainpe doctor` | Check your service is ready for agents and Circle's marketplace |
 | `chainpe status` | Show your configuration |
+| `chainpe discover [query]` | Find paid services through Circle's Discovery API and `ChainPeAccounts` |
 | `chainpe fetch <url>` | Call a URL, paying any x402 price in USDC |
 | `chainpe deposit <amount>` | Deposit USDC into Circle Gateway, to pay as a buyer |
 | `chainpe balance` | Show your Gateway and on-chain USDC balances |

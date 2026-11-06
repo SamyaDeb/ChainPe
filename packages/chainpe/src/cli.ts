@@ -34,7 +34,8 @@ import { runDoctorCommand } from "./commands/doctor.js";
 import { runLoginCommand, runLogoutCommand } from "./commands/cloud.js";
 import { startTelemetry } from "./cloud/start.js";
 import { VERSION } from "./version.js";
-import { gatewayClient, runFetchCommand, runDiscoverCommand, runDepositCommand } from "./commands/consume.js";
+import { gatewayClient, runFetchCommand, runDepositCommand } from "./commands/consume.js";
+import { runDiscoverCommand } from "./commands/discover.js";
 import { runBalanceCommand, runWithdrawCommand } from "./commands/seller.js";
 import {
   runDeregisterCommand,
@@ -511,6 +512,13 @@ program
     await runWithdrawCommand(amount, walletAddress, network, { all: options.all, chain: options.chain });
   });
 
-program.command("discover").description("Discover services (not available on Arc yet)").action(runDiscoverCommand);
+program
+  .command("discover [query]")
+  .description("Find paid services through Circle's Discovery API and ChainPeAccounts")
+  .option("-n, --network <network>", NETWORK_FLAG)
+  .option("--max <usdc>", "Highest price per request")
+  .option("--limit <count>", "Most results to show (default: 20)")
+  .option("--json", "Print JSON")
+  .action(runDiscoverCommand);
 
 program.parse();
