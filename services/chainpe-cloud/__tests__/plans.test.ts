@@ -127,15 +127,44 @@ describe('Free', () => {
 
   it('sees the latest health only', async () => {
     const base = { serviceKey: hex32(1), provider: address, version: '1', network: CAIP2, rails: ['exact'] }
+    const doctorJson = { ok: true, score: { passed: 1, total: 1 } }
     await db.insert(heartbeats).values([
-      { ...base, ts: new Date(Date.now() - 1000), version: 'old' },
-      { ...base, ts: new Date(), version: 'new' },
+      { ...base, ts: new Date(Date.now() - 1000), version: 'old', doctorJson },
+      { ...base, ts: new Date(), version: 'new', doctorJson },
     ])
     const free = await get('/v1/me/health').expect(200)
     expect(free.body.history.map((b: { version: string }) => b.version)).toEqual(['new'])
     expect(free.body.latestOnly).toBe(true)
     makePro()
     expect((await get('/v1/me/health').expect(200)).body.history).toHaveLength(2)
+  })
+})
+
+describe('doctor results', () => {
+  const key = hex32(1)
+  const insert = () =>
+    db.insert(services).values({ key, provider: address, name: 'demo', description: '', tags: '', endpoint: 'https://a.example', price: '0.01', network: CAIP2, payTo: address, acceptsExact: true, acceptsGateway: true, createdBlock: 1n, updatedBlock: 1n })
+
+  it('survive a later heartbeat with no report, as a proxy in a container sends', async () => {
+    await insert()
+    const beat = { serviceKey: key, provider: address, version: '1', network: CAIP2, rails: ['exact'] }
+    await db.insert(heartbeats).values([
+      { ...beat, ts: new Date(Date.now() - 60_000), doctorJson: { ok: true, score: { passed: 11, total: 11 } } },
+      { ...beat, ts: new Date(), gatewayBalanceAtomic: '4500' },
+    ])
+    const [service] = (await get('/v1/me/services').expect(200)).body.services
+    expect(service.doctor).toEqual({ ok: true, passed: 11, total: 11 })
+    expect(service.gatewayBalanceAtomic).toBe('4500')
+    const { history } = (await get('/v1/me/health').expect(200)).body
+    expect(history).toHaveLength(1)
+    expect(history[0].doctor.score.passed).toBe(11)
+  })
+
+  it('are null when doctor has never reported', async () => {
+    await insert()
+    await db.insert(heartbeats).values({ serviceKey: key, provider: address, version: '1', network: CAIP2, rails: [] })
+    expect((await get('/v1/me/services').expect(200)).body.services[0].doctor).toBeNull()
+    expect((await get('/v1/me/health').expect(200)).body.history).toEqual([])
   })
 })
 

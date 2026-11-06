@@ -316,8 +316,8 @@ paths:
   /v1/me/health:
     get:
       tags: [me]
-      summary: Heartbeats and doctor reports
-      description: '**Free:** the latest only. **Pro:** the last 100.'
+      summary: Doctor reports, as sent by heartbeats
+      description: 'Only heartbeats that carry a report. **Free:** the latest only. **Pro:** the last 100.'
       security: [{ session: [] }]
       responses:
         '200':
@@ -613,6 +613,7 @@ components:
               gatewayBalanceAtomic: { type: [string, 'null'] }
               doctor:
                 type: [object, 'null']
+                description: The latest report, which may be older than `lastHeartbeatAt`. Null if doctor has never reported.
                 additionalProperties: false
                 required: [ok, passed, total]
                 properties:

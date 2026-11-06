@@ -2,7 +2,7 @@
  * Provider-scoped reads. The provider always comes from the session, never from
  * input, and every query filters on it. Spec 08a sections 3 and 6.
  */
-import { and, asc, desc, eq, inArray, or, sql, lt, gte, type SQL } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, inArray, isNotNull, lt, or, sql, type SQL } from 'drizzle-orm'
 import { Router, type Request } from 'express'
 import { getAddress } from 'viem'
 import { z } from 'zod'
@@ -99,6 +99,15 @@ export function meRoutes({ db, views, sessions, readLimit, now = Date.now }: MeO
           .orderBy(heartbeats.serviceKey, desc(heartbeats.ts))
       : []
     const beatOf = new Map(beats.map((b) => [b.serviceKey, b]))
+    // A proxy's own heartbeat carries no report in a container, so the latest beat must not hide the latest result.
+    const reports = keys.length
+      ? await db
+          .selectDistinctOn([heartbeats.serviceKey])
+          .from(heartbeats)
+          .where(and(eq(heartbeats.provider, provider), inArray(heartbeats.serviceKey, keys), isNotNull(heartbeats.doctorJson)))
+          .orderBy(heartbeats.serviceKey, desc(heartbeats.ts))
+      : []
+    const reportOf = new Map(reports.map((b) => [b.serviceKey, b.doctorJson]))
     res.json({
       services: shown.map((s) => {
         const beat = beatOf.get(s.key)
@@ -120,7 +129,7 @@ export function meRoutes({ db, views, sessions, readLimit, now = Date.now }: MeO
           version: beat?.version ?? null,
           rails: beat?.rails ?? null,
           gatewayBalanceAtomic: beat?.gatewayBalanceAtomic ?? null,
-          doctor: doctorSummary(beat?.doctorJson),
+          doctor: doctorSummary(reportOf.get(s.key)),
         }
       }),
       truncated: shown.length < rows.length,
@@ -336,7 +345,8 @@ export function meRoutes({ db, views, sessions, readLimit, now = Date.now }: MeO
     const rows = await db
       .select()
       .from(heartbeats)
-      .where(eq(heartbeats.provider, req.provider!))
+      // Doctor history. A heartbeat with no report would push real results out of the window.
+      .where(and(eq(heartbeats.provider, req.provider!), isNotNull(heartbeats.doctorJson)))
       .orderBy(desc(heartbeats.ts))
       .limit(plan === 'free' ? 1 : 100)
     res.json({
