@@ -2,6 +2,8 @@
 
 For the Arc Studio Continuity Track at ETHGlobal Mumbai. Submissions close **Saturday, November 7, 2026 at 09:00 IST**.
 
+The narration in the recorded cut is in [VOICEOVER.md](VOICEOVER.md). It replaces the lines below where they differ.
+
 ## Video rules
 
 - Between 2:00 and 4:00. Anything longer is rejected on upload, so aim for 3:50.
