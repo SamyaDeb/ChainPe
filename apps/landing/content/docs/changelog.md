@@ -10,7 +10,7 @@ All notable changes to ChainPe are documented here.
 
 ## 3.0.0 — 2026-11-06
 
-- The npm packages lost the Avalanche name: `@chainpeavax/cli` is now `chainpe`, `@chainpeavax/sdk` is `chainpe-sdk`, `@chainpeavax/ai-tools` is `chainpe-ai-tools`, and `@chainpeavax/agent` is `chainpe-agent`. New versions: `chainpe` 3.0.0, `chainpe-sdk` 0.3.0, `chainpe-ai-tools` 0.3.0, `chainpe-agent` 3.0.0.
+- The npm packages moved to the `@chainpe` scope: `@chainpe/cli`, `@chainpe/sdk`, `@chainpe/ai-tools`, `@chainpe/agent` and `@chainpe/wallet-mcp`.
 
 ---
 
@@ -29,15 +29,15 @@ All notable changes to ChainPe are documented here.
 - Complete README rewrite documenting all surfaces
 - `docs/WHY-AVALANCHE.md` — measured finality + fees, ICM rationale
 
-**Phase 1 — @chainpeavax/sdk**
+**Phase 1 — @chainpe/sdk**
 - `ChainPe` class with `fetch()`, `pay()`, `discover()`, `getReputation()`, `giveFeedback()`, `balance()`
 - `RegistryClient` with `listAllServices()`, `filterServices()`, `rankByReputation()`
 - `PolicyVaultClient` with owner/agent/relayer roles and EIP-712 signing
 - Full TypeScript types: `ChainPeOptions`, `ChainPeService`, `RankedService`, `PaidResult`, `PaymentInfo`, `SpendAuthorization`
 - `ChainPePaymentError` with `txHash` and `reason`
-- Published to npm as `@chainpeavax/sdk@0.2.0`
+- Published to npm
 
-**Phase 2 — @chainpeavax/ai-tools + CLI**
+**Phase 2 — @chainpe/ai-tools + CLI**
 - Vercel AI SDK adapter: `createChainPeTools()` → `chainpeFetch`, `discoverService`
 - LangChain adapter: `createChainPeLangChainTools()` → `chainpe_fetch`, `discover_service`
 - Framework-agnostic core: `runFetch`, `runDiscover`, zod schemas, tool descriptions
@@ -74,7 +74,7 @@ All notable changes to ChainPe are documented here.
 - `previewSpend()` view function
 - `cleanupDailySpent()` for gas reclaim
 - `PolicyVaultUpgradeable.sol` — UUPS version for mainnet
-- `PolicyVaultClient` in `@chainpeavax/sdk`
+- `PolicyVaultClient` in `@chainpe/sdk`
 
 **Phase 7 — Avalanche bench + ICM**
 - `contracts/contracts/icm/ChainPeICMSender.sol` and `ChainPeICMReceiver.sol`

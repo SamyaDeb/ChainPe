@@ -23,7 +23,7 @@ ChainPe is that layer, on Avalanche.
 ## Payments in three lines
 
 ```ts
-import { ChainPe } from 'chainpe-sdk'
+import { ChainPe } from '@chainpe/sdk'
 
 const cp = new ChainPe({ privateKey: process.env.PRIVATE_KEY!, network: 'avalanche' })
 const res = await cp.fetch('https://api.example.com/paid')  // auto-pays a 402 in USDC
@@ -65,7 +65,7 @@ You have an API, an LLM agent, or any HTTP service that produces value. You want
 
 ### AI Agent Builders (buyers)
 
-You build autonomous agents that call external services. You want those agents to pay for what they use, without hardwired API keys that can leak, and with a way to discover trustworthy services ranked by real on-chain reputation. You install `chainpe-sdk` or `chainpe-ai-tools` and your agent gains the ability to discover, pay, and rate services in the same loop.
+You build autonomous agents that call external services. You want those agents to pay for what they use, without hardwired API keys that can leak, and with a way to discover trustworthy services ranked by real on-chain reputation. You install `@chainpe/sdk` or `@chainpe/ai-tools` and your agent gains the ability to discover, pay, and rate services in the same loop.
 
 ### End Users / Operators
 
@@ -77,11 +77,11 @@ ChainPe is infrastructure. Claude/MCP is just one client. The same payment + rep
 
 | Surface | Package | Description |
 |---|---|---|
-| SDK | `chainpe-sdk` | Payments + reputation in 3 lines for any Node/TS project |
-| Agent tools | `chainpe-ai-tools` | Vercel AI SDK + LangChain tool adapters |
+| SDK | `@chainpe/sdk` | Payments + reputation in 3 lines for any Node/TS project |
+| Agent tools | `@chainpe/ai-tools` | Vercel AI SDK + LangChain tool adapters |
 | CLI | `chainpe` | Provider proxy + consumer `fetch`/`discover` commands |
-| Claude wallet | `chainpe-wallet-mcp` | MCP extension — Claude gets an Avalanche x402 wallet |
-| Agent SDK | `chainpe-agent` | Standalone LLM agent loop that discovers and pays |
+| Claude wallet | `@chainpe/wallet-mcp` | MCP extension — Claude gets an Avalanche x402 wallet |
+| Agent SDK | `@chainpe/agent` | Standalone LLM agent loop that discovers and pays |
 | Dashboard | `apps/dashboard` | Next.js marketplace UI |
 | Facilitator | `services/chainpe-facilitator` | Non-custodial x402 verify/settle (Railway-deployed) |
 | Indexer | `services/chainpe-indexer` | Events → Postgres → O(1) REST API |

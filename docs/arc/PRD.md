@@ -95,7 +95,7 @@ the customer we design for.
 
 ### 6.1 Provider: zero to paid (target: under 10 minutes)
 
-1. `npm i -g chainpe`
+1. `npm i -g @chainpe/cli`
 2. `chainpe init --network arc-testnet` → target URL, price, payout wallet.
 3. `chainpe login` → signs a message with the payout wallet; gets a dashboard session + ingest key.
 4. `chainpe register` → `ChainPeAccounts.registerProvider` + `registerService`, ERC-8004 identity minted/linked.

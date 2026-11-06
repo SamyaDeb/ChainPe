@@ -29,7 +29,7 @@ Avalanche Interchain Messaging (ICM / Teleporter) enables agents on one Avalanch
 
 ```mermaid
 graph LR
-    Agent["AI Agent\n(chainpe-sdk)"] -->|"cp.fetch(url)"| Proxy["x402 Proxy\n(chainpe start)"]
+    Agent["AI Agent\n(@chainpe/sdk)"] -->|"cp.fetch(url)"| Proxy["x402 Proxy\n(chainpe start)"]
     Proxy -->|"402 → sign → retry"| Agent
     Proxy -->|"/settle"| Fac["Facilitator\n(non-custodial)"]
     Fac -->|"transferWithAuthorization"| USDC["USDC Contract\n(Avalanche C-Chain)"]

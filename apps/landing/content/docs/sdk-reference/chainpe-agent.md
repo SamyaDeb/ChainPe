@@ -11,7 +11,7 @@ Standalone LLM agent loop for autonomous discovery and payment of ChainPe servic
 ## Installation
 
 ```bash
-npm install chainpe-agent
+npm install @chainpe/agent
 ```
 
 ## Key exports
@@ -30,7 +30,7 @@ export { AgentKeychain } from './keychain.js'
 The top-level orchestrator that combines LLM inference with ChainPe tools.
 
 ```ts
-import { AgentRunner } from 'chainpe-agent'
+import { AgentRunner } from '@chainpe/agent'
 
 const runner = new AgentRunner({
   // Wallet
@@ -95,7 +95,7 @@ Array<{ name: string; endpoint: string; pricePerRequest: string; reputation: ...
 Manages secure key storage for long-running agents:
 
 ```ts
-import { AgentKeychain } from 'chainpe-agent'
+import { AgentKeychain } from '@chainpe/agent'
 
 const keychain = new AgentKeychain()
 await keychain.store('myAgent', '0xPrivateKey')
@@ -105,7 +105,7 @@ const key = await keychain.retrieve('myAgent')
 ## WalletManager
 
 ```ts
-import { WalletManager } from 'chainpe-agent'
+import { WalletManager } from '@chainpe/agent'
 
 const wallet = new WalletManager({ privateKey, network: 'avalanche' })
 const balance = await wallet.getBalance()
@@ -117,7 +117,7 @@ const address = wallet.getAddress()
 Direct x402 payment without the full agent loop:
 
 ```ts
-import { PaymentClient } from 'chainpe-agent'
+import { PaymentClient } from '@chainpe/agent'
 
 const client = new PaymentClient({ privateKey, network: 'avalanche', maxPerCall: '0.10' })
 const result = await client.payAndFetch('https://api.example.com/data')
@@ -133,5 +133,5 @@ CHAINPE_NETWORK=avalanche \
 AGENT_LLM_PROVIDER=openai \
 AGENT_LLM_MODEL=gpt-4o \
 AGENT_LLM_API_KEY=sk-... \
-npx chainpe-agent "summarize the latest AI research"
+npx @chainpe/agent "summarize the latest AI research"
 ```

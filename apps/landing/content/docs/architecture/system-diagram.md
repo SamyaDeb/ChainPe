@@ -12,13 +12,13 @@ Detailed component map of the ChainPe system, including data stores, external de
 graph TB
     subgraph "Client Layer"
         AI["AI Agent\n(Node.js / Python / Claude)"]
-        DEV["Developer App\n(chainpe-sdk)"]
+        DEV["Developer App\n(@chainpe/sdk)"]
         DASH["Dashboard\napps/dashboard\n(Next.js / Vercel)"]
     end
 
     subgraph "ChainPe NPM Packages"
-        SDK["chainpe-sdk\nChainPe class\nRegistryClient\nPolicyVaultClient\nReputationClient"]
-        TOOLS["chainpe-ai-tools\ncreateChainPeTools (Vercel)\ncreateChainPeLangChainTools"]
+        SDK["@chainpe/sdk\nChainPe class\nRegistryClient\nPolicyVaultClient\nReputationClient"]
+        TOOLS["@chainpe/ai-tools\ncreateChainPeTools (Vercel)\ncreateChainPeLangChainTools"]
         CLICMD["chainpe\nchainpe init/start/register\nchainpe fetch/discover"]
     end
 

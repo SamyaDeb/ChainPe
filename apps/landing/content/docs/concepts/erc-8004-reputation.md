@@ -74,7 +74,7 @@ All three are deployed behind UUPS (ERC-1967) proxies. The owner (initially the 
 ## Reading reputation
 
 ```ts
-import { ChainPe } from 'chainpe-sdk'
+import { ChainPe } from '@chainpe/sdk'
 
 const cp = new ChainPe({ privateKey, network: 'avalanche' })
 

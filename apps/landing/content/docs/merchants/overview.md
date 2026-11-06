@@ -38,7 +38,7 @@ The proxy:
 
 ```bash
 # Install
-npm install -g chainpe
+npm install -g @chainpe/cli
 
 # Interactive setup
 chainpe init

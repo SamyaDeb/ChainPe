@@ -70,7 +70,7 @@ curl -H "X-Admin-Key: your-secret-admin-key" http://localhost:4402/chainpe-admin
 chainpe status
 
 # Or using the SDK
-import { ChainPe } from 'chainpe-sdk'
+import { ChainPe } from '@chainpe/sdk'
 const cp = new ChainPe({ privateKey: process.env.KEY!, network: 'avalanche' })
 const { usdc } = await cp.balance()
 console.log(`USDC earned: ${usdc}`)

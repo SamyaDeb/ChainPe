@@ -90,7 +90,7 @@ This is why:
 Here is the minimal code that produces a first payment:
 
 ```ts
-import { ChainPe } from 'chainpe-sdk'
+import { ChainPe } from '@chainpe/sdk'
 
 // 1. Construct the client. This does NOT make any network requests.
 const cp = new ChainPe({

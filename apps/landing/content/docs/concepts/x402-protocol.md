@@ -145,7 +145,7 @@ app.use(
 
 The middleware intercepts all requests, returns `402` if no `X-PAYMENT` header is present, and calls the facilitator's `/settle` endpoint when one is present.
 
-### Consumer side: `chainpe-sdk`
+### Consumer side: `@chainpe/sdk`
 
 `ChainPe.fetch()` manually runs the x402 flow: initial request → parse `402` body → sign → retry with `X-PAYMENT` → decode `X-PAYMENT-RESPONSE`. This gives the SDK full access to the payment metadata for surfacing in `PaidResult`.
 

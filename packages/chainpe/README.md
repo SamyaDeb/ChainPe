@@ -1,6 +1,6 @@
-# chainpe
+# @chainpe/cli
 
-[![npm](https://img.shields.io/npm/v/chainpe.svg)](https://www.npmjs.com/package/chainpe)
+[![npm](https://img.shields.io/npm/v/@chainpe/cli.svg)](https://www.npmjs.com/package/@chainpe/cli)
 
 **Put a USDC price on any HTTP API, and let AI agents pay per call on Arc.**
 
@@ -16,7 +16,7 @@ ChainPe is a reverse proxy that sits in front of your API. An unpaid request get
 ## Install
 
 ```bash
-npm install -g chainpe
+npm install -g @chainpe/cli
 ```
 
 ## Sell your API
