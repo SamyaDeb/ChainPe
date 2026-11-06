@@ -46,7 +46,7 @@ const heartbeatSchema = z
     network: z.string().regex(/^eip155:\d+$/),
     rails: z.array(z.enum(['exact', 'gateway'])).max(2),
     gatewayBalanceAtomic: atomicString.optional(),
-    doctor: z.record(z.unknown()).optional(),
+    doctor: z.record(z.string(), z.unknown()).optional(),
   })
   .strict()
 
