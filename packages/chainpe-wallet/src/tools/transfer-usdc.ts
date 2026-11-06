@@ -6,25 +6,25 @@ import {
   getAddress,
   parseUnits
 } from 'viem'
-import { avalanche, avalancheFuji } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
+import {
+  chainFor,
+  explorerFor,
+  getUsdcAddress,
+  normalizeKey,
+  publicClientFor,
+  rpcUrlFor,
+  USDC_DECIMALS
+} from '@chainpearc/sdk'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import type { AppConfig, PaymentNetwork } from '@/types.js'
+import type { AppConfig } from '@/types.js'
 import type { SpendingTracker } from '@/spending.js'
 import {
-  getUsdcAddress,
-  rpcUrlFor,
-  publicClientFor,
-  USDC_DECIMALS
+  errorMessage,
+  NO_WALLET_MESSAGE,
+  toolError,
+  toolJson
 } from '@/clients.js'
-
-const CHAINS = { fuji: avalancheFuji, avalanche }
-
-function explorerTx(network: PaymentNetwork, hash: string): string {
-  return network === 'fuji'
-    ? `https://testnet.snowtrace.io/tx/${hash}`
-    : `https://snowtrace.io/tx/${hash}`
-}
 
 export function registerTransferUsdc(
   server: McpServer,
@@ -33,50 +33,28 @@ export function registerTransferUsdc(
 ): void {
   server.tool(
     'transfer_usdc',
-    'Send USDC directly on-chain from your Avalanche wallet to another address. This is a real ERC-20 ' +
-      'transfer — NOT an x402 payment header. Use it to send USDC to a friend, top up a wallet, or move funds.',
+    'Send USDC directly on-chain from this wallet to another address on Arc. This is a real ERC-20 ' +
+      'transfer, not an x402 payment. Use it to send USDC to someone, top up a wallet, or move funds.',
     {
       to: z.string().describe('Recipient EVM address (0x…)'),
-      amount: z.string().describe('USDC amount as decimal string, e.g. "1.50"'),
-      network: z
-        .enum(['fuji', 'avalanche'])
-        .default('fuji')
-        .describe('Avalanche network (default: fuji)')
+      amount: z.string().describe('USDC amount as decimal string, e.g. "1.50"')
     },
-    async ({ to, amount, network }) => {
-      if (!config.privateKey) {
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: 'No wallet configured. Set CHAINPE_PRIVATE_KEY environment variable.'
-            }
-          ],
-          isError: true
-        }
-      }
-
+    async ({ to, amount }) => {
+      if (!config.privateKey) return toolError(NO_WALLET_MESSAGE)
       try {
         spending.check(amount)
 
-        const net = network as PaymentNetwork
+        // Through the 6-decimal ERC-20 interface, never Arc's 18-decimal native balance.
+        const value = parseUnits(amount, USDC_DECIMALS)
+        if (value <= 0n) return toolError('Amount must be greater than 0.')
+
+        const net = config.network
         const account = privateKeyToAccount(normalizeKey(config.privateKey))
         const walletClient = createWalletClient({
           account,
-          chain: CHAINS[net],
+          chain: chainFor(net),
           transport: http(rpcUrlFor(net))
         })
-
-        const value = parseUnits(amount, USDC_DECIMALS)
-        if (value <= 0n) {
-          return {
-            content: [
-              { type: 'text' as const, text: 'Amount must be greater than 0.' }
-            ],
-            isError: true
-          }
-        }
-
         const recipient = getAddress(to)
         const hash = await walletClient.writeContract({
           address: getUsdcAddress(net),
@@ -84,48 +62,25 @@ export function registerTransferUsdc(
           functionName: 'transfer',
           args: [recipient, value]
         })
-
         const receipt = await publicClientFor(net).waitForTransactionReceipt({
           hash
         })
-        spending.record(amount, recipient, network)
+        if (receipt.status === 'success')
+          spending.record(amount, recipient, net)
 
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: JSON.stringify(
-                {
-                  success: receipt.status === 'success',
-                  txHash: hash,
-                  from: account.address,
-                  to: recipient,
-                  amount: `${amount} USDC`,
-                  network,
-                  blockNumber: Number(receipt.blockNumber),
-                  explorerUrl: explorerTx(net, hash)
-                },
-                null,
-                2
-              )
-            }
-          ]
-        }
+        return toolJson({
+          success: receipt.status === 'success',
+          txHash: hash,
+          from: account.address,
+          to: recipient,
+          amount: `${amount} USDC`,
+          network: net,
+          blockNumber: Number(receipt.blockNumber),
+          explorerUrl: `${explorerFor(net)}/tx/${hash}`
+        })
       } catch (err) {
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: `Transfer failed: ${err instanceof Error ? err.message : String(err)}`
-            }
-          ],
-          isError: true
-        }
+        return toolError(`Transfer failed: ${errorMessage(err)}`)
       }
     }
   )
-}
-
-function normalizeKey(key: string): `0x${string}` {
-  return (key.startsWith('0x') ? key : `0x${key}`) as `0x${string}`
 }

@@ -1,7 +1,7 @@
 {
   "name": "@chainpearc/wallet-mcp",
   "version": "0.3.0",
-  "description": "ChainPe Wallet — MCP server giving Claude an Avalanche C-Chain x402 wallet that discovers and pays for services on the ChainPe on-chain registry",
+  "description": "ChainPe Wallet: an MCP server that lets Claude find, pay for and rate x402 services in USDC on Arc.",
   "type": "module",
   "bin": {
     "chainpe-wallet-mcp": "./dist/index.js"
@@ -25,10 +25,9 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "@chainpearc/sdk": "^0.3.0",
     "@modelcontextprotocol/sdk": "^1.26.0",
-    "viem": "^2.21.0",
-    "x402": "^1.2.0",
-    "x402-fetch": "^1.2.0",
+    "viem": "^2.57.5",
     "zod": "^3.23.0"
   },
   "devDependencies": {
@@ -50,8 +49,8 @@
     "wallet",
     "mcp",
     "usdc",
-    "avalanche",
-    "c-chain",
+    "arc",
+    "circle",
     "payments",
     "chainpe",
     "agent-commerce"
@@ -62,6 +61,6 @@
     "url": "git+https://github.com/SamyaDeb/ChainPe.git"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.18"
   }
 }

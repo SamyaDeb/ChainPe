@@ -30,6 +30,24 @@ export class SpendingTracker {
     }
   }
 
+  /**
+   * The most one payment may cost right now, as a USDC amount for the SDK's
+   * limit, which refuses a higher price before signing. Rounded down to USDC's
+   * 6 decimals. Throws when the daily budget is used up.
+   */
+  paymentCap(): string {
+    this.resetDailyIfNeeded()
+    const remaining = parseFloat(this.config.maxPerDay) - this.spentToday
+    const cap = Math.min(parseFloat(this.config.maxPerCall), remaining)
+    const atomic = Math.floor(cap * 1_000_000 + 1e-6)
+    if (atomic <= 0) {
+      throw new Error(
+        `Daily limit of $${this.config.maxPerDay} reached (spent today: $${this.spentToday.toFixed(4)})`
+      )
+    }
+    return (atomic / 1_000_000).toFixed(6)
+  }
+
   record(amountUsdc: string, recipient: string, network: string): void {
     const amount = parseFloat(amountUsdc)
     this.spentToday += amount

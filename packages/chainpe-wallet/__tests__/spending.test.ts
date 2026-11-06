@@ -69,3 +69,21 @@ describe('SpendingTracker', () => {
     expect(summary.recentPayments).toHaveLength(10)
   })
 })
+
+describe('SpendingTracker.paymentCap', () => {
+  it('is the per-call limit while the day has room', () => {
+    expect(new SpendingTracker({ maxPerCall: '0.10', maxPerDay: '1.00' }).paymentCap()).toBe('0.100000')
+  })
+
+  it('shrinks to what is left today', () => {
+    const tracker = new SpendingTracker({ maxPerCall: '0.10', maxPerDay: '0.015' })
+    tracker.record('0.01', '0xabc', 'arc-testnet')
+    expect(tracker.paymentCap()).toBe('0.005000')
+  })
+
+  it('throws when the day is used up', () => {
+    const tracker = new SpendingTracker({ maxPerCall: '0.10', maxPerDay: '0.01' })
+    tracker.record('0.01', '0xabc', 'arc-testnet')
+    expect(() => tracker.paymentCap()).toThrow(/Daily limit/)
+  })
+})

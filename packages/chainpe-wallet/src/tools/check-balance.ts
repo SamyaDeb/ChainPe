@@ -1,6 +1,12 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { AppConfig } from '@/types.js'
-import { getWalletAddress, getUsdcBalance, getAvaxBalance } from '@/clients.js'
+import {
+  clientFor,
+  errorMessage,
+  NO_WALLET_MESSAGE,
+  toolError,
+  toolJson
+} from '@/clients.js'
 
 export function registerCheckBalance(
   server: McpServer,
@@ -8,53 +14,24 @@ export function registerCheckBalance(
 ): void {
   server.tool(
     'check_balance',
-    'Check wallet balances: USDC and native AVAX (for gas) on Avalanche Fuji/Mainnet.',
+    'Check this wallet on Arc: its address, its USDC, and its Circle Gateway deposit. On Arc, gas is paid in USDC.',
     {},
     async () => {
-      if (!config.canPay) {
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: 'No wallet configured. Set CHAINPE_PRIVATE_KEY environment variable.'
-            }
-          ],
-          isError: true
-        }
-      }
-
+      if (!config.canPay) return toolError(NO_WALLET_MESSAGE)
       try {
-        const address = getWalletAddress(config)
-        const [usdc, avax] = await Promise.all([
-          getUsdcBalance(config.network, config),
-          getAvaxBalance(config.network, address)
-        ])
-
-        const result = {
-          address,
+        const client = clientFor(config)
+        const { usdc, gateway } = await client.balance()
+        return toolJson({
+          address: client.getAddress(),
           network: config.network,
           mode: config.mode,
           usdc: `${usdc} USDC`,
-          avax: `${avax} AVAX`,
+          gatewayDeposit: `${gateway} USDC`,
           gasNote:
-            'AVAX is needed for native transfers and gas. x402 USDC payments are gasless for you — the facilitator pays gas.'
-        }
-
-        return {
-          content: [
-            { type: 'text' as const, text: JSON.stringify(result, null, 2) }
-          ]
-        }
+            'Gas on Arc is paid in USDC. x402 payments cost you no gas: Circle pays it on the exact rail, and the Gateway rail has none. Transfers, deposits and ratings do use gas.'
+        })
       } catch (err) {
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: `Error: ${err instanceof Error ? err.message : String(err)}`
-            }
-          ],
-          isError: true
-        }
+        return toolError(`Error: ${errorMessage(err)}`)
       }
     }
   )

@@ -31,16 +31,16 @@ import {
   rpcUrlFor,
   USDC_DECIMALS
 } from './networks.js'
-import { mergeListings, searchCircle } from './discovery.js'
-import { RegistryClient, filterServices, rankByReputation } from './registry.js'
+import { discoverServices } from './discovery.js'
+import { RegistryClient } from './registry.js'
 import { getReputation, giveFeedback } from './reputation.js'
 import type {
   Balances,
   ChainPeNetwork,
   ChainPeOptions,
-  ChainPeService,
   DiscoverOptions,
   FetchOptions,
+  PaidResponse,
   PaidResult,
   PaymentInfo,
   PaymentRail,
@@ -53,7 +53,6 @@ const DEFAULT_RAILS: PaymentRail[] = ['gateway', 'exact']
 const AGENT_ID_HEADER = 'x-chainpe-agent-id'
 const TX_HASH = /^0x[0-9a-fA-F]{64}$/
 const DEFAULT_TIMEOUT_MS = 30_000
-const DEFAULT_DISCOVER_LIMIT = 20
 
 type Requirement = Parameters<PaymentPolicy>[1][number]
 
@@ -77,15 +76,6 @@ export function railPolicy(
     }
     return []
   }
-}
-
-/** Internal result of a paid request: a live (unconsumed) Response + metadata. */
-interface PaidRequest {
-  response: Response
-  /** Set when a payment was actually made. */
-  payment?: PaymentInfo
-  /** Provider's ERC-8004 agent id, from the X-CHAINPE-AGENT-ID header. */
-  agentId?: string
 }
 
 export class ChainPe {
@@ -175,6 +165,14 @@ export class ChainPe {
   }
 
   /**
+   * Like {@link fetch}, but returns the live, unread {@link Response} together
+   * with the payment details. Never posts feedback.
+   */
+  async request(url: string, opts: FetchOptions = {}): Promise<PaidResponse> {
+    return (await this.execute(url, opts)).result
+  }
+
+  /**
    * Like {@link fetch}, but returns a structured, body-parsed result with the
    * payment + (optional) reputation details. Convenient for agents.
    */
@@ -213,31 +211,10 @@ export class ChainPe {
   async discover(
     query: string | DiscoverOptions = {}
   ): Promise<RankedService[]> {
-    const options: DiscoverOptions =
-      typeof query === 'string' ? { query } : query
-    const [circle, chainpe] = await Promise.allSettled([
-      searchCircle(this.network, options),
-      this.listChainPeServices(options)
-    ])
-    if (circle.status === 'rejected' && chainpe.status === 'rejected') {
-      throw new Error(
-        `Could not discover services: ${String(circle.reason)}; ${String(chainpe.reason)}`
-      )
-    }
-    const services = mergeListings(
-      circle.status === 'fulfilled' ? circle.value : [],
-      chainpe.status === 'fulfilled' ? chainpe.value : []
-    ).slice(0, options.limit ?? DEFAULT_DISCOVER_LIMIT)
-
-    const ranked: RankedService[] = await Promise.all(
-      services.map(async s => ({
-        ...s,
-        reputation: s.agentId
-          ? await getReputation(this.network, this.reputationRegistry, s.agentId)
-          : null
-      }))
-    )
-    return rankByReputation(ranked)
+    return discoverServices(this.network, query, {
+      accountsAddress: this.accountsAddress,
+      reputationRegistry: this.reputationRegistry
+    })
   }
 
   /** Reads a provider agent's aggregate ERC-8004 reputation. */
@@ -278,14 +255,6 @@ export class ChainPe {
     }
   }
 
-  private async listChainPeServices(
-    options: DiscoverOptions
-  ): Promise<ChainPeService[]> {
-    if (!this.accountsAddress) return []
-    const registry = new RegistryClient(this.network, this.accountsAddress)
-    return filterServices(await registry.listAllServices(), options)
-  }
-
   /**
    * Runs the x402 flow: request → on 402, cap the price, choose a rail, sign →
    * retry. Spend limits run before anything is signed.
@@ -293,7 +262,7 @@ export class ChainPe {
   private async execute(
     url: string,
     opts: FetchOptions
-  ): Promise<{ result: PaidRequest; autoFeedback?: boolean }> {
+  ): Promise<{ result: PaidResponse; autoFeedback?: boolean }> {
     const { autoFeedback, timeout = DEFAULT_TIMEOUT_MS, ...init } = opts
 
     let selected: Requirement | undefined

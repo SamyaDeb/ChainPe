@@ -139,6 +139,15 @@ export interface PaymentInfo {
   settlement?: unknown
 }
 
+/** Result of {@link ChainPe.request}: a live, unread Response + metadata. */
+export interface PaidResponse {
+  response: Response
+  /** Set when a payment was actually made. */
+  payment?: PaymentInfo
+  /** The provider's ERC-8004 agent id, when it advertises one. */
+  agentId?: string
+}
+
 /** Result of {@link ChainPe.pay} — a parsed, structured paid response. */
 export interface PaidResult<T = unknown> {
   status: number

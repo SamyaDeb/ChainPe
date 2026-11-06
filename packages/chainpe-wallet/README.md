@@ -1,58 +1,78 @@
-# ChainPe Wallet (MCP)
+# @chainpearc/wallet-mcp
 
-> Give Claude an Avalanche wallet that discovers and pays for services on the
-> **ChainPe** on-chain registry — using the **x402** micropayment protocol.
+**Give Claude a USDC wallet on Arc, so it can find, pay for and rate paid APIs within your limits.**
 
-ChainPe Wallet is a [Model Context Protocol](https://modelcontextprotocol.io)
-server packaged as a Claude Desktop extension (`.mcpb`). Install it, drop in your
-Avalanche wallet, set spending limits, and Claude can discover paid services,
-pay for them within your budget, and return the results in the chat.
+It is a [Model Context Protocol](https://modelcontextprotocol.io) server. Claude can search for x402 services, pay for them per call and return the results in your chat. No API keys or accounts are needed.
 
-Discovery reads directly from the on-chain **ChainPeRegistry** contract on
-Avalanche — no hosted backend or accounts required.
+> **Runs on Arc testnet by default.** ChainPe has not been tested with real USDC on Arc mainnet, so `NETWORK=arc` is ignored unless you also set `ALLOW_MAINNET=true`.
 
-## How it works
+## Set up
 
-1. **`search_bazaar`** reads the ChainPeRegistry (Avalanche app, default
-   `<CHAINPE_REGISTRY_ADDRESS>`) via the indexer and lists registered services with their price
-   and endpoint.
-2. **`x402_fetch`** calls a service endpoint; on `402 Payment Required` it signs
-   a USDC payment on Avalanche and retries — automatically.
-3. A **spending tracker** enforces `MAX_PER_CALL` and `MAX_PER_DAY` (USDC)
-   *before* any payment is signed.
+1. Make a new wallet just for this. Never use one that holds real money.
+2. Get free test USDC at https://faucet.circle.com (pick Arc Testnet). On Arc, this USDC also pays for gas.
+3. Add the server to Claude Desktop's config, or to any MCP client:
 
-Other tools: `check_balance`, `pay`, `transfer_usdc`, `transfer_avax`,
-`spending_report`, `request_funding`, `search_bazaar`, `give_feedback`.
+```json
+{
+  "mcpServers": {
+    "chainpe-wallet": {
+      "command": "npx",
+      "args": ["-y", "@chainpearc/wallet-mcp"],
+      "env": {
+        "CHAINPE_PRIVATE_KEY": "0x...",
+        "MAX_PER_CALL": "0.10",
+        "MAX_PER_DAY": "5.00"
+      }
+    }
+  }
+}
+```
 
-**On-chain reputation (ERC-8004):** after a successful paid `x402_fetch`, the
-wallet automatically posts a positive on-chain score for the provider's agent.
-`search_bazaar` surfaces each provider's aggregate score (read from the
-Reputation Registry), and `give_feedback` lets you score a provider manually.
-Set `ERC8004_REPUTATION_REGISTRY` (defaults to the deployed mainnet registry).
+Then ask Claude: *"Find a weather API under $0.01 and get the forecast for Mumbai."*
+
+## Tools
+
+| Tool | What it does |
+|---|---|
+| `search_bazaar` | Finds services through Circle's Discovery API and ChainPe's on-chain listings. Needs no wallet |
+| `x402_fetch` | Calls a URL, paying a 402 within your limits |
+| `pay` | The same, on a rail you choose: `exact` or `gateway` |
+| `check_balance` | Shows the address, USDC and Circle Gateway deposit |
+| `deposit_gateway` | Moves USDC into Circle Gateway, for payments with no gas |
+| `transfer_usdc` | Sends USDC to an address |
+| `spending_report` | Shows what was spent against your limits |
+| `request_funding` | Asks for USDC, with a payment link and the testnet faucet |
+| `give_feedback` | Rates a provider 0 to 100 on-chain (ERC-8004) |
+
+## Limits
+
+- `MAX_PER_CALL` and `MAX_PER_DAY` are checked **before** a payment is signed. They also apply to `transfer_usdc`.
+- The daily total is kept in memory, so it starts again when the server restarts.
+- Deposits are not counted as spending, because the funds stay yours, but one deposit can't be above `MAX_PER_DAY`.
+- Ratings and deposits use a little gas in USDC. Claude only rates a provider when it chooses to or you ask.
+- What a listing says about itself is unverified.
 
 ## Configuration
 
-Set via the Claude Desktop config form (or env vars when run directly):
-
-| Field | Env var | Default |
+| Env var | Default | Purpose |
 |---|---|---|
-| Avalanche private key (0x…) | `CHAINPE_PRIVATE_KEY` | — (read-only if unset) |
-| Network (`avalanche` / `fuji`) | `NETWORK` | `avalanche` |
-| Max USDC per payment | `MAX_PER_CALL` | `0.10` |
-| Max USDC per day | `MAX_PER_DAY` | `20.00` |
-| ChainPe registry app id | `CHAINPE_REGISTRY_APP_ID` | `<CHAINPE_REGISTRY_ADDRESS>` |
+| `CHAINPE_PRIVATE_KEY` | none | The wallet key. Without it, only `search_bazaar` and `spending_report` work |
+| `NETWORK` | `arc-testnet` | `arc-testnet`, or `arc` with `ALLOW_MAINNET=true` |
+| `MAX_PER_CALL` | `0.10` | Most USDC for one payment |
+| `MAX_PER_DAY` | `20.00` | Most USDC per day |
+| `RAILS` | `gateway,exact` | Payment rails, in order of preference |
+| `CHAINPE_ACCOUNTS_ADDRESS` | the deployed contract | `ChainPeAccounts` |
+| `ERC8004_REPUTATION_REGISTRY` | Arc's registry | Where ratings are read and written |
 
 ## Build
 
 ```bash
 npm install          # from the monorepo root
-npm run build        # tsup → dist/index.js
-npm run build:mcpb   # produces chainpe.mcpb (double-click to install in Claude Desktop)
+npm run build        # tsup, to dist/index.js
+npm run build:mcpb   # a Claude Desktop extension, once @chainpearc/sdk is on npm
 npm test             # vitest
 ```
 
-## Develop against a local MCP client
+## License
 
-Run `dist/index.js` over stdio. For a quick check you can connect with the MCP
-SDK client (`@modelcontextprotocol/sdk/client`) or the MCP Inspector and call
-`search_bazaar` to read the live mainnet registry.
+MIT

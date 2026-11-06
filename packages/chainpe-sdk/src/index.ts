@@ -13,7 +13,13 @@
  */
 export { ChainPe, railPolicy } from './chainpe.js'
 
-export { searchCircle, mapCircleItem, mergeListings, CIRCLE_DISCOVERY_URL } from './discovery.js'
+export {
+  discoverServices,
+  searchCircle,
+  mapCircleItem,
+  mergeListings,
+  CIRCLE_DISCOVERY_URL
+} from './discovery.js'
 
 export {
   RegistryClient,
@@ -39,6 +45,8 @@ export type {
 
 export {
   publicClientFor,
+  chainFor,
+  normalizeKey,
   resolveAccountsAddress,
   resolveReputationRegistry,
   getUsdcAddress,
@@ -59,6 +67,7 @@ export type {
   ReputationSummary,
   RankedService,
   PaymentInfo,
+  PaidResponse,
   PaidResult,
   Balances
 } from './types.js'

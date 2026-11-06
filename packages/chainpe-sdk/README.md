@@ -65,6 +65,7 @@ By default ChainPe uses Gateway when your deposit covers the price, and your wal
 |---|---|---|
 | `fetch(url, opts?)` | `Response` | Calls a URL, paying a 402 |
 | `pay(url, opts?)` | `PaidResult` | The same, with the parsed body and payment details |
+| `request(url, opts?)` | `{ response, payment, agentId }` | The same, with the unread `Response` |
 | `discover(query?)` | `RankedService[]` | Finds services. Takes a search string or `{ query, tags, maxPrice, category, gatewayOnly, limit }` |
 | `balance()` | `{ usdc, gateway }` | Your wallet and Gateway balances |
 | `depositGateway(amount)` | `{ txHash, amount }` | Deposits USDC into Circle Gateway |

@@ -1,11 +1,19 @@
 /** Searches Circle's Discovery API, the directory behind its Agent Marketplace. No API key needed. */
 import { formatUnits } from 'viem'
-import { getCaip2, USDC_DECIMALS } from './networks.js'
+import {
+  getCaip2,
+  resolveAccountsAddress,
+  resolveReputationRegistry,
+  USDC_DECIMALS
+} from './networks.js'
+import { RegistryClient, filterServices, rankByReputation } from './registry.js'
+import { getReputation } from './reputation.js'
 import type {
   ChainPeNetwork,
   ChainPeService,
   DiscoverOptions,
-  PaymentRail
+  PaymentRail,
+  RankedService
 } from './types.js'
 
 export const CIRCLE_DISCOVERY_URL =
@@ -100,6 +108,52 @@ export function mergeListings(
     `${s.walletAddress.toLowerCase()}@${hostOf(s.endpoint)}`
   const listed = new Set(circle.map(key))
   return [...chainpe.filter(s => !listed.has(key(s))), ...circle]
+}
+
+/**
+ * Finds services through Circle's Discovery API and ChainPeAccounts, annotated
+ * with ERC-8004 reputation and ranked. Needs no wallet. ChainPeAccounts also covers
+ * providers Circle has not listed yet. Throws only when neither source can be read.
+ */
+export async function discoverServices(
+  network: ChainPeNetwork,
+  query: string | DiscoverOptions = {},
+  addresses: { accountsAddress?: string; reputationRegistry?: string } = {}
+): Promise<RankedService[]> {
+  const options: DiscoverOptions = typeof query === 'string' ? { query } : query
+  const accounts = resolveAccountsAddress(network, addresses.accountsAddress)
+  const reputationRegistry = resolveReputationRegistry(
+    network,
+    addresses.reputationRegistry
+  )
+
+  const [circle, chainpe] = await Promise.allSettled([
+    searchCircle(network, options),
+    accounts
+      ? new RegistryClient(network, accounts)
+          .listAllServices()
+          .then(services => filterServices(services, options))
+      : Promise.resolve([])
+  ])
+  if (circle.status === 'rejected' && chainpe.status === 'rejected') {
+    throw new Error(
+      `Could not discover services: ${String(circle.reason)}; ${String(chainpe.reason)}`
+    )
+  }
+  const services = mergeListings(
+    circle.status === 'fulfilled' ? circle.value : [],
+    chainpe.status === 'fulfilled' ? chainpe.value : []
+  ).slice(0, options.limit ?? DEFAULT_LIMIT)
+
+  const ranked: RankedService[] = await Promise.all(
+    services.map(async s => ({
+      ...s,
+      reputation: s.agentId
+        ? await getReputation(network, reputationRegistry, s.agentId)
+        : null
+    }))
+  )
+  return rankByReputation(ranked)
 }
 
 function hostOf(endpoint: string): string {
