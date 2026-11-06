@@ -5,7 +5,12 @@
  */
 import fs from "fs/promises";
 import chalk from "chalk";
+import { serviceKey } from "../accounts.js";
 import { getNetwork, parseNetwork, type ChainPeNetwork } from "../chains.js";
+import { resolveCredentials } from "../cloud/credentials.js";
+import { sendHeartbeat } from "../cloud/heartbeat.js";
+import { ALL_RAILS } from "../proxy/routeConfig.js";
+import { VERSION } from "../version.js";
 import { configPath, loadConfig } from "../config.js";
 import { concreteRoutes, runChecks, type CheckStatus, type DoctorReport, type PaidCall } from "../doctor/checks.js";
 import { documentedRoutes, documentPaths, generateDocuments, type DocumentPaths, type Samples } from "../doctor/documents.js";
@@ -123,6 +128,20 @@ function printIntake(config: ChainPeConfig): void {
   console.log(chalk.gray("    Listed services are health-checked continuously, so keep the endpoint up."));
 }
 
+/** Keeps the report for the proxy's heartbeat, and sends it now if logged in. Never changes doctor's result. */
+async function shareReport(report: DoctorReport, config: ChainPeConfig, network: ChainPeNetwork, file: string): Promise<void> {
+  await fs.writeFile(file, JSON.stringify(report, null, 2)).catch(() => undefined);
+  const credentials = await resolveCredentials();
+  if (!credentials) return;
+  await sendHeartbeat(credentials, {
+    serviceKey: serviceKey(config.walletAddress, config.serviceName),
+    version: VERSION,
+    network: getNetwork(network).caip2,
+    rails: config.rails ?? ALL_RAILS,
+    doctor: report,
+  }).catch(() => undefined);
+}
+
 export async function runDoctorCommand(options: DoctorOptions): Promise<void> {
   try {
     const config = await loadConfig();
@@ -146,6 +165,7 @@ export async function runDoctorCommand(options: DoctorOptions): Promise<void> {
     if (!options.json) for (const file of written) console.log(chalk.gray(`  Wrote ${file}`));
 
     const report = await runChecks({ config, network, baseUrl, chain: chainReader(network), paid });
+    await shareReport(report, config, network, paths.doctor);
     if (options.json) console.log(JSON.stringify(report, null, 2));
     else {
       printReport(report);

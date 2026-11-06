@@ -18,6 +18,8 @@ export interface DocumentPaths {
   x402: string;
   discovery: string;
   samples: string;
+  /** The last report. Not served: the proxy's heartbeat reads it. */
+  doctor: string;
 }
 
 /** Named after the config file, so several configs in one folder do not collide. */
@@ -28,6 +30,7 @@ export function documentPaths(configFile: string): DocumentPaths {
     x402: `${base}.x402.json`,
     discovery: `${base}.discovery.json`,
     samples: `${base}.samples.json`,
+    doctor: `${base}.doctor.json`,
   };
 }
 

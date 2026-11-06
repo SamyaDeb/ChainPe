@@ -16,11 +16,11 @@ export async function loadConfig(): Promise<ChainPeConfig | null> {
   }
 }
 
-/** Writes through a temp file, so a crash cannot leave half a config behind. */
+/** Writes through a temp file, so a crash cannot leave half a config behind. 0600, because it can also hold the ingest key. */
 export async function saveConfig(config: ChainPeConfig): Promise<void> {
   const file = configPath();
   await fs.mkdir(path.dirname(file), { recursive: true });
   const temp = `${file}.${process.pid}.tmp`;
-  await fs.writeFile(temp, JSON.stringify(config, null, 2));
+  await fs.writeFile(temp, JSON.stringify(config, null, 2), { mode: 0o600 });
   await fs.rename(temp, file);
 }

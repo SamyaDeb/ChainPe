@@ -24,12 +24,16 @@ import {
   parseRails,
   RailRouter,
   startProxyServer,
+  resolveSellerKey,
 } from "./proxy/index.js";
 import { setLogLevel } from "./logger.js";
 import { configPath, loadConfig, saveConfig } from "./config.js";
 import { documentPaths } from "./doctor/documents.js";
 import { runDoctorCommand } from "./commands/doctor.js";
-import { runFetchCommand, runDiscoverCommand, runDepositCommand } from "./commands/consume.js";
+import { runLoginCommand, runLogoutCommand } from "./commands/cloud.js";
+import { startTelemetry } from "./cloud/start.js";
+import { VERSION } from "./version.js";
+import { gatewayClient, runFetchCommand, runDiscoverCommand, runDepositCommand } from "./commands/consume.js";
 import { runBalanceCommand, runWithdrawCommand } from "./commands/seller.js";
 import {
   runDeregisterCommand,
@@ -44,7 +48,6 @@ import {
 // Constants
 // ============================================================================
 
-const VERSION = "3.0.0-arc.0";
 
 const chainpeGradient = gradient(["#E84142", "#FF6B6B", "#FFD93D"]);
 
@@ -205,6 +208,7 @@ async function runStart(options: {
   network?: string;
   facilitatorUrl?: string;
   rails?: string;
+  telemetry?: boolean;
 }): Promise<void> {
   printBanner();
   const config = await loadConfig();
@@ -240,12 +244,26 @@ async function runStart(options: {
     if (exact) console.log(chalk.gray(`    Facilitator: ${chalk.green(facilitatorMode())}`));
     console.log();
 
-    await startProxyServer({ config, facilitator, gateway: gateway?.terms, documents: documentPaths(configPath()) });
-    console.log(chalk.gray("  Press Ctrl+C to stop\n"));
-    process.on("SIGINT", () => {
-      console.log(chalk.yellow("\n  Shutting down…"));
-      process.exit(0);
+    const documents = documentPaths(configPath());
+    const telemetry = await startTelemetry({
+      enabled: options.telemetry !== false,
+      config,
+      network: config.network,
+      version: VERSION,
+      doctorFile: documents.doctor,
+      gatewayClient: rails.includes("gateway") ? () => gatewayClient(info.name, resolveSellerKey(config.walletAddress)) : undefined,
     });
+    console.log(chalk.gray(`    Telemetry:   ${telemetry ? chalk.green(telemetry.cloudUrl) : "off"}\n`));
+
+    await startProxyServer({ config, facilitator, gateway: gateway?.terms, documents, onPayment: telemetry?.onPayment });
+    console.log(chalk.gray("  Press Ctrl+C to stop\n"));
+    const shutdown = (): void => {
+      console.log(chalk.yellow("\n  Shutting down…"));
+      telemetry?.stop();
+      process.exit(0);
+    };
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
   } catch (error) {
     console.log(chalk.red(`✗ Failed to start server: ${(error as Error).message}`));
     process.exit(1);
@@ -362,7 +380,19 @@ program
   .option("-n, --network <network>", "arc | arc-testnet (default: $CHAINPE_NETWORK, then config)")
   .option("--facilitator-url <url>", "Override the Circle facilitator URL (advanced)")
   .option("--rails <rails>", "Payment rails to accept: exact,gateway (default: config, then both)")
+  .option("--no-telemetry", "Send nothing to chainpe-cloud")
   .action(runStart);
+program
+  .command("login")
+  .description("Sign in to chainpe-cloud with the seller key and save an ingest key")
+  .option("--cloud-url <url>", "chainpe-cloud URL (default: $CHAINPE_CLOUD_URL, then the saved one)")
+  .option("-n, --network <network>", "arc | arc-testnet (default: $CHAINPE_NETWORK, then config)")
+  .action(runLoginCommand);
+program
+  .command("logout")
+  .description("Remove the ingest key from this machine and revoke it")
+  .option("-n, --network <network>", "arc | arc-testnet (default: $CHAINPE_NETWORK, then config)")
+  .action(runLogoutCommand);
 const NETWORK_FLAG = "arc | arc-testnet (default: $CHAINPE_NETWORK, then config)";
 program
   .command("identity")

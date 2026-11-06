@@ -26,6 +26,11 @@ describe("example configs", () => {
     expect(leaks).toEqual([]);
   });
 
+  it("contain no ingest key", () => {
+    const leaks = configFiles(EXAMPLES).filter((file) => fs.readFileSync(file, "utf-8").includes("cpk_"));
+    expect(leaks).toEqual([]);
+  });
+
   it("the matcher catches a key with or without 0x, and ignores an address", () => {
     const key = "ab".repeat(32);
     expect(PRIVATE_KEY.test(`{"k":"0x${key}"}`)).toBe(true);

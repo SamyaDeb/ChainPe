@@ -31,3 +31,6 @@ npm-debug.log*
 # Arc Studio local state and run output
 .arc-studio/
 .arc-studio-run*.json
+
+# Last `chainpe doctor` report, generated locally
+*.doctor.json
