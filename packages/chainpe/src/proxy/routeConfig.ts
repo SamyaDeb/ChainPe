@@ -24,6 +24,11 @@ export const ALL_RAILS: PaymentRail[] = ["exact", "gateway"];
 /** On-chain settlement costs make `exact` pointless below one cent. */
 const MIN_EXACT_PRICE_ATOMIC = 10_000n;
 
+/** The rails a price can really be paid on. Listings and 402s must agree, so both use this. */
+export function effectiveRails(priceAtomic: bigint, rails: PaymentRail[]): PaymentRail[] {
+  return rails.filter((rail) => rail !== "exact" || priceAtomic >= MIN_EXACT_PRICE_ATOMIC);
+}
+
 /** Parses "exact,gateway" from the command line. */
 export function parseRails(value: string): PaymentRail[] {
   const rails = value.split(",").map((rail) => rail.trim());
@@ -83,7 +88,7 @@ export function createRoutesConfig(
     const common = { scheme: "exact", price: toMoney(price), network, payTo: config.walletAddress };
     if (rails.includes("exact")) {
       // Listed first: stock x402 clients take the first option they can sign.
-      if (atomic >= MIN_EXACT_PRICE_ATOMIC) accepts.push({ ...common, extra: { paymentFlow: "upfront" } });
+      if (effectiveRails(atomic, ["exact"]).length > 0) accepts.push({ ...common, extra: { paymentFlow: "upfront" } });
       else tooCheapForExact.push(key);
     }
     if (rails.includes("gateway")) {
