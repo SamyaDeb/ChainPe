@@ -1,8 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="apps/dashboard/public/logo-dark.png">
-    <img src="apps/dashboard/public/logo-light.png" width="85" alt="ChainPe logo">
-  </picture>
+  <img src="docs/assets/chainpe-logo.jpg" width="100" alt="ChainPe logo">
 </p>
 
 <h1 align="center">ChainPe</h1>
