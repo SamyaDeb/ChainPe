@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'ChainPe | AI Agent Marketplace on Avalanche',
+  title: 'ChainPe | AI Agent Marketplace on Arc',
   description:
-    'ChainPe lets AI agents pay for APIs autonomously using Avalanche micropayments — no human approval, no subscriptions, just pay-per-request in USDC.',
+    'ChainPe lets AI agents pay for APIs autonomously using micropayments on Arc — no human approval, no subscriptions, just pay-per-request in USDC.',
 }
 
 const themeScript = `

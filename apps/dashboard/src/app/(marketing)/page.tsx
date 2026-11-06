@@ -3,17 +3,17 @@ import InstallBox from '@/components/marketing/InstallBox'
 import WaitlistForm from '@/components/marketing/WaitlistForm'
 
 export const metadata: Metadata = {
-  title: 'ChainPe | AI Agent Marketplace on Avalanche',
+  title: 'ChainPe | AI Agent Marketplace on Arc',
   description:
-    'ChainPe lets AI agents pay for APIs autonomously using Avalanche micropayments — no human approval, no subscriptions, just pay-per-request in USDC.',
+    'ChainPe lets AI agents pay for APIs autonomously using micropayments on Arc — no human approval, no subscriptions, just pay-per-request in USDC.',
 }
 
 const features = [
   { title: 'x402 Protocol', desc: 'Real HTTP 402 "Payment Required" implementation — how the web was designed to handle payments' },
   { title: 'USDC payments', desc: 'Prices in dollars, paid in Circle USDC with a signed EIP-3009 transfer. Near-zero fees make micropayments viable' },
-  { title: 'sub-second finality', desc: 'Avalanche confirms in about 1 second. Agents can\'t wait 10 minutes for Bitcoin confirmations' },
+  { title: 'sub-second finality', desc: 'Arc finalizes in under a second, with no reorgs. Agents can\'t wait 10 minutes for Bitcoin confirmations' },
   { title: 'AI SDK Integration', desc: 'Built on Vercel AI SDK, works with any LLM. npm install and you\'re paying for APIs' },
-  { title: 'Direct Settlement', desc: 'Providers get paid directly to their Avalanche wallet. No intermediary holds funds' },
+  { title: 'Direct Settlement', desc: 'Providers get paid to their own Arc wallet or Circle Gateway balance. ChainPe never holds funds' },
   { title: 'Safe by Design', desc: 'Agent wallets have balance limits. Set maxPricePerRequest caps. Payments fail gracefully when empty' },
 ]
 
@@ -91,19 +91,19 @@ const useCases = [
 const faqs = [
   {
     q: 'What is ChainPe?',
-    a: 'ChainPe is an AI Agent Marketplace on Avalanche that uses the x402 payment protocol. It enables AI agents to autonomously discover services, pay for them with USDC micropayments, and receive results — all without human intervention.',
+    a: 'ChainPe is an AI Agent Marketplace on Arc that uses the x402 payment protocol. It enables AI agents to autonomously discover services, pay for them with USDC micropayments, and receive results — all without human intervention.',
   },
   {
     q: 'Why not just use Stripe?',
-    a: 'Stripe requires merchant accounts, human verification, and charges 2.9% + $0.30 per transaction. A $0.05 micropayment would cost more in fees than the payment itself. Avalanche transactions cost a fraction of a cent in AVAX, making true micropayments economically viable.',
+    a: 'Stripe requires merchant accounts, human verification, and charges 2.9% + $0.30 per transaction. A $0.05 micropayment would cost more in fees than the payment itself. Arc targets a fee of about $0.001 per USDC transfer, paid in USDC, making true micropayments economically viable.',
   },
   {
-    q: 'Why Avalanche specifically?',
-    a: 'Speed and cost. Agents need instant settlement — Avalanche confirms in about 1 second. The fees are low enough that even $0.01 payments make economic sense. No other chain provides this combination for micropayments.',
+    q: 'Why Arc specifically?',
+    a: 'Speed and cost. Agents need instant settlement — Arc finalizes in under a second. Gas is paid in USDC, so fees stay predictable, and they are low enough that even $0.01 payments make economic sense.',
   },
   {
     q: 'How do providers get paid?',
-    a: "Directly to their Avalanche wallet. No intermediary holds funds. The x402 proxy verifies the payment hit the chain before forwarding the API request to the provider.",
+    a: "To their own Arc wallet, or to a Circle Gateway balance they can withdraw. ChainPe never holds funds. The x402 proxy waits for Circle to settle the payment before forwarding the API request to the provider.",
   },
   {
     q: 'What prevents agents from overspending?',
@@ -127,7 +127,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="hero-badge">
             <span className="badge-new">New</span>
-            <span className="badge-text">Built on Avalanche with the x402 payment protocol.</span>
+            <span className="badge-text">Built on Arc with the x402 payment protocol.</span>
           </div>
           <h1 className="hero-title">
             The payment rail for<br />the <span className="highlight">AI economy</span>
@@ -170,7 +170,7 @@ export default function LandingPage() {
         <div className="container">
           <h2 className="section-title">What is ChainPe?</h2>
           <p className="section-description">
-            ChainPe is an AI Agent Marketplace on Avalanche using the x402 payment protocol. Agents
+            ChainPe is an AI Agent Marketplace on Arc using the x402 payment protocol. Agents
             discover services, pay in USDC, and get results &mdash; all in one autonomous flow.
           </p>
           <div className="features-list">
@@ -191,20 +191,20 @@ export default function LandingPage() {
       {/* ===== STATS ===== */}
       <section className="section section-stats" id="stats">
         <div className="container">
-          <h2 className="section-title">Why Avalanche + x402</h2>
+          <h2 className="section-title">Why Arc + x402</h2>
           <div className="stats-grid">
             <div className="stat-card">
               <div className="stat-visual stat-visual-1" />
               <div className="stat-info">
-                <span className="stat-number">4s</span>
-                <span className="stat-label">Block Finality</span>
+                <span className="stat-number">&lt;1s</span>
+                <span className="stat-label">Finality</span>
               </div>
             </div>
             <div className="stat-card">
               <div className="stat-visual stat-visual-2" />
               <div className="stat-info">
-                <span className="stat-number">~0.001</span>
-                <span className="stat-label">AVAX per Tx Fee</span>
+                <span className="stat-number">~$0.001</span>
+                <span className="stat-label">Target Fee per USDC Transfer</span>
               </div>
             </div>
             <div className="stat-card">
@@ -225,7 +225,7 @@ export default function LandingPage() {
           <p className="section-description">
             Stripe requires merchant accounts, human verification, and charges 2.9% + $0.30 per
             transaction. A $0.05 micropayment would cost more in fees than the payment itself.
-            Avalanche transactions cost a fraction of a cent in AVAX.
+            Arc targets a fee of about $0.001 per USDC transfer, paid in USDC.
           </p>
         </div>
       </section>

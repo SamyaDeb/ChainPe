@@ -113,3 +113,5 @@ Every text or link changed in `apps/landing`. Design untouched. The testimonials
 | `page.tsx` | <TestimonialsSection /> |  |
 
 Also in `apps/dashboard` (the legacy June marketing page): "native AVAX" payment claims → USDC (6 strings). In `docs/CHANGELOG.md`: the wrong `1.0.0 - 2024-07` date → `2026-06-13`, plus a new Arc entry.
+
+Later: the `apps/dashboard` marketing page and its metadata moved from Avalanche to Arc. Its finality and fee figures now come from the Arc docs (under 1 second; a target of about $0.001 per USDC transfer), and "No other chain provides this combination" was removed as unproven. In `apps/landing/components/landing/footer-section.tsx`, "Smart Contracts Live on Mainnet" → "Smart Contracts Live on Arc Testnet", because `ChainPeAccounts` is not deployed on mainnet.

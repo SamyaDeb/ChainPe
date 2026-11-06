@@ -105,7 +105,7 @@ export function FooterSection() {
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-500" />
-              Smart Contracts Live on Mainnet
+              Smart Contracts Live on Arc Testnet
             </span>
           </div>
         </div>
