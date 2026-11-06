@@ -1,5 +1,5 @@
 /**
- * ChainPe Provider Types (Avalanche C-Chain)
+ * ChainPe Provider Types
  *
  * EVM-native types for the x402 payment gateway. Payment gating uses USDC via
  * the x402 "exact" scheme (EIP-3009 transferWithAuthorization). Prices are
@@ -8,14 +8,14 @@
 
 import type { ChainPeNetwork } from "./chains.js";
 
-export type { ChainPeNetwork } from "./chains.js";
+export type { ChainPeNetwork, GasToken } from "./chains.js";
 
 // ============================================================================
 // Payment Token
 // ============================================================================
 
-// x402 "exact" on EVM settles in USDC. AVAX is used only for gas (paid by the
-// facilitator), not as a payment-gating token.
+// x402 "exact" on EVM settles in USDC. The network's gas token is paid by the
+// facilitator and is not a payment-gating token.
 export type PaymentToken = "USDC";
 
 // ============================================================================
@@ -44,47 +44,28 @@ export interface ChainPeConfig {
   // Network
   network: ChainPeNetwork;
 
-  // Deployed ChainPeRegistry contract address (0x...)
-  registryAddress?: string;
+  // Payment rails to accept. Default: all of them.
+  rails?: PaymentRail[];
 
-  // ERC-8004 agent identity for this service (persisted on register). When set,
-  // the proxy advertises it on 402 responses so consumers can leave reputation
-  // feedback without scanning the registry. Override via CHAINPE_AGENT_ID.
+  // Routes priced differently from pricePerRequest, e.g. { path: "GET /weather", ... }.
+  routes?: RouteConfig[];
+
+  // The HTTPS URL buyers connect to: this proxy, never targetUrl. Published
+  // on-chain as the service endpoint and in the ERC-8004 agent URI.
+  publicUrl?: string;
+
+  // Circle Discovery category for this service, used by `chainpe doctor`.
+  category?: string;
+
+  // ERC-8004 agent identity for this service (persisted by `chainpe identity`).
+  // When set, the proxy advertises it so consumers can leave reputation feedback
+  // without scanning the registry. Override via CHAINPE_AGENT_ID.
   agentId?: string;
-
-  // x402 facilitator URL (verifies + settles payments, pays gas). Optional —
-  // when omitted, `chainpe start --facilitator <key>` runs one in-process.
-  facilitatorUrl?: string;
 
   // Optional settings
   logLevel?: "verbose" | "normal" | "quiet";
   adminKey?: string;
   rateLimit?: number;
-}
-
-// ============================================================================
-// Registry Types
-// ============================================================================
-
-export interface ServiceRegistration {
-  id: string; // "<developer>:<name>"
-  name: string;
-  description: string;
-  tags: string[];
-  endpoint: string; // Full URL to the x402-protected endpoint
-  pricePerRequest: string;
-  paymentToken: PaymentToken;
-  walletAddress: string; // payTo (0x)
-  developer: string; // 0x address that registered
-  network: ChainPeNetwork;
-  agentId?: string; // ERC-8004 agent identity (optional)
-  createdAt: string; // ISO timestamp
-  updatedAt: string; // ISO timestamp
-}
-
-export interface Registry {
-  version: string;
-  services: ServiceRegistration[];
 }
 
 // ============================================================================
@@ -96,6 +77,8 @@ export interface RouteConfig {
   pricePerRequest: string; // Human-readable USDC
   paymentToken: PaymentToken;
   description?: string;
+  // Query parameters, name → description, documented by `chainpe doctor`.
+  query?: Record<string, string>;
 }
 
 // ============================================================================
@@ -106,20 +89,32 @@ export interface RequestStats {
   totalRequests: number;
   paidRequests: number;
   failedPayments: number;
+  chargedButBackendFailed: number; // settled, then the backend answered 5xx or was unreachable
   totalRevenue: bigint; // atomic USDC (6 decimals)
   revenueByToken: Record<PaymentToken, bigint>;
+  revenueByRail: Record<PaymentRail, bigint>;
+  revenueByNetwork: Record<string, bigint>;
   requestsPerMinute: number[];
   lastHourRequests: number;
 }
 
+export type PaymentRail = "exact" | "gateway";
+
 export interface PaymentEvent {
-  timestamp: Date;
-  path: string;
-  amount: string;
-  token: PaymentToken;
+  id: string;
+  ts: number;
+  route: string;
+  method: string;
+  rail: PaymentRail;
+  network: string; // CAIP-2
+  amountAtomic: string; // atomic USDC (6 decimals)
   payer: string;
-  txId?: string;
-  success: boolean;
+  payTo: string;
+  txHash?: string;
+  paymentId?: string;
+  status: "completed" | "failed" | "pending";
+  latencyMs: number;
+  backendStatus?: number;
   error?: string;
 }
 

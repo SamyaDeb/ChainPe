@@ -1,0 +1,27 @@
+{
+  "services": [
+    {
+      "key": "0xccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3e8",
+      "name": "marker-service-1000",
+      "description": "Current weather as JSON",
+      "tags": "weather,demo",
+      "endpoint": "https://weather.example.com",
+      "endpointHttps": "https://weather.example.com/",
+      "price": "0.01",
+      "priceAtomic": "10000",
+      "network": "eip155:5042002",
+      "payTo": "0xA5402c8F3B1123126e237C42c92BA64028826c2c",
+      "acceptsExact": true,
+      "acceptsGateway": true,
+      "active": true,
+      "lastHeartbeatAt": "2026-11-06T03:51:15.122Z",
+      "version": "3.0.0",
+      "rails": [
+        "exact"
+      ],
+      "gatewayBalanceAtomic": null,
+      "doctor": null
+    }
+  ],
+  "truncated": false
+}

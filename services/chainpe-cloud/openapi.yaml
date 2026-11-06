@@ -1,0 +1,804 @@
+openapi: 3.1.0
+info:
+  title: chainpe-cloud
+  version: 0.1.0
+  description: |
+    Backend of the ChainPe provider dashboard, on Arc. Fixtures for every response are in `fixtures/`.
+
+    **Money:** every `*Atomic` field is a string of atomic USDC (6 decimals). Parse it as a bigint and format it at the
+    edge. Never use a JS number.
+
+    **Trust:** revenue counts `verified` events only. An exact event is verified against a USDC Transfer log on Arc. A
+    Gateway event is verified against Circle's transfer record. `verified` proves money from that payer reached the
+    provider. It does not prove the payer is an independent customer.
+
+    **Errors:** every error is `{ error, message }`. `error` is a stable code.
+
+    **On-chain strings** (`name`, `description`, `tags`, `endpoint`, `price`) are untrusted. Render them as text, and
+    link only `endpointHttps`.
+servers:
+  - url: https://chainpe-cloud-production.up.railway.app
+    description: Arc testnet
+security: []
+tags:
+  - name: auth
+  - name: keys
+  - name: ingest
+    description: Called by the CLI proxy, not by the dashboard.
+  - name: me
+    description: Scoped to the signed-in provider. Limits on Free are noted per endpoint.
+paths:
+  /health:
+    get:
+      summary: Service and indexer status
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+  /v1/auth/nonce:
+    post:
+      tags: [auth]
+      summary: Get a SIWE message to sign
+      description: Valid for 5 minutes and usable once. Sign `message` exactly as returned. Rate limit 20/min per IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NonceRequest' }
+      responses:
+        '200':
+          description: The message to sign
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NonceResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /v1/auth/verify:
+    post:
+      tags: [auth]
+      summary: Exchange a signed message for a session token
+      description: |
+        Send the token as `Authorization: Bearer <token>`. It lasts 12 hours. There are no cookies. Keep it in
+        `sessionStorage`. Rate limit 10/min per IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VerifyRequest' }
+      responses:
+        '200':
+          description: Signed in
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401':
+          description: '`invalid_siwe`: wrong domain, URI, chain or address, an expired or used nonce, or a bad signature. Ask for a new nonce.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '403':
+          description: '`not_registered`: this wallet has no ChainPe provider account. Tell the user to run `chainpe register`.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+        '503':
+          description: '`chain_unavailable`: Arc could not be read. This does not mean the wallet is unregistered. Retry.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /v1/auth/logout:
+    post:
+      tags: [auth]
+      summary: End this session
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: The token no longer works
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ok' }
+        '401': { $ref: '#/components/responses/Error' }
+  /v1/keys:
+    post:
+      tags: [keys]
+      summary: Create an ingest key
+      description: The full key appears in this response only. At most 10 active keys, then `too_many_keys` (409).
+      security: [{ session: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateKeyRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreatedKey' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+    get:
+      tags: [keys]
+      summary: List ingest keys, without their secrets
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: Keys, newest first
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/KeyList' }
+        '401': { $ref: '#/components/responses/Error' }
+  /v1/keys/{id}:
+    delete:
+      tags: [keys]
+      summary: Revoke an ingest key
+      security: [{ session: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Revoked
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RevokedKey' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /v1/ingest/events:
+    post:
+      tags: [ingest]
+      summary: Send payment events from a proxy
+      description: |
+        Idempotent on `id`. A completed event never changes; a pending or failed one may later become completed. Events
+        are claims: they start `unverified`, and nothing sent here can verify them. Rate limit 600/min per key.
+      security: [{ ingestKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/IngestEvents' }
+      responses:
+        '200':
+          description: Stored
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IngestResult' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403':
+          description: '`pay_to_mismatch`: an event pays an address other than this key''s provider. The whole batch is refused. Do not retry it.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '413':
+          description: '`payload_too_large`: over 500 events or 1 MB.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /v1/ingest/heartbeat:
+    post:
+      tags: [ingest]
+      summary: Report a proxy's status
+      security: [{ ingestKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HeartbeatRequest' }
+      responses:
+        '200':
+          description: Stored
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ok' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '413': { $ref: '#/components/responses/Error' }
+        '503': { $ref: '#/components/responses/Error' }
+  /v1/me:
+    get:
+      tags: [me]
+      summary: The signed-in provider
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: Provider
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '401': { $ref: '#/components/responses/Error' }
+  /v1/me/services:
+    get:
+      tags: [me]
+      summary: Services, with the last heartbeat and doctor result
+      description: '**Free:** the oldest active service only, with `truncated: true` if there are more. **Pro:** all, including inactive.'
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: Services
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Services' }
+        '401': { $ref: '#/components/responses/Error' }
+  /v1/me/summary:
+    get:
+      tags: [me]
+      summary: Revenue and calls for a time range
+      description: '**Free:** `24h` and `7d` only; other ranges get `plan_required`.'
+      security: [{ session: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Range' }
+      responses:
+        '200':
+          description: Summary
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Summary' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/PlanRequired' }
+  /v1/me/payments:
+    get:
+      tags: [me]
+      summary: Payment events, newest first
+      description: '**Free:** the last 7 days. **Pro:** all.'
+      security: [{ session: [] }]
+      parameters:
+        - { name: cursor, in: query, schema: { type: string }, description: '`nextCursor` from the previous page' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+        - { name: rail, in: query, schema: { $ref: '#/components/schemas/Rail' } }
+        - { name: route, in: query, schema: { type: string } }
+        - { name: verification, in: query, schema: { $ref: '#/components/schemas/Verification' } }
+      responses:
+        '200':
+          description: A page of events
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payments' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+  /v1/me/payments.csv:
+    get:
+      tags: [me]
+      summary: Export payments as CSV
+      description: '**Pro only.** Fetch with the Authorization header, then save the blob: a plain link cannot send it.'
+      security: [{ session: [] }]
+      parameters:
+        - { name: rail, in: query, schema: { $ref: '#/components/schemas/Rail' } }
+        - { name: route, in: query, schema: { type: string } }
+        - { name: verification, in: query, schema: { $ref: '#/components/schemas/Verification' } }
+      responses:
+        '200':
+          description: CSV
+          content:
+            text/csv:
+              schema: { type: string }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/PlanRequired' }
+  /v1/me/buyers:
+    get:
+      tags: [me]
+      summary: Payers by verified spend
+      description: '**Free:** top 5, `24h` or `7d`. **Pro:** all, any range, default `all`.'
+      security: [{ session: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/RangeNoDefault' }
+      responses:
+        '200':
+          description: Buyers
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Buyers' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/PlanRequired' }
+  /v1/me/reputation:
+    get:
+      tags: [me]
+      summary: ERC-8004 ratings
+      description: |
+        Shown only while the provider owns the token. When `agentIdStatus` is `unknown`, ownership could not be read: say
+        so, and do not show "no ratings". **Free:** average and count, with `items: null`. **Pro:** every review.
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: Reputation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Reputation' }
+        '401': { $ref: '#/components/responses/Error' }
+  /v1/me/health:
+    get:
+      tags: [me]
+      summary: Doctor reports, as sent by heartbeats
+      description: 'Only heartbeats that carry a report. **Free:** the latest only. **Pro:** the last 100.'
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: History, newest first
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health_' }
+        '401': { $ref: '#/components/responses/Error' }
+  /v1/me/wallets:
+    get:
+      tags: [me]
+      summary: The provider's other wallets, for the self-pay filter
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: Wallets
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Wallets' }
+        '401': { $ref: '#/components/responses/Error' }
+    put:
+      tags: [me]
+      summary: Replace the wallet list
+      description: Payments from these wallets, past and future, are flagged as self-pay and leave revenue. At most 50.
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Wallets' }
+      responses:
+        '200':
+          description: The stored list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Wallets' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+components:
+  securitySchemes:
+    session:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Session token from `/v1/auth/verify`.
+    ingestKey:
+      type: http
+      scheme: bearer
+      description: An ingest key, `cpk_…`, for CLI proxies.
+  parameters:
+    Range:
+      name: range
+      in: query
+      schema: { $ref: '#/components/schemas/Range', default: 7d }
+    RangeNoDefault:
+      name: range
+      in: query
+      schema: { $ref: '#/components/schemas/Range' }
+  responses:
+    Error:
+      description: An error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    PlanRequired:
+      description: '`plan_required`: this needs Pro. Offer `chainpe upgrade`. HTTP 403, not 402, so x402 clients do not try to pay.'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Atomic:
+      type: string
+      pattern: '^\d+$'
+      description: Atomic USDC, 6 decimals. A string, never a number.
+      examples: ['10000']
+    Address:
+      type: string
+      pattern: '^0x[0-9a-fA-F]{40}$'
+      description: Checksummed address.
+    NullableAddressOrUnknown:
+      type: string
+      description: Checksummed address, or `unknown` if the proxy could not tell.
+    DateTime: { type: string, format: date-time }
+    Hash: { type: string, pattern: '^0x[0-9a-f]{64}$' }
+    Rail: { type: string, enum: [exact, gateway] }
+    Range: { type: string, enum: [24h, 7d, 30d, 90d, all] }
+    Verification:
+      type: string
+      enum: [unverified, verified, failed]
+      description: |
+        `verified`: matched to a Transfer log or a Circle transfer that has not failed. `unverified`: not matched, see
+        `verificationReason`. `failed`: Circle's transfer failed, so the provider served the call and was not paid.
+    VerificationReason:
+      type: [string, 'null']
+      enum: [no_transfer_yet, not_completed, no_tx_hash, no_transfer_id, amount_mismatch, payer_mismatch, recipient_mismatch, asset_mismatch, already_claimed, gateway_failed, null]
+    AgentIdStatus:
+      type: string
+      enum: [owned, not_owner, none, unknown]
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: |
+            One of invalid_request, unauthorized, invalid_siwe, not_registered, plan_required, pay_to_mismatch,
+            service_not_owned, wrong_network, not_found, too_many_keys, payload_too_large, rate_limited,
+            chain_unavailable, internal_error.
+        message: { type: string }
+    Ok:
+      type: object
+      additionalProperties: false
+      required: [ok]
+      properties:
+        ok: { const: true }
+    Health:
+      type: object
+      additionalProperties: false
+      required: [status, indexer]
+      properties:
+        status: { const: ok }
+        indexer:
+          type: [object, 'null']
+          additionalProperties: false
+          required: [cursor, head]
+          properties:
+            cursor: { type: string, description: Last indexed block }
+            head: { type: string, description: Chain head last seen }
+    NonceRequest:
+      type: object
+      additionalProperties: false
+      required: [address]
+      properties:
+        address: { $ref: '#/components/schemas/Address' }
+        client: { type: string, enum: [dashboard, cli], default: dashboard }
+    NonceResponse:
+      type: object
+      additionalProperties: false
+      required: [nonce, message, expiresAt]
+      properties:
+        nonce: { type: string }
+        message: { type: string, description: The EIP-4361 message. Sign it unchanged with personal_sign. }
+        expiresAt: { $ref: '#/components/schemas/DateTime' }
+    VerifyRequest:
+      type: object
+      additionalProperties: false
+      required: [message, signature]
+      properties:
+        message: { type: string }
+        signature: { type: string, pattern: '^0x[0-9a-fA-F]+$' }
+    Session:
+      type: object
+      additionalProperties: false
+      required: [token, tokenType, address, expiresAt]
+      properties:
+        token: { type: string }
+        tokenType: { const: Bearer }
+        address: { $ref: '#/components/schemas/Address' }
+        expiresAt: { $ref: '#/components/schemas/DateTime' }
+    CreateKeyRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 64 }
+    CreatedKey:
+      type: object
+      additionalProperties: false
+      required: [id, key, prefix, name, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        key: { type: string, pattern: '^cpk_', description: Shown here only. Only its hash is stored. }
+        prefix: { type: string }
+        name: { type: [string, 'null'] }
+        createdAt: { $ref: '#/components/schemas/DateTime' }
+    KeyList:
+      type: object
+      additionalProperties: false
+      required: [keys, owner]
+      properties:
+        owner: { $ref: '#/components/schemas/Address' }
+        keys:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, prefix, name, createdAt, lastUsedAt, revokedAt]
+            properties:
+              id: { type: string, format: uuid }
+              prefix: { type: string }
+              name: { type: [string, 'null'] }
+              createdAt: { $ref: '#/components/schemas/DateTime' }
+              lastUsedAt: { type: [string, 'null'], format: date-time }
+              revokedAt: { type: [string, 'null'], format: date-time }
+    RevokedKey:
+      type: object
+      additionalProperties: false
+      required: [ok, id]
+      properties:
+        ok: { const: true }
+        id: { type: string, format: uuid }
+    IngestEvents:
+      type: object
+      additionalProperties: false
+      required: [events]
+      properties:
+        events:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items: { $ref: '#/components/schemas/IngestEvent' }
+    IngestEvent:
+      type: object
+      additionalProperties: false
+      description: Unknown fields are refused, so a payment signature cannot be stored.
+      required: [id, ts, route, method, rail, network, amountAtomic, payer, payTo, status, latencyMs]
+      properties:
+        id: { type: string, pattern: '^chainpe_[0-9a-f]{48}$' }
+        ts: { type: integer, description: Milliseconds since the epoch. Refused if over 5 minutes in the future. }
+        route: { type: string, maxLength: 512 }
+        method: { type: string, maxLength: 16 }
+        rail: { $ref: '#/components/schemas/Rail' }
+        network: { type: string, examples: ['eip155:5042002'] }
+        amountAtomic: { $ref: '#/components/schemas/Atomic' }
+        payer: { $ref: '#/components/schemas/NullableAddressOrUnknown' }
+        payTo: { $ref: '#/components/schemas/Address' }
+        serviceKey: { type: string, pattern: '^0x[0-9a-fA-F]{64}$' }
+        txHash: { type: string, pattern: '^0x[0-9a-fA-F]{64}$' }
+        paymentId: { type: string, description: Circle's transfer id on the Gateway rail. }
+        status: { type: string, enum: [completed, failed, pending] }
+        latencyMs: { type: integer, minimum: 0 }
+        backendStatus: { type: integer }
+        error: { type: string, maxLength: 256 }
+    IngestResult:
+      type: object
+      additionalProperties: false
+      required: [accepted, updated, duplicates]
+      properties:
+        accepted: { type: integer }
+        updated: { type: integer }
+        duplicates: { type: integer }
+    HeartbeatRequest:
+      type: object
+      additionalProperties: false
+      required: [serviceKey, version, network, rails]
+      properties:
+        serviceKey: { type: string, pattern: '^0x[0-9a-fA-F]{64}$' }
+        version: { type: string }
+        network: { type: string }
+        rails: { type: array, items: { $ref: '#/components/schemas/Rail' } }
+        gatewayBalanceAtomic: { $ref: '#/components/schemas/Atomic' }
+        doctor: { type: object, description: 'The `chainpe doctor --json` report. See docs/arc/specs/schemas/doctor.schema.json.' }
+    Me:
+      type: object
+      additionalProperties: false
+      required: [address, agentId, agentIdStatus, plan, paidUntil, createdAt]
+      properties:
+        address: { $ref: '#/components/schemas/Address' }
+        agentId: { type: [string, 'null'], description: Null unless `agentIdStatus` is `owned`. }
+        agentIdStatus: { $ref: '#/components/schemas/AgentIdStatus' }
+        plan: { type: string, enum: [free, pro] }
+        paidUntil: { type: [string, 'null'], format: date-time }
+        createdAt: { type: [string, 'null'], format: date-time }
+    Services:
+      type: object
+      additionalProperties: false
+      required: [services, truncated]
+      properties:
+        truncated: { type: boolean, description: True when Free is hiding services. }
+        services:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [key, name, description, tags, endpoint, endpointHttps, price, priceAtomic, network, payTo, acceptsExact, acceptsGateway, active, lastHeartbeatAt, version, rails, gatewayBalanceAtomic, doctor]
+            properties:
+              key: { $ref: '#/components/schemas/Hash' }
+              name: { type: string, description: Untrusted on-chain text. }
+              description: { type: string, description: Untrusted on-chain text. }
+              tags: { type: string, description: Untrusted on-chain text. }
+              endpoint: { type: string, description: Untrusted. Do not link this. }
+              endpointHttps: { type: [string, 'null'], description: Safe to link. Null unless https. }
+              price: { type: string, description: Untrusted on-chain text. }
+              priceAtomic: { type: [string, 'null'], description: Null if the on-chain price does not parse. }
+              network: { type: string }
+              payTo: { $ref: '#/components/schemas/Address' }
+              acceptsExact: { type: boolean }
+              acceptsGateway: { type: boolean }
+              active: { type: boolean }
+              lastHeartbeatAt: { type: [string, 'null'], format: date-time }
+              version: { type: [string, 'null'] }
+              rails: { type: [array, 'null'], items: { type: string } }
+              gatewayBalanceAtomic: { type: [string, 'null'] }
+              doctor:
+                type: [object, 'null']
+                description: The latest report, which may be older than `lastHeartbeatAt`. Null if doctor has never reported.
+                additionalProperties: false
+                required: [ok, passed, total]
+                properties:
+                  ok: { type: boolean }
+                  passed: { type: integer }
+                  total: { type: integer }
+    Summary:
+      type: object
+      additionalProperties: false
+      required: [range, since, revenue, notRevenue, calls, uniqueBuyers, series]
+      properties:
+        range: { $ref: '#/components/schemas/Range' }
+        since: { type: [string, 'null'], format: date-time }
+        revenue:
+          type: object
+          additionalProperties: false
+          description: Verified only, excluding self-pay.
+          required: [totalVerifiedAtomic, exactAtomic, gateway]
+          properties:
+            totalVerifiedAtomic: { $ref: '#/components/schemas/Atomic' }
+            exactAtomic: { $ref: '#/components/schemas/Atomic' }
+            gateway:
+              type: object
+              additionalProperties: false
+              required: [settledAtomic, pendingBatchAtomic]
+              properties:
+                settledAtomic: { $ref: '#/components/schemas/Atomic' }
+                pendingBatchAtomic:
+                  allOf: [{ $ref: '#/components/schemas/Atomic' }]
+                  description: Accepted by Circle, but the batch has not landed and can still fail. Label it pending.
+        notRevenue:
+          type: object
+          additionalProperties: false
+          description: Show these apart from revenue, never added to it.
+          required: [unverifiedAtomic, failedAtomic, selfPayAtomic, unattributedInflowAtomic]
+          properties:
+            unverifiedAtomic: { $ref: '#/components/schemas/Atomic' }
+            failedAtomic:
+              allOf: [{ $ref: '#/components/schemas/Atomic' }]
+              description: Calls served whose Gateway transfer then failed.
+            selfPayAtomic: { $ref: '#/components/schemas/Atomic' }
+            unattributedInflowAtomic:
+              allOf: [{ $ref: '#/components/schemas/Atomic' }]
+              description: USDC that reached the wallet with no matching event, including faucet drips, Gateway withdrawals and payments under `--no-telemetry`.
+        calls:
+          type: object
+          additionalProperties: false
+          required: [total, completed, failed, verified, successRate]
+          properties:
+            total: { type: integer }
+            completed: { type: integer }
+            failed: { type: integer }
+            verified: { type: integer }
+            successRate: { type: [number, 'null'], description: 'completed / (completed + failed), from 0 to 1. Null with no calls.' }
+        uniqueBuyers: { type: integer }
+        series:
+          type: object
+          additionalProperties: false
+          required: [unit, points]
+          properties:
+            unit: { type: string, enum: [hour, day] }
+            points:
+              type: array
+              description: Only periods with events. Fill the gaps when charting.
+              items:
+                type: object
+                additionalProperties: false
+                required: [t, revenueAtomic, calls]
+                properties:
+                  t: { $ref: '#/components/schemas/DateTime' }
+                  revenueAtomic: { $ref: '#/components/schemas/Atomic' }
+                  calls: { type: integer }
+    Payment:
+      type: object
+      additionalProperties: false
+      required: [id, ts, effectiveTs, serviceKey, route, method, rail, network, amountAtomic, payer, payTo, txHash, paymentId, status, latencyMs, backendStatus, error, verification, verificationReason, selfPay, gateway]
+      properties:
+        id: { type: string }
+        ts: { allOf: [{ $ref: '#/components/schemas/DateTime' }], description: 'The time the proxy reported. Untrusted.' }
+        effectiveTs: { allOf: [{ $ref: '#/components/schemas/DateTime' }], description: 'Block time or Circle''s time once verified. Show this one.' }
+        serviceKey: { type: [string, 'null'] }
+        route: { type: string, description: Reported by the proxy. Untrusted. }
+        method: { type: string }
+        rail: { $ref: '#/components/schemas/Rail' }
+        network: { type: string }
+        amountAtomic: { $ref: '#/components/schemas/Atomic' }
+        payer: { $ref: '#/components/schemas/NullableAddressOrUnknown' }
+        payTo: { $ref: '#/components/schemas/Address' }
+        txHash: { type: [string, 'null'], description: 'Exact rail. Link with https://explorer.testnet.arc.io/tx/<hash>.' }
+        paymentId: { type: [string, 'null'], description: Circle's transfer id on the Gateway rail. }
+        status: { type: string, enum: [completed, failed, pending], description: What the proxy reported. }
+        latencyMs: { type: integer }
+        backendStatus: { type: [integer, 'null'] }
+        error: { type: [string, 'null'] }
+        verification: { $ref: '#/components/schemas/Verification' }
+        verificationReason: { $ref: '#/components/schemas/VerificationReason' }
+        selfPay: { type: boolean }
+        gateway:
+          type: [object, 'null']
+          additionalProperties: false
+          required: [status, txHash]
+          description: Circle's record. Null on the exact rail, or before Circle's record is seen.
+          properties:
+            status: { type: string, description: 'received, batched, confirmed, completed or failed.' }
+            txHash: { type: [string, 'null'], description: The batch transaction, once it has landed. }
+    Payments:
+      type: object
+      additionalProperties: false
+      required: [payments, nextCursor]
+      properties:
+        payments: { type: array, items: { $ref: '#/components/schemas/Payment' } }
+        nextCursor: { type: [string, 'null'] }
+    Buyers:
+      type: object
+      additionalProperties: false
+      required: [range, buyers, totalBuyers, truncated]
+      properties:
+        range: { $ref: '#/components/schemas/Range' }
+        totalBuyers: { type: integer }
+        truncated: { type: boolean }
+        buyers:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [address, spendAtomic, calls, firstSeen, lastSeen]
+            properties:
+              address: { $ref: '#/components/schemas/Address' }
+              spendAtomic: { $ref: '#/components/schemas/Atomic' }
+              calls: { type: integer }
+              firstSeen: { $ref: '#/components/schemas/DateTime' }
+              lastSeen: { $ref: '#/components/schemas/DateTime' }
+    Reputation:
+      type: object
+      additionalProperties: false
+      required: [agentId, agentIdStatus, average, count, items]
+      properties:
+        agentId: { type: [string, 'null'] }
+        agentIdStatus: { $ref: '#/components/schemas/AgentIdStatus' }
+        average: { type: [string, 'null'], description: 'Two decimals, as a string. Null with no ratings, or when not attributed.' }
+        count: { type: integer }
+        items:
+          type: [array, 'null']
+          description: Null on Free.
+          items:
+            type: object
+            additionalProperties: false
+            required: [client, feedbackIndex, value, valueDecimals, tag1, tag2, endpoint, feedbackUri, blockTs, txHash]
+            properties:
+              client: { $ref: '#/components/schemas/Address' }
+              feedbackIndex: { type: string }
+              value: { type: string, description: 'int128 on-chain. score = value / 10^valueDecimals.' }
+              valueDecimals: { type: integer }
+              tag1: { type: [string, 'null'], description: Untrusted on-chain text. }
+              tag2: { type: [string, 'null'], description: Untrusted on-chain text. }
+              endpoint: { type: [string, 'null'], description: Untrusted. Do not link this. }
+              feedbackUri: { type: [string, 'null'], description: Untrusted. Do not link this. }
+              blockTs: { $ref: '#/components/schemas/DateTime' }
+              txHash: { type: string }
+    Health_:
+      type: object
+      additionalProperties: false
+      required: [history, latestOnly]
+      properties:
+        latestOnly: { type: boolean, description: True on Free. }
+        history:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [serviceKey, ts, version, network, rails, gatewayBalanceAtomic, doctor]
+            properties:
+              serviceKey: { type: string }
+              ts: { $ref: '#/components/schemas/DateTime' }
+              version: { type: string }
+              network: { type: string }
+              rails: { type: array, items: { type: string } }
+              gatewayBalanceAtomic: { type: [string, 'null'] }
+              doctor: { type: [object, 'null'], description: 'The `chainpe doctor --json` report.' }
+    Wallets:
+      type: object
+      additionalProperties: false
+      required: [wallets]
+      properties:
+        wallets:
+          type: array
+          maxItems: 50
+          items: { $ref: '#/components/schemas/Address' }

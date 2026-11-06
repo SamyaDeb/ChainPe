@@ -1,0 +1,239 @@
+{
+  "x402Version": 2,
+  "items": [
+    {
+      "resource": "https://chainpe-arc-demo-production.up.railway.app/weather",
+      "type": "http",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:5042002",
+          "asset": "0x3600000000000000000000000000000000000000",
+          "amount": "1000",
+          "payTo": "0x261f058496D81703c858DDFEd201834F0b5f2e73",
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1"
+          }
+        }
+      ],
+      "metadata": {
+        "provider": {
+          "name": "ChainPe Weather Demo",
+          "description": "Current weather and 5-day forecasts for any city, as clean JSON your agent can parse. No API key or signup: pay per call in USDC on Arc over x402, from $0.001 per request.",
+          "category": "DATA_ENRICHMENT",
+          "tags": [
+            "weather",
+            "forecast",
+            "demo"
+          ],
+          "website": "https://chainpe-arc-demo-production.up.railway.app",
+          "docsUrl": "https://chainpe-arc-demo-production.up.railway.app/openapi.json",
+          "openApiUrl": "https://chainpe-arc-demo-production.up.railway.app/openapi.json"
+        },
+        "path": "/weather",
+        "method": "GET",
+        "description": "Current temperature, conditions, humidity and wind for a city",
+        "mimeType": "application/json",
+        "input": {
+          "type": "object",
+          "properties": {
+            "city": {
+              "type": "string",
+              "description": "City name, for example London"
+            }
+          }
+        },
+        "output": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "object",
+                  "properties": {
+                    "city": {
+                      "type": "string"
+                    },
+                    "country": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city",
+                    "country"
+                  ]
+                },
+                "current": {
+                  "type": "object",
+                  "properties": {
+                    "temperatureC": {
+                      "type": "integer"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "humidity": {
+                      "type": "integer"
+                    },
+                    "windSpeed": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "temperatureC",
+                    "description",
+                    "humidity",
+                    "windSpeed"
+                  ]
+                },
+                "timestamp": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "location",
+                "current",
+                "timestamp",
+                "source"
+              ]
+            }
+          },
+          "required": [
+            "success",
+            "data"
+          ]
+        },
+        "siwx": false,
+        "supportsVanillax402": false,
+        "supportsCircleGateway": true
+      }
+    },
+    {
+      "resource": "https://chainpe-arc-demo-production.up.railway.app/forecast",
+      "type": "http",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:5042002",
+          "asset": "0x3600000000000000000000000000000000000000",
+          "amount": "10000",
+          "payTo": "0x261f058496D81703c858DDFEd201834F0b5f2e73",
+          "extra": {
+            "name": "USDC",
+            "version": "2"
+          }
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:5042002",
+          "asset": "0x3600000000000000000000000000000000000000",
+          "amount": "10000",
+          "payTo": "0x261f058496D81703c858DDFEd201834F0b5f2e73",
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1"
+          }
+        }
+      ],
+      "metadata": {
+        "provider": {
+          "name": "ChainPe Weather Demo",
+          "description": "Current weather and 5-day forecasts for any city, as clean JSON your agent can parse. No API key or signup: pay per call in USDC on Arc over x402, from $0.001 per request.",
+          "category": "DATA_ENRICHMENT",
+          "tags": [
+            "weather",
+            "forecast",
+            "demo"
+          ],
+          "website": "https://chainpe-arc-demo-production.up.railway.app",
+          "docsUrl": "https://chainpe-arc-demo-production.up.railway.app/openapi.json",
+          "openApiUrl": "https://chainpe-arc-demo-production.up.railway.app/openapi.json"
+        },
+        "path": "/forecast",
+        "method": "GET",
+        "description": "5-day temperature forecast for a city",
+        "mimeType": "application/json",
+        "input": {
+          "type": "object",
+          "properties": {
+            "city": {
+              "type": "string",
+              "description": "City name, for example Tokyo"
+            }
+          }
+        },
+        "output": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "object",
+                  "properties": {
+                    "city": {
+                      "type": "string"
+                    },
+                    "country": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "city",
+                    "country"
+                  ]
+                },
+                "forecast": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "date": {
+                        "type": "string"
+                      },
+                      "temperatureC": {
+                        "type": "integer"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "date",
+                      "temperatureC",
+                      "description"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "location",
+                "forecast"
+              ]
+            }
+          },
+          "required": [
+            "success",
+            "data"
+          ]
+        },
+        "siwx": false,
+        "supportsVanillax402": true,
+        "supportsCircleGateway": true
+      }
+    }
+  ]
+}

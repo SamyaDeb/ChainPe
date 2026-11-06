@@ -1,0 +1,20 @@
+{
+  "agentId": "4217",
+  "agentIdStatus": "owned",
+  "average": "95.00",
+  "count": 1,
+  "items": [
+    {
+      "client": "0x24BC730c658201bC51873f7aeAaDE65A545c7A11",
+      "feedbackIndex": "1",
+      "value": "95",
+      "valueDecimals": 0,
+      "tag1": "x402",
+      "tag2": "/marker-route-1000",
+      "endpoint": "https://weather.example.com",
+      "feedbackUri": "",
+      "blockTs": "2026-11-06T03:51:05.056Z",
+      "txHash": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee3e8"
+    }
+  ]
+}

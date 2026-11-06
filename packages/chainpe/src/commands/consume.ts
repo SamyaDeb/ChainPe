@@ -1,41 +1,77 @@
 /**
- * Consumer-side CLI commands (curl-level): `chainpe fetch` and `chainpe discover`.
+ * Consumer-side CLI commands (curl-level): `chainpe fetch`, `chainpe deposit` and
+ * `chainpe discover`.
  *
- * These are thin wrappers over `@chainpe/sdk` — the same payment + discovery
- * core used by the wallet MCP, the agent, and the framework tools — so a paid
- * call from the terminal settles on Avalanche exactly like one from an agent.
+ * `fetch` pays any x402 v2 402 on Arc in USDC, signing with the consumer wallet,
+ * either from the wallet (`exact`) or from a Gateway deposit (`gateway`).
  */
 import chalk from "chalk";
 import ora from "ora";
-import {
-  ChainPe,
-  RegistryClient,
-  resolveRegistryAddress,
-  resolveReputationRegistry,
-  getReputation,
-  filterServices,
-  rankByReputation,
-  type RankedService,
-} from "@chainpeavax/sdk";
-import type { ChainPeNetwork } from "../types.js";
-import { explorerTxUrl } from "../chains.js";
+import { privateKeyToAccount } from "viem/accounts";
+import type { Hex } from "viem";
+import { ExactEvmScheme } from "@x402/evm/exact/client";
+import { decodePaymentResponseHeader, wrapFetchWithPaymentFromConfig, type PaymentPolicy } from "@x402/fetch";
+import { isBatchPayment } from "@circle-fin/x402-batching";
+import { BatchEvmScheme, CompositeEvmScheme, GatewayClient } from "@circle-fin/x402-batching/client";
+import { explorerTxUrl, getNetwork, parseNetwork, type ChainPeNetwork } from "../chains.js";
+import { parseUsdc } from "../evm.js";
 
-function resolveNetwork(explicit?: string): ChainPeNetwork {
-  const n = explicit ?? process.env.CHAINPE_NETWORK ?? "fuji";
-  if (n !== "fuji" && n !== "avalanche") {
-    throw new Error(`Invalid network "${n}" (expected "fuji" or "avalanche").`);
-  }
-  return n;
+const DEFAULT_MAX_USDC = "1";
+const TX_HASH = /^0x[0-9a-fA-F]{64}$/;
+
+export type RailChoice = "gateway" | "exact" | "auto";
+
+function parseRailChoice(value: string): RailChoice {
+  if (value === "gateway" || value === "exact" || value === "auto") return value;
+  throw new Error(`Invalid rail "${value}" (expected gateway, exact or auto).`);
 }
 
-function resolveKey(explicit?: string): string {
+/** Keeps the options of the chosen rail. `auto` prefers Gateway when the deposit covers the price. */
+export function railPolicy(rail: RailChoice, gatewayAvailable: bigint): PaymentPolicy {
+  return (_version, requirements) => {
+    const gateway = requirements.filter((r) => isBatchPayment(r));
+    const exact = requirements.filter((r) => !isBatchPayment(r));
+    if (rail === "gateway") return gateway;
+    if (rail === "exact") return exact;
+    const funded = gateway.filter((r) => BigInt(r.amount) <= gatewayAvailable);
+    return funded.length > 0 ? funded : exact;
+  };
+}
+
+/**
+ * Caps one payment at `max` USDC, before anything is signed. CompositeEvmScheme
+ * cannot name default assets, so Arc USDC is listed with its own atomic cap.
+ */
+export function spendControlsFor(network: ChainPeNetwork, max: string) {
+  assertUsdcAmount(max);
+  const { caip2, usdc } = getNetwork(network);
+  return {
+    maxAmountPerPayment: false as const,
+    allowedAssets: [{ network: caip2, asset: usdc, maxAmountPerPayment: parseUsdc(max).toString() }],
+  };
+}
+
+/** Builds a Gateway client for the Arc network. The key stays in memory. */
+export function gatewayClient(network: ChainPeNetwork, privateKey: Hex): GatewayClient {
+  const info = getNetwork(network);
+  return new GatewayClient({ chain: info.gatewayChain, privateKey, rpcUrl: info.rpcUrl });
+}
+
+/** Refuses anything but a positive USDC amount with at most 6 decimals. */
+export function assertUsdcAmount(amount: string): void {
+  if (!/^\d+(\.\d{1,6})?$/.test(amount) || parseUsdc(amount) <= 0n) {
+    throw new Error(`Invalid amount "${amount}" (expected positive USDC, e.g. 1.50).`);
+  }
+}
+
+export function resolveKey(explicit?: string): Hex {
   const key = explicit ?? process.env.CHAINPE_PRIVATE_KEY;
   if (!key) {
     throw new Error(
       "No wallet key. Pass --key 0x… or set CHAINPE_PRIVATE_KEY (the consumer wallet that pays).",
     );
   }
-  return key;
+  return (key.startsWith("0x") ? key : `0x${key}`) as Hex;
 }
 
 /** Parses repeated `-H "Key: Value"` flags into a headers object. */
@@ -50,6 +86,19 @@ function parseHeaders(headers?: string[]): Record<string, string> | undefined {
   return out;
 }
 
+/** A fetch that answers a 402 by paying it, capped at `max` USDC per payment. */
+export async function createPayingFetch(network: ChainPeNetwork, key: Hex, rail: RailChoice, max: string): Promise<typeof fetch> {
+  const gatewayAvailable = rail === "auto" ? await availableDeposit(network, key) : 0n;
+  const account = privateKeyToAccount(key);
+  const client = new CompositeEvmScheme(new BatchEvmScheme(account), new ExactEvmScheme(account));
+  return wrapFetchWithPaymentFromConfig(fetch, {
+    schemes: [{ network: getNetwork(network).caip2, client: client as unknown as ExactEvmScheme }],
+    // Runs before policies, so before anything is signed.
+    spendControls: spendControlsFor(network, max),
+    policies: [railPolicy(rail, gatewayAvailable)],
+  });
+}
+
 export interface FetchCommandOptions {
   method?: string;
   header?: string[];
@@ -57,133 +106,99 @@ export interface FetchCommandOptions {
   key?: string;
   network?: string;
   max?: string;
-  feedback?: boolean;
+  rail?: string;
   raw?: boolean;
 }
 
 export async function runFetchCommand(url: string, opts: FetchCommandOptions): Promise<void> {
-  const network = resolveNetwork(opts.network);
-  const privateKey = resolveKey(opts.key);
-  const method = (opts.method ?? "GET").toUpperCase();
-
-  const cp = new ChainPe({
-    privateKey,
-    network,
-    maxPerCall: opts.max,
-    autoFeedback: !!opts.feedback,
-  });
-
-  const headers = parseHeaders(opts.header);
-
-  if (!opts.raw) {
-    console.log(chalk.gray(`  ${method} ${chalk.white(url)}  ·  wallet ${shortAddr(cp.getAddress())} on ${chalk.yellow(network)}`));
-  }
-  const spinner = opts.raw ? null : ora("Fetching (auto-pays a 402 in USDC)…").start();
+  const spinner = opts.raw ? null : ora("Fetching (auto-pays a 402 in USDC)…");
 
   try {
-    const res = await cp.pay(url, {
-      method,
-      headers,
-      body: opts.data,
-    });
+    const network = parseNetwork(opts.network ?? process.env.CHAINPE_NETWORK ?? "arc-testnet");
+    const rail = parseRailChoice(opts.rail ?? "auto");
+    const key = resolveKey(opts.key);
+    const account = privateKeyToAccount(key);
+    const method = (opts.method ?? "GET").toUpperCase();
+
+    if (!opts.raw) {
+      console.log(chalk.gray(`  ${method} ${chalk.white(url)}  ·  wallet ${shortAddr(account.address)} on ${chalk.yellow(network)}`));
+    }
+    spinner?.start();
+
+    const payingFetch = await createPayingFetch(network, key, rail, opts.max ?? DEFAULT_MAX_USDC);
+
+    const res = await payingFetch(url, { method, headers: parseHeaders(opts.header), body: opts.data });
+    const body = await res.text();
+    const header = res.headers.get("PAYMENT-RESPONSE");
+    const receipt = header ? decodePaymentResponseHeader(header) : undefined;
     spinner?.stop();
 
     if (opts.raw) {
-      process.stdout.write(typeof res.data === "string" ? res.data : JSON.stringify(res.data, null, 2));
-      process.stdout.write("\n");
+      process.stdout.write(`${body}\n`);
+      if (!res.ok) process.exit(1);
       return;
     }
 
-    const statusColor = res.ok ? chalk.green : chalk.red;
-    console.log(statusColor(`  ✓ ${res.status}`));
-
-    if (res.payment) {
-      console.log(
-        chalk.gray(
-          `    Paid:     ${chalk.green(res.payment.amount)} USDC → ${shortAddr(res.payment.recipient)} on ${chalk.yellow(res.payment.network)}`,
-        ),
-      );
-      if (res.payment.txHash) {
-        console.log(chalk.gray(`    Tx:       ${chalk.cyan(explorerTxUrl(network, res.payment.txHash))}`));
-      }
+    console.log((res.ok ? chalk.green : chalk.red)(`  ${res.ok ? "✓" : "✗"} ${res.status}`));
+    if (receipt?.success && TX_HASH.test(receipt.transaction)) {
+      console.log(chalk.gray(`    Tx:       ${chalk.cyan(receipt.transaction)}`));
+      console.log(chalk.gray(`    Explorer: ${chalk.cyan(explorerTxUrl(network, receipt.transaction))}`));
+    } else if (receipt?.success) {
+      console.log(chalk.gray(`    Gateway payment: ${chalk.cyan(receipt.transaction)} (settles in the next batch)`));
+    } else if (receipt) {
+      console.log(chalk.red(`    Payment failed: ${receipt.errorReason ?? "unknown reason"}`));
     } else {
-      console.log(chalk.gray("    Payment:  none required (non-402 response)"));
+      console.log(chalk.gray("    Payment:  none made"));
     }
-
-    if (res.reputation) {
-      console.log(
-        chalk.gray(
-          `    Rated:    agent ${res.reputation.agentId} +${res.reputation.score} (ERC-8004) · ${chalk.cyan(explorerTxUrl(network, res.reputation.txHash))}`,
-        ),
-      );
-    }
-
     console.log();
-    console.log(typeof res.data === "string" ? res.data : JSON.stringify(res.data, null, 2));
+    console.log(body);
+    if (!res.ok) process.exit(1);
   } catch (err) {
     spinner?.fail("Request failed");
-    console.log(chalk.red(`  ✗ ${(err as Error).message}`));
+    console.error(chalk.red(`  ✗ ${(err as Error).message}`));
     process.exit(1);
   }
 }
 
-export interface DiscoverCommandOptions {
-  network?: string;
-  tag?: string[];
-  maxPrice?: string;
-  json?: boolean;
-}
-
-export async function runDiscoverCommand(query: string | undefined, opts: DiscoverCommandOptions): Promise<void> {
-  const network = resolveNetwork(opts.network);
-  const registryAddress = resolveRegistryAddress(network);
-  const reputationRegistry = resolveReputationRegistry(network);
-
-  const spinner = opts.json ? null : ora("Discovering services on-chain…").start();
+/** A deposit we cannot read counts as empty, so `auto` falls back to paying from the wallet. */
+async function availableDeposit(network: ChainPeNetwork, key: Hex): Promise<bigint> {
   try {
-    const registry = new RegistryClient(network, registryAddress);
-    const services = filterServices(await registry.listAllServices(), {
-      query,
-      tags: opts.tag,
-      maxPrice: opts.maxPrice,
-    });
+    return (await gatewayClient(network, key).getBalances()).gateway.available;
+  } catch {
+    return 0n;
+  }
+}
 
-    const ranked: RankedService[] = rankByReputation(
-      await Promise.all(
-        services.map(async (s) => ({
-          ...s,
-          reputation: s.agentId ? await getReputation(network, reputationRegistry, s.agentId) : null,
-        })),
-      ),
-    );
-    spinner?.stop();
+export interface DepositCommandOptions {
+  key?: string;
+  network?: string;
+}
 
-    if (opts.json) {
-      process.stdout.write(JSON.stringify(ranked, null, 2) + "\n");
-      return;
-    }
+export async function runDepositCommand(amount: string, opts: DepositCommandOptions): Promise<void> {
+  const spinner = ora(`Depositing ${amount} USDC into Gateway…`);
+  try {
+    assertUsdcAmount(amount);
+    const network = parseNetwork(opts.network ?? process.env.CHAINPE_NETWORK ?? "arc-testnet");
+    const client = gatewayClient(network, resolveKey(opts.key));
 
-    if (ranked.length === 0) {
-      console.log(chalk.gray("  No matching services on-chain.\n"));
-      return;
-    }
+    spinner.start();
+    const result = await client.deposit(amount);
+    const { gateway } = await client.getBalances();
+    spinner.succeed(`Deposited ${result.formattedAmount} USDC from ${shortAddr(result.depositor)}`);
 
-    console.log();
-    for (const s of ranked) {
-      const rep = s.reputation;
-      const stars = rep?.score != null ? chalk.yellow(`⭐ ${rep.score} (${rep.count})`) : chalk.gray("unrated");
-      console.log(`  ${chalk.white.bold(s.name)}  ${stars}`);
-      console.log(chalk.gray(`    ${s.description}`));
-      console.log(chalk.gray(`    Endpoint: ${chalk.cyan(s.endpoint)}`));
-      console.log(chalk.gray(`    Price:    ${chalk.green(s.pricePerRequest)} USDC${s.tags.length ? `  ·  ${s.tags.join(", ")}` : ""}`));
-      console.log();
-    }
-    console.log(chalk.gray(`  ${ranked.length} service(s) · ranked by ERC-8004 reputation · Registry ${registryAddress}\n`));
+    console.log(chalk.gray(`    Tx:       ${chalk.cyan(result.depositTxHash)}`));
+    console.log(chalk.gray(`    Explorer: ${chalk.cyan(explorerTxUrl(network, result.depositTxHash))}`));
+    console.log(chalk.gray(`    Gateway:  ${chalk.green(gateway.formattedAvailable)} USDC available`));
   } catch (err) {
-    spinner?.fail("Discovery failed");
-    console.log(chalk.red(`  ✗ ${(err as Error).message}`));
+    spinner.fail("Deposit failed");
+    console.error(chalk.red(`  ✗ ${(err as Error).message}`));
     process.exit(1);
   }
+}
+
+export function runDiscoverCommand(): void {
+  console.log(chalk.yellow("  Service discovery is not available on Arc yet."));
+  process.exit(1);
 }
 
 function shortAddr(addr: string): string {

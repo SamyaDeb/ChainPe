@@ -1,0 +1,4 @@
+{
+  "error": "invalid_siwe",
+  "message": "Unknown or already used nonce."
+}

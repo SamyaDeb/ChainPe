@@ -1,6 +1,6 @@
 /**
  * ChainPe - Provider SDK
- * Monetize any API with x402 micropayments on Avalanche C-Chain.
+ * Monetize any API with x402 micropayments on Arc.
  */
 
 // Types
@@ -10,11 +10,12 @@ export * from "./types.js";
 export {
   NETWORKS,
   getNetwork,
+  parseNetwork,
   fromX402Network,
   explorerTxUrl,
   USDC_DECIMALS,
 } from "./chains.js";
-export type { ChainPeNetwork, NetworkInfo } from "./chains.js";
+export type { ChainPeNetwork, GasToken, NetworkInfo } from "./chains.js";
 
 // Proxy Server
 export {
@@ -24,33 +25,40 @@ export {
   Analytics,
   createRoutesConfig,
   formatRoutesForDisplay,
+  assertExactSupported,
+  createCircleFacilitator,
+  facilitatorMode,
+  paymentIdentifierFor,
+  resolveSellerSigner,
+  SettlementGuard,
+  createGateway,
+  GatewayGuard,
+  RailRouter,
 } from "./proxy/index.js";
-export type { RoutesConfig } from "./proxy/index.js";
+export type {
+  RoutesConfig,
+  CircleClient,
+  FacilitatorMode,
+  SettlementGuardOptions,
+  GatewayGuardOptions,
+  GatewayTerms,
+} from "./proxy/index.js";
 
 // EVM helpers
 export {
   createClient,
   isValidAddress,
   toChecksum,
-  getAccountBalances,
+  getUsdcBalance,
   formatUsdc,
-  formatAvax,
   parseUsdc,
 } from "./evm.js";
-export type { AccountBalances } from "./evm.js";
 
-// On-Chain Registry
-export {
-  ChainPeRegistryClient,
-  onChainToServiceRegistration,
-  resolveRegistryAddress,
-  CHAINPE_REGISTRY_ABI,
-} from "./registry.js";
-export type { RegistrationResult, OnChainService } from "./registry.js";
-
-// Browser / MetaMask registration handoff
-export { registerViaBrowser } from "./wallet-connect-browser.js";
-export type { BrowserRegisterParams, BrowserRegisterResult } from "./wallet-connect-browser.js";
+// Provider accounts and identity on Arc
+export { AccountsReader, AccountsWriter, accountsAddress, serviceKey } from "./accounts.js";
+export type { OnChainService, ProviderAccount, ServiceInput } from "./accounts.js";
+export { ensureIdentity, IDENTITY_REGISTRY_ABI } from "./erc8004.js";
+export { chainPeAccountsAbi } from "./abi/ChainPeAccounts.js";
 
 // Logger
 export { logger, setLogLevel, getLogLevel, logPayment, logRequest, logServerStart } from "./logger.js";
