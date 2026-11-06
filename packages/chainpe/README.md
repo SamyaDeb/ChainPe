@@ -1,10 +1,10 @@
-# @chainpeavax/cli
+# chainpe
 
-[![npm](https://img.shields.io/npm/v/@chainpeavax/cli.svg)](https://www.npmjs.com/package/@chainpeavax/cli)
+[![npm](https://img.shields.io/npm/v/chainpe.svg)](https://www.npmjs.com/package/chainpe)
 
 > **Breaking change in 3.0.0:** the CLI is Arc-only (`arc`, `arc-testnet`), settled through Circle.
-> `avalanche` and `fuji` are removed; stay on `@chainpeavax/cli@2.0.1` for Avalanche. 3.0.0-arc.0 is a
-> prerelease and is not published. The rest of this README still describes 2.x and will be updated
+> `avalanche` and `fuji` are removed; stay on `@chainpeavax/cli@2.0.1` for Avalanche. This package was
+> called `@chainpeavax/cli` before 3.0.0. The rest of this README still describes 2.x and will be updated
 > when the Arc work lands.
 
 **Monetize any API with x402 micropayments on Avalanche**
@@ -14,7 +14,7 @@ ChainPe is a reverse proxy that sits in front of your HTTP API and enforces x402
 ## Installation
 
 ```bash
-npm install -g @chainpeavax/cli
+npm install -g chainpe
 ```
 
 ## Quick Start
@@ -113,7 +113,7 @@ Client Signs Payment → Proxy Verifies → Forwards to Your API
 ## Programmatic Usage
 
 ```typescript
-import { startProxyServer } from "@chainpeavax/cli";
+import { startProxyServer } from "chainpe";
 
 const handle = await startProxyServer({
   config: {

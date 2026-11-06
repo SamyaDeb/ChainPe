@@ -7,7 +7,7 @@
  * serializable return shapes live here so the two adapters stay identical.
  */
 import { z } from 'zod'
-import { ChainPe, type ChainPeOptions } from '@chainpeavax/sdk'
+import { ChainPe, type ChainPeOptions } from 'chainpe-sdk'
 
 /** Either SDK constructor options, or a pre-built {@link ChainPe} instance. */
 export type ChainPeToolOptions = ChainPeOptions | { client: ChainPe }

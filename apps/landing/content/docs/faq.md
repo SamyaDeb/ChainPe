@@ -22,7 +22,7 @@ Avalanche C-Chain. It uses sub-cent gas fees and ~1-2 second deterministic final
 
 ### Is this just for Claude/AI?
 
-No. Claude/MCP is one client. The same payment core drives an SDK (`@chainpeavax/sdk`), Vercel AI SDK tools, LangChain tools, a CLI, and a standalone agent SDK. Any application that can make HTTP requests can use ChainPe.
+No. Claude/MCP is one client. The same payment core drives an SDK (`chainpe-sdk`), Vercel AI SDK tools, LangChain tools, a CLI, and a standalone agent SDK. Any application that can make HTTP requests can use ChainPe.
 
 ---
 
@@ -124,7 +124,7 @@ cd contracts && npm test
 
 ### Does ChainPe work with OpenAI models?
 
-Yes. `@chainpeavax/ai-tools` wraps the ChainPe SDK as framework-native tools, not model-native tools. The LangChain adapter works with any `ChatModel` including `ChatOpenAI`. The Vercel AI SDK adapter works with any provider that supports tool use.
+Yes. `chainpe-ai-tools` wraps the ChainPe SDK as framework-native tools, not model-native tools. The LangChain adapter works with any `ChatModel` including `ChatOpenAI`. The Vercel AI SDK adapter works with any provider that supports tool use.
 
 ### Can I run ChainPe completely locally?
 
@@ -135,6 +135,6 @@ Yes. Use:
 
 For a fully local environment, deploy `MockUSDC` and `ChainPeRegistry` to a local Hardhat node.
 
-### What's the npm scope?
+### What are the npm packages called?
 
-Published packages use the `@chainpeavax` scope: `@chainpeavax/sdk`, `@chainpeavax/ai-tools`, `@chainpeavax/agent`, `@chainpeavax/cli`.
+The packages have no scope: `chainpe-sdk`, `chainpe-ai-tools`, `chainpe-agent`, `chainpe`.

@@ -219,7 +219,7 @@ export function DevelopersSection() {
                 View on GitHub
               </a>
               <span className="text-foreground/20">|</span>
-              <a href="https://www.npmjs.com/org/chainpeavax" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
+              <a href="https://www.npmjs.com/package/chainpe" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
                 npm packages
               </a>
             </div>

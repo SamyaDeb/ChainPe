@@ -8,20 +8,20 @@ sidebar_position: 4
 
 This page covers integrating ChainPe into autonomous agents — systems that discover, pay for, and compose API services without human intervention.
 
-## @chainpeavax/agent
+## chainpe-agent
 
-The `@chainpeavax/agent` package provides a standalone LLM agent loop that discovers and pays for ChainPe services. It is framework-independent (uses its own LLM client, not Vercel AI SDK or LangChain).
+The `chainpe-agent` package provides a standalone LLM agent loop that discovers and pays for ChainPe services. It is framework-independent (uses its own LLM client, not Vercel AI SDK or LangChain).
 
 ### Installation
 
 ```bash
-npm install @chainpeavax/agent
+npm install chainpe-agent
 ```
 
 ### Configuration
 
 ```ts
-import { AgentRunner } from '@chainpeavax/agent'
+import { AgentRunner } from 'chainpe-agent'
 
 const runner = new AgentRunner({
   // Wallet config
@@ -45,7 +45,7 @@ console.log(result)
 
 ### Available tools in the agent
 
-The `@chainpeavax/agent` exposes these built-in tools:
+The `chainpe-agent` exposes these built-in tools:
 
 | Tool | Description |
 |---|---|
@@ -127,7 +127,7 @@ Each seller agent:
 For long-running agents with controlled budgets:
 
 ```ts
-import { PolicyVaultClient } from '@chainpeavax/sdk'
+import { PolicyVaultClient } from 'chainpe-sdk'
 
 // Setup (done once by the operator)
 const owner = new PolicyVaultClient({

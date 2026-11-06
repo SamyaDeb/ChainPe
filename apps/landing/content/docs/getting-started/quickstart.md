@@ -19,13 +19,13 @@ You do NOT need AVAX in the agent wallet. The ChainPe facilitator pays gas on yo
 ## Step 1 — Install
 
 ```bash
-npm install @chainpeavax/sdk
+npm install chainpe-sdk
 ```
 
 ## Step 2 — Create a ChainPe client
 
 ```ts
-import { ChainPe } from '@chainpeavax/sdk'
+import { ChainPe } from 'chainpe-sdk'
 
 const cp = new ChainPe({
   privateKey: process.env.CHAINPE_PRIVATE_KEY!,
@@ -101,7 +101,7 @@ if (result.payment) {
 If you have an API you want to monetize, initialize the CLI:
 
 ```bash
-npm install -g @chainpeavax/cli
+npm install -g chainpe
 chainpe init      # interactive wizard → saves to ~/.chainpe/config.json
 chainpe start     # starts the x402 payment proxy
 chainpe register  # publishes your service on-chain
@@ -112,7 +112,7 @@ See [Merchant Registration](../merchants/registration.md) for a full walkthrough
 ## Complete working example
 
 ```ts
-import { ChainPe } from '@chainpeavax/sdk'
+import { ChainPe } from 'chainpe-sdk'
 
 async function main() {
   const cp = new ChainPe({

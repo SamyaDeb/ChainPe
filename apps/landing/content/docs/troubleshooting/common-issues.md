@@ -157,10 +157,10 @@ curl https://chainpe-facilitator-production.up.railway.app/status
 
 ## 10. npm publish failures
 
-**Symptom:** `npm publish @chainpeavax/sdk` fails with "You do not have permission" or "Package already exists".
+**Symptom:** `npm publish chainpe-sdk` fails with "You do not have permission" or "Package already exists".
 
 **Fixes:**
-- Ensure you are logged in: `npm login` with the account that owns the `@chainpeavax` scope
+- Ensure you are logged in: `npm login` with an account that maintains the package
 - If the version already exists, bump the version in `packages/chainpe-sdk/package.json`
 - Build before publishing: `npm run build` in the package directory (the `tsup.config.ts` outputs to `dist/`)
 - Check `package.json` `files` field: ensure `dist/` is included

@@ -1,6 +1,6 @@
-# @chainpeavax/sdk
+# chainpe-sdk
 
-[![npm](https://img.shields.io/npm/v/@chainpeavax/sdk.svg)](https://www.npmjs.com/package/@chainpeavax/sdk)
+[![npm](https://img.shields.io/npm/v/chainpe-sdk.svg)](https://www.npmjs.com/package/chainpe-sdk)
 
 **x402 USDC payments + on-chain ERC-8004 reputation for the Avalanche agent economy — in 3 lines.**
 
@@ -9,13 +9,13 @@ per request in USDC, settled on Avalanche C-Chain. The provider's facilitator pa
 the gas, so your wallet only needs USDC.
 
 ```bash
-npm install @chainpeavax/sdk
+npm install chainpe-sdk
 ```
 
 ## Quickstart (the 3 lines)
 
 ```ts
-import { ChainPe } from '@chainpeavax/sdk'
+import { ChainPe } from 'chainpe-sdk'
 
 const cp = new ChainPe({ privateKey: process.env.PRIVATE_KEY!, network: 'avalanche' })
 const res = await cp.fetch('https://api.example.com/paid') // auto-pays a 402

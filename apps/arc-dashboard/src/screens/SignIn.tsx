@@ -17,7 +17,7 @@ import { useNow } from '@/hooks/useNow'
 import { disconnectAll, QR_ENABLED } from '@/lib/wagmi'
 import { FAUCET_URL } from '@/lib/wallet'
 
-export const REGISTER_COMMAND = 'npx @chainpeavax/cli register --network arc-testnet'
+export const REGISTER_COMMAND = 'npx chainpe register --network arc-testnet'
 
 const WORDS = ['paid', 'rated', 'listed', 'verified']
 const WORD_MS = 2500

@@ -40,11 +40,11 @@ claude mcp add --transport http arc-docs https://docs.arc.io/mcp   # Arc docs se
 
 | Path | What | Arc work |
 |---|---|---|
-| `packages/chainpe` | `@chainpeavax/cli` — provider CLI + x402 proxy | specs 01, 02, 03, 04, 05, 06 |
-| `packages/chainpe-sdk` | `@chainpeavax/sdk` — buyer SDK | spec 09 |
+| `packages/chainpe` | `chainpe` — provider CLI + x402 proxy | specs 01, 02, 03, 04, 05, 06 |
+| `packages/chainpe-sdk` | `chainpe-sdk` — buyer SDK | spec 09 |
 | `packages/chainpe-ai-tools` | Vercel AI / LangChain tools | spec 09 |
 | `packages/chainpe-wallet` | `chainpe-wallet-mcp` — Claude MCP wallet | spec 09 |
-| `packages/chainpe-agent` | `@chainpeavax/agent` | spec 09 (network only) |
+| `packages/chainpe-agent` | `chainpe-agent` | spec 09 (network only) |
 | `services/chainpe-indexer` | becomes `chainpe-cloud` API | spec 08 |
 | `services/chainpe-facilitator` | retired for Arc (Circle replaces it) | not used by the CLI |
 | `contracts/` | Hardhat, Avalanche contracts | Arc contracts built in Arc Studio → `contracts-arc/` |

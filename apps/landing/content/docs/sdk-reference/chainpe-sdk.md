@@ -1,17 +1,17 @@
 ---
 id: sdk-reference-chainpe-sdk
-title: "@chainpeavax/sdk"
+title: "chainpe-sdk"
 sidebar_position: 2
 ---
 
-# @chainpeavax/sdk
+# chainpe-sdk
 
 Complete API reference for the core ChainPe SDK.
 
 ## Installation
 
 ```bash
-npm install @chainpeavax/sdk
+npm install chainpe-sdk
 ```
 
 ## Exports
@@ -154,7 +154,7 @@ Posts ERC-8004 feedback. Returns tx hash.
 Low-level on-chain registry access.
 
 ```ts
-import { RegistryClient, filterServices, rankByReputation } from '@chainpeavax/sdk'
+import { RegistryClient, filterServices, rankByReputation } from 'chainpe-sdk'
 
 const client = new RegistryClient(network, registryAddress)
 
@@ -200,7 +200,7 @@ Sorts: services with a non-null score (highest first) → services without a sco
 Gasless spending from a PolicyVault. See [Policy Vaults](../concepts/policy-vaults.md).
 
 ```ts
-import { PolicyVaultClient } from '@chainpeavax/sdk'
+import { PolicyVaultClient } from 'chainpe-sdk'
 
 const client = new PolicyVaultClient({
   privateKey: string,
@@ -260,7 +260,7 @@ class ChainPePaymentError extends Error {
 ## Network utilities
 
 ```ts
-import { publicClientFor, getUsdcAddress, rpcUrlFor, USDC_DECIMALS } from '@chainpeavax/sdk'
+import { publicClientFor, getUsdcAddress, rpcUrlFor, USDC_DECIMALS } from 'chainpe-sdk'
 
 const client = publicClientFor('avalanche')  // viem PublicClient
 const usdc = getUsdcAddress('avalanche')     // '0xB97E...6a6E'

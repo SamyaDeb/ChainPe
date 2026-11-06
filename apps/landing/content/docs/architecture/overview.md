@@ -13,9 +13,9 @@ ChainPe is infrastructure, not a single app. One payment + reputation core drive
 ```mermaid
 graph TB
     subgraph "Client Layer"
-        SDK["@chainpeavax/sdk\n(cp.fetch / cp.pay / cp.discover)"]
-        AITOOLS["@chainpeavax/ai-tools\n(Vercel AI SDK / LangChain)"]
-        CLI["@chainpeavax/cli\n(chainpe fetch / discover)"]
+        SDK["chainpe-sdk\n(cp.fetch / cp.pay / cp.discover)"]
+        AITOOLS["chainpe-ai-tools\n(Vercel AI SDK / LangChain)"]
+        CLI["chainpe\n(chainpe fetch / discover)"]
         MCP["chainpe-wallet-mcp\n(Claude Desktop)"]
         DASH["apps/dashboard\n(Next.js marketplace)"]
     end
@@ -64,15 +64,15 @@ graph TB
 
 ## Component responsibilities
 
-### @chainpeavax/sdk
+### chainpe-sdk
 
 The primary consumer library. Wraps all x402 payment logic, ERC-8004 reputation, registry discovery, and PolicyVault interaction behind a clean TypeScript API. The `ChainPe` class is the entry point.
 
-### @chainpeavax/ai-tools
+### chainpe-ai-tools
 
 Thin adapters that wrap SDK calls as Vercel AI SDK `tool()` objects or LangChain `StructuredTool` instances. Exposes `chainpeFetch` (pay for and call a URL) and `discoverService` (search and rank the registry).
 
-### @chainpeavax/cli
+### chainpe
 
 Two roles in one package:
 - **Provider**: `chainpe init/start/register` — configure and launch the x402 payment proxy

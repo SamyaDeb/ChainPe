@@ -13,9 +13,9 @@ ChainPe is a monorepo. Most users only need one or two packages. Install exactly
 The primary package for making x402 payments and reading/writing ERC-8004 reputation:
 
 ```bash
-npm install @chainpeavax/sdk
+npm install chainpe-sdk
 # or
-pnpm add @chainpeavax/sdk
+pnpm add chainpe-sdk
 ```
 
 **Peer dependencies:** None. The SDK bundles `viem` and `x402` internals.
@@ -27,7 +27,7 @@ pnpm add @chainpeavax/sdk
 Vercel AI SDK and LangChain tool adapters — drop-in `chainpeFetch` and `discoverService` tools:
 
 ```bash
-npm install @chainpeavax/ai-tools
+npm install chainpe-ai-tools
 ```
 
 If using the Vercel AI SDK adapter:
@@ -45,23 +45,23 @@ npm install @langchain/core @langchain/langgraph
 The provider proxy and consumer command-line tool:
 
 ```bash
-npm install -g @chainpeavax/cli
+npm install -g chainpe
 # then
 chainpe --help
 ```
 
 Or use it without installing globally:
 ```bash
-npx @chainpeavax/cli discover
-npx @chainpeavax/cli fetch <url>
+npx chainpe discover
+npx chainpe fetch <url>
 ```
 
 ## Standalone Agent SDK
 
-The `@chainpeavax/agent` package provides a self-contained LLM agent loop that discovers and pays for services:
+The `chainpe-agent` package provides a self-contained LLM agent loop that discovers and pays for services:
 
 ```bash
-npm install @chainpeavax/agent
+npm install chainpe-agent
 ```
 
 ## Claude MCP Wallet
@@ -105,5 +105,5 @@ The SDK ships full TypeScript types. It uses ES module output, so ensure your `t
 Or if using CommonJS in your project, use a dynamic import:
 
 ```ts
-const { ChainPe } = await import('@chainpeavax/sdk')
+const { ChainPe } = await import('chainpe-sdk')
 ```

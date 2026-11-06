@@ -9,20 +9,20 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "build:cli": "npm run build --workspace=@chainpeavax/cli",
-    "build:agent": "npm run build --workspace=@chainpeavax/agent",
+    "build:cli": "npm run build --workspace=chainpe",
+    "build:agent": "npm run build --workspace=chainpe-agent",
     "build:wallet": "npm run build --workspace=chainpe-wallet-mcp",
     "build:mcpb": "npm run build:mcpb --workspace=chainpe-wallet-mcp",
-    "build:sdk": "npm run build --workspace=@chainpeavax/sdk",
-    "build:ai-tools": "npm run build --workspace=@chainpeavax/ai-tools",
+    "build:sdk": "npm run build --workspace=chainpe-sdk",
+    "build:ai-tools": "npm run build --workspace=chainpe-ai-tools",
     "test:wallet": "npm run test --workspace=chainpe-wallet-mcp",
-    "test:sdk": "npm run test --workspace=@chainpeavax/sdk",
-    "test:ai-tools": "npm run test --workspace=@chainpeavax/ai-tools",
+    "test:sdk": "npm run test --workspace=chainpe-sdk",
+    "test:ai-tools": "npm run test --workspace=chainpe-ai-tools",
     "test": "npm run test --workspaces --if-present",
     "test:e2e": "node e2e/run.mjs",
     "test:e2e:a2a": "node e2e/agent-to-agent.mjs",
-    "dev": "npm run dev --workspace=@chainpeavax/cli",
-    "dev:agent": "npm run dev --workspace=@chainpeavax/agent",
+    "dev": "npm run dev --workspace=chainpe",
+    "dev:agent": "npm run dev --workspace=chainpe-agent",
     
     "dev:dashboard": "npm run dev --prefix apps/dashboard",
     "dev:landing": "npm run dev --prefix apps/landing -- -p 3002",
@@ -32,10 +32,10 @@
     
     "typecheck": "npm run typecheck --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present",
-    "publish:cli": "npm publish --workspace=@chainpeavax/cli --access public",
-    "publish:agent": "npm publish --workspace=@chainpeavax/agent --access public",
-    "publish:sdk": "npm publish --workspace=@chainpeavax/sdk --access public",
-    "publish:ai-tools": "npm publish --workspace=@chainpeavax/ai-tools --access public",
+    "publish:cli": "npm publish --workspace=chainpe --access public",
+    "publish:agent": "npm publish --workspace=chainpe-agent --access public",
+    "publish:sdk": "npm publish --workspace=chainpe-sdk --access public",
+    "publish:ai-tools": "npm publish --workspace=chainpe-ai-tools --access public",
     "publish:all": "npm run publish:sdk && npm run publish:ai-tools && npm run publish:cli && npm run publish:agent"
   },
   "keywords": [
@@ -55,6 +55,6 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@chainpeavax/sdk": "^0.1.0"
+    "chainpe-sdk": "^0.1.0"
   }
 }

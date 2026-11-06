@@ -12,7 +12,7 @@ Welcome to ChainPe. This section walks you from zero to a working paid API call 
 
 By the end of this section you will have:
 
-1. Installed the `@chainpeavax/sdk` package
+1. Installed the `chainpe-sdk` package
 2. Created a `ChainPe` client with a funded Avalanche C-Chain wallet
 3. Made a real USDC micropayment to a registered API and received a response
 4. Optionally registered your own service on-chain
@@ -42,7 +42,7 @@ The non-custodial facilitator pays AVAX gas on your behalf when you make x402 pa
 
 | Use case | Start here |
 |---|---|
-| Using a paid API from your own TypeScript/JavaScript code | [Quickstart](./quickstart.md) using `@chainpeavax/sdk` |
+| Using a paid API from your own TypeScript/JavaScript code | [Quickstart](./quickstart.md) using `chainpe-sdk` |
 | Building a Vercel AI SDK agent that pays for services | [AI Tools](../developers/ai-tools.md) |
 | Building a LangChain agent | [AI Tools](../developers/ai-tools.md) |
 | Using Claude to pay for APIs via MCP | Install `chainpe-wallet-mcp` per the README |

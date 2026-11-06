@@ -81,10 +81,10 @@ The relayer calls `PolicyVault.spend(owner, to, amount, deadline, sessionSig)`. 
 
 ## Using PolicyVaultClient
 
-The `@chainpeavax/sdk` package ships a `PolicyVaultClient`:
+The `chainpe-sdk` package ships a `PolicyVaultClient`:
 
 ```ts
-import { PolicyVaultClient } from '@chainpeavax/sdk'
+import { PolicyVaultClient } from 'chainpe-sdk'
 
 // Owner: set up the vault
 const owner = new PolicyVaultClient({

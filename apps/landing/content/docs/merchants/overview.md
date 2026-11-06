@@ -38,7 +38,7 @@ The proxy:
 
 ```bash
 # Install
-npm install -g @chainpeavax/cli
+npm install -g chainpe
 
 # Interactive setup
 chainpe init

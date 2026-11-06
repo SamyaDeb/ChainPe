@@ -23,7 +23,7 @@ ChainPe is that layer, on Avalanche.
 ## Payments in three lines
 
 ```ts
-import { ChainPe } from '@chainpeavax/sdk'
+import { ChainPe } from 'chainpe-sdk'
 
 const cp = new ChainPe({ privateKey: process.env.PRIVATE_KEY!, network: 'avalanche' })
 const res = await cp.fetch('https://api.example.com/paid')  // auto-pays a 402 in USDC
@@ -39,7 +39,7 @@ const data = await res.json()
 | **ChainPeRegistry** | On-chain registry of x402-gated services. Providers register; agents discover. Keyed by `keccak256(developer, name)`. |
 | **ERC-8004 Reputation** | Portable agent identity + reputation. Every paid call can build score; self-feedback is blocked on-chain. |
 | **PolicyVault** | Programmable, gasless spending policy. Owners set per-call caps, daily limits, and allowlists. The chain enforces every constraint. |
-| **x402 Proxy** | The `@chainpeavax/cli` package starts a payment-gated reverse proxy in front of any backend. No code changes to the backend. |
+| **x402 Proxy** | The `chainpe` package starts a payment-gated reverse proxy in front of any backend. No code changes to the backend. |
 | **Facilitator** | Non-custodial x402 `verify`/`settle` service that submits payer-signed USDC transfers and pays Avalanche gas. |
 | **Indexer** | Watches on-chain events → Postgres → O(1) REST discovery and reputation API. |
 | **Dashboard** | Next.js marketplace to browse reputation-ranked services and register via MetaMask. |
@@ -65,7 +65,7 @@ You have an API, an LLM agent, or any HTTP service that produces value. You want
 
 ### AI Agent Builders (buyers)
 
-You build autonomous agents that call external services. You want those agents to pay for what they use, without hardwired API keys that can leak, and with a way to discover trustworthy services ranked by real on-chain reputation. You install `@chainpeavax/sdk` or `@chainpeavax/ai-tools` and your agent gains the ability to discover, pay, and rate services in the same loop.
+You build autonomous agents that call external services. You want those agents to pay for what they use, without hardwired API keys that can leak, and with a way to discover trustworthy services ranked by real on-chain reputation. You install `chainpe-sdk` or `chainpe-ai-tools` and your agent gains the ability to discover, pay, and rate services in the same loop.
 
 ### End Users / Operators
 
@@ -77,11 +77,11 @@ ChainPe is infrastructure. Claude/MCP is just one client. The same payment + rep
 
 | Surface | Package | Description |
 |---|---|---|
-| SDK | `@chainpeavax/sdk` | Payments + reputation in 3 lines for any Node/TS project |
-| Agent tools | `@chainpeavax/ai-tools` | Vercel AI SDK + LangChain tool adapters |
-| CLI | `@chainpeavax/cli` | Provider proxy + consumer `fetch`/`discover` commands |
+| SDK | `chainpe-sdk` | Payments + reputation in 3 lines for any Node/TS project |
+| Agent tools | `chainpe-ai-tools` | Vercel AI SDK + LangChain tool adapters |
+| CLI | `chainpe` | Provider proxy + consumer `fetch`/`discover` commands |
 | Claude wallet | `chainpe-wallet-mcp` | MCP extension — Claude gets an Avalanche x402 wallet |
-| Agent SDK | `@chainpeavax/agent` | Standalone LLM agent loop that discovers and pays |
+| Agent SDK | `chainpe-agent` | Standalone LLM agent loop that discovers and pays |
 | Dashboard | `apps/dashboard` | Next.js marketplace UI |
 | Facilitator | `services/chainpe-facilitator` | Non-custodial x402 verify/settle (Railway-deployed) |
 | Indexer | `services/chainpe-indexer` | Events → Postgres → O(1) REST API |

@@ -12,14 +12,14 @@ Detailed component map of the ChainPe system, including data stores, external de
 graph TB
     subgraph "Client Layer"
         AI["AI Agent\n(Node.js / Python / Claude)"]
-        DEV["Developer App\n(@chainpeavax/sdk)"]
+        DEV["Developer App\n(chainpe-sdk)"]
         DASH["Dashboard\napps/dashboard\n(Next.js / Vercel)"]
     end
 
     subgraph "ChainPe NPM Packages"
-        SDK["@chainpeavax/sdk\nChainPe class\nRegistryClient\nPolicyVaultClient\nReputationClient"]
-        TOOLS["@chainpeavax/ai-tools\ncreateChainPeTools (Vercel)\ncreateChainPeLangChainTools"]
-        CLICMD["@chainpeavax/cli\nchainpe init/start/register\nchainpe fetch/discover"]
+        SDK["chainpe-sdk\nChainPe class\nRegistryClient\nPolicyVaultClient\nReputationClient"]
+        TOOLS["chainpe-ai-tools\ncreateChainPeTools (Vercel)\ncreateChainPeLangChainTools"]
+        CLICMD["chainpe\nchainpe init/start/register\nchainpe fetch/discover"]
     end
 
     subgraph "ChainPe Services (Railway)"

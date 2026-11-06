@@ -14,19 +14,19 @@ chainpe/
 │   └── deployments/                   Deployed addresses per network
 │
 ├── packages/
-│   ├── chainpe/              Provider SDK + CLI (@chainpeavax/cli)
+│   ├── chainpe/              Provider SDK + CLI (chainpe)
 │   │   └── src/
 │   │       ├── cli.ts                 `chainpe init`, `chainpe start`, `chainpe list`
 │   │       ├── registry.ts            On-chain registration via viem
 │   │       └── proxy/                 x402-express payment proxy + facilitator
 │   │
-│   ├── chainpe-agent/        Consumer agent SDK (@chainpeavax/agent)
+│   ├── chainpe-agent/        Consumer agent SDK (chainpe-agent)
 │   │   └── src/
 │   │       ├── agent.ts               Autonomous AI agent (discover → pay → use)
 │   │       ├── registry.ts            On-chain service discovery
 │   │       └── tools/                 AI tool definitions
 │   │
-│   ├── chainpe-sdk/          Shared SDK types + helpers (@chainpeavax/sdk)
+│   ├── chainpe-sdk/          Shared SDK types + helpers (chainpe-sdk)
 │   ├── chainpe-ai-tools/     LLM tool schemas for MCP / function calling
 │   └── chainpe-wallet/       MCP wallet server (62 tests)
 │       └── scripts/build-mcpb.sh      Builds .mcpb for Claude Desktop
