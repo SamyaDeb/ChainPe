@@ -36,6 +36,10 @@ export interface NetworkInfo {
   gatewayUrl?: string;
   /** ChainPeAccounts contract; undefined where it is not deployed. */
   accountsAddress?: `0x${string}`;
+  /** Arc's canonical ERC-8004 IdentityRegistry. */
+  identityRegistry: `0x${string}`;
+  /** Arc's canonical ERC-8004 ReputationRegistry. */
+  reputationRegistry: `0x${string}`;
 }
 
 const ARC_USDC = "0x3600000000000000000000000000000000000000";
@@ -69,6 +73,8 @@ export const NETWORKS: Record<ChainPeNetwork, NetworkInfo> = {
     gatewayChain: "arcTestnet",
     gatewayUrl: "https://gateway-api-testnet.circle.com",
     accountsAddress: ARC_TESTNET_ACCOUNTS,
+    identityRegistry: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    reputationRegistry: "0x8004B663056A597Dffe9eCcC1965A193B7388713",
   },
   arc: {
     name: "arc",
@@ -82,6 +88,8 @@ export const NETWORKS: Record<ChainPeNetwork, NetworkInfo> = {
     gasToken: "USDC",
     gatewayChain: "arc",
     accountsAddress: undefined,
+    identityRegistry: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+    reputationRegistry: "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
   },
 };
 
