@@ -4,19 +4,20 @@ import { AlertTriangle, CheckCircle2, CircleDashed, Info, MinusCircle, ShieldAle
 import type { Verification, VerificationReason } from '@/api/schema'
 import type { CheckStatus } from '@/lib/doctor'
 
-type Tone = 'ok' | 'warn' | 'bad' | 'neutral' | 'accent'
+type Tone = 'ok' | 'warn' | 'bad' | 'neutral' | 'accent' | 'solid'
 
 const tones: Record<Tone, string> = {
   ok: 'bg-ok-soft text-ok',
   warn: 'bg-warn-soft text-warn',
   bad: 'bg-bad-soft text-bad',
   neutral: 'bg-subtle text-muted',
-  accent: 'bg-accent-soft text-accent',
+  accent: 'border border-ink/20 text-ink',
+  solid: 'bg-accent text-accent-fg',
 }
 
 export function Pill({ tone = 'neutral', children }: { tone?: Tone; children: ReactNode }) {
   return (
-    <span className={clsx('inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-medium', tones[tone])}>
+    <span className={clsx('inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 font-mono text-xs', tones[tone])}>
       {children}
     </span>
   )
@@ -96,5 +97,5 @@ export function CheckBadge({ status }: { status: CheckStatus }) {
 }
 
 export function PlanBadge({ plan }: { plan: 'free' | 'pro' }) {
-  return <Pill tone={plan === 'pro' ? 'accent' : 'neutral'}>{plan === 'pro' ? 'Pro plan' : 'Free plan'}</Pill>
+  return <Pill tone={plan === 'pro' ? 'solid' : 'accent'}>{plan === 'pro' ? 'Pro plan' : 'Free plan'}</Pill>
 }

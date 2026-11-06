@@ -48,6 +48,8 @@ export default defineConfig(({ mode }) => {
       dedupe: ['react', 'react-dom'],
     },
     build: {
+      // The CSP has font-src 'self', so a font inlined as a data: URL would be blocked.
+      assetsInlineLimit: 0,
       rollupOptions: {
         output: {
           manualChunks(id: string) {

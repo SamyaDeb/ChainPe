@@ -51,7 +51,7 @@ const columns: Array<Column<Payment>> = [
     ),
   },
   { header: 'Rail', cell: (p) => <Pill tone="accent">{p.rail === 'exact' ? 'Exact' : 'Gateway'}</Pill> },
-  { header: 'Amount', cell: (p) => <span className="font-semibold tabular-nums">{formatUsdc(p.amountAtomic)}</span> },
+  { header: 'Amount', cell: (p) => <span className="font-display text-2xl tracking-tight">{formatUsdc(p.amountAtomic)}</span> },
   { header: 'Payer', cell: (p) => (p.payer === 'unknown' ? <span className="text-muted">unknown</span> : <AddressView address={p.payer} />) },
   {
     header: 'Verification',
@@ -146,7 +146,7 @@ export function Payments() {
         right={<LiveStatus updatedAt={first.updatedAt} failing={first.error !== null && first.data !== null} />}
       />
 
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_2fr_auto] lg:items-end">
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_2fr_auto] lg:items-start">
         <Field label="Rail" htmlFor="f-rail">
           <select id="f-rail" className={inputCls} value={rail} onChange={(e) => setRail(e.target.value as '' | Rail)}>
             <option value="">All rails</option>
@@ -165,16 +165,16 @@ export function Payments() {
         <Field label="Route" htmlFor="f-route" hint="Exact route, for example /weather">
           <input id="f-route" className={inputCls} value={routeDraft} onChange={(e) => setRouteDraft(e.target.value)} placeholder="All routes" autoComplete="off" />
         </Field>
-        <Button onClick={() => void exportCsv()} disabled={csv === 'working'}>
+        <Button className="lg:mt-7" onClick={() => void exportCsv()} disabled={csv === 'working'}>
           {csv === 'working' ? <Loader2 size={16} className="animate-spin" aria-hidden /> : <Download size={16} aria-hidden />}
           Export CSV
         </Button>
       </div>
 
       {csv === 'locked' ? (
-        <div role="status" className="mb-4 rounded-md border border-line bg-subtle px-3 py-2 text-sm">
+        <div role="status" className="mb-4 border border-ink/10 bg-subtle px-4 py-2 text-sm">
           CSV export is part of the Pro plan.{' '}
-          <Link to="/billing" className="font-medium text-accent underline">
+          <Link to="/billing" className="font-medium underline underline-offset-4">
             Upgrade with USDC
           </Link>
         </div>

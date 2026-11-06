@@ -1,7 +1,7 @@
 import type { Health as HealthData, HealthEntry } from '@/api/schema'
 import { useAuth } from '@/auth/AuthContext'
 import { CheckBadge, Pill } from '@/components/ui/Badges'
-import { Card, PageHeader } from '@/components/ui/Card'
+import { Card, PageHeader, SectionTitle } from '@/components/ui/Card'
 import { DataTable, type Column } from '@/components/ui/DataTable'
 import { EmptyState, LockedCard, ResourceView } from '@/components/ui/States'
 import { useResource } from '@/hooks/useResource'
@@ -13,9 +13,9 @@ function Checks({ report }: { report: DoctorReport }) {
     return <p className="text-sm text-muted">This report has no check details, only the score.</p>
   }
   return (
-    <ul className="flex flex-col divide-y divide-line">
+    <ul className="flex flex-col divide-y divide-ink/10">
       {report.checks.map((c, i) => (
-        <li key={`${c.id ?? i}-${c.name}`} className="flex flex-col gap-1 py-2">
+        <li key={`${c.id ?? i}-${c.name}`} className="flex flex-col gap-1 py-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-medium text-ink">{c.name}</span>
             <CheckBadge status={c.status} />
@@ -40,12 +40,12 @@ function Latest({ entry, report }: { entry: HealthEntry; report: DoctorReport })
     <Card>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-muted">
+          <p className="text-muted">
             Last <code className="font-mono">chainpe doctor</code> result
           </p>
-          <p className="mt-1 text-4xl font-semibold tabular-nums text-ink">
+          <p className="mt-4 font-display text-[clamp(5rem,14vw,10rem)] leading-[0.9] tracking-tight text-ink">
             {report.passed}/{report.total}
-            <span className="ml-2 text-base font-normal text-muted">checks passed</span>
+            <span className="ml-4 font-sans text-base tracking-normal text-muted">checks passed</span>
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -53,11 +53,11 @@ function Latest({ entry, report }: { entry: HealthEntry; report: DoctorReport })
           <Pill tone={report.allGreen ? 'ok' : 'warn'}>{report.allGreen ? 'All green' : 'Not all green'}</Pill>
         </div>
       </div>
-      <p className="mt-2 text-xs text-muted">
+      <p className="mt-4 font-mono text-xs text-muted">
         Reported {formatDateTime(report.generatedAt ?? entry.ts)} by proxy {entry.version}
         {report.service ? `, service ${report.service}` : ''}
       </p>
-      <div className="mt-3">
+      <div className="mt-6">
         <Checks report={report} />
       </div>
     </Card>
@@ -90,7 +90,7 @@ function History({ entries }: { entries: HealthEntry[] }) {
         if (!r || r.checks.length === 0) return <span className="text-muted">{'\u2014'}</span>
         return (
           <details>
-            <summary className="cursor-pointer text-accent">Show {r.checks.length} checks</summary>
+            <summary className="cursor-pointer underline decoration-ink/30 underline-offset-4">Show {r.checks.length} checks</summary>
             <div className="mt-2 text-left">
               <Checks report={r} />
             </div>
@@ -107,7 +107,7 @@ function Body({ d }: { d: HealthData }) {
   const report = withReport ? parseDoctor(withReport.doctor) : null
   const hasDoctorValue = d.history.some((e) => e.doctor !== null)
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {withReport && report ? (
         <Latest entry={withReport} report={report} />
       ) : (
@@ -121,7 +121,7 @@ function Body({ d }: { d: HealthData }) {
         <LockedCard feature="Check history" description="Pro keeps the last 100 doctor reports so you can see when a check started failing." />
       ) : d.history.length > 0 ? (
         <section>
-          <h2 className="mb-2 text-sm font-semibold text-ink">History</h2>
+          <SectionTitle>History</SectionTitle>
           <History entries={d.history} />
         </section>
       ) : null}

@@ -7,7 +7,7 @@ export function SettingsScreen() {
   return (
     <>
       <PageHeader title="Settings" subtitle="Connect your proxy and mark your own wallets." />
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
         <Keys />
         <Card>
           <SectionTitle>Telemetry</SectionTitle>

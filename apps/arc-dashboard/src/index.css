@@ -2,43 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Light values match apps/landing/app/globals.css. Colour is kept for status only. */
 :root {
-  --c-bg: 246 247 249;
-  --c-surface: 255 255 255;
-  --c-subtle: 240 242 245;
-  --c-line: 224 228 234;
-  --c-edge: 118 128 142;
-  --c-ink: 20 24 31;
-  --c-muted: 91 101 115;
-  --c-accent: 29 78 216;
-  --c-accent-fg: 255 255 255;
-  --c-accent-soft: 232 239 253;
-  --c-ok: 19 115 55;
-  --c-ok-soft: 228 245 234;
-  --c-warn: 146 84 6;
-  --c-warn-soft: 253 243 220;
-  --c-bad: 185 28 28;
-  --c-bad-soft: 253 232 232;
+  --c-bg: 0.985 0.002 90;
+  --c-surface: 0.985 0.002 90;
+  --c-subtle: 0.96 0.005 90;
+  --c-line: 0.88 0.01 90;
+  --c-edge: 0.7 0.02 60;
+  --c-ink: 0.12 0.01 60;
+  --c-muted: 0.45 0.02 60;
+  --c-accent: 0.12 0.01 60;
+  --c-accent-fg: 0.985 0.002 90;
+  --c-accent-soft: 0.94 0.005 90;
+  --c-ok: 0.5 0.14 150;
+  --c-ok-soft: 0.95 0.035 150;
+  --c-warn: 0.5 0.11 70;
+  --c-warn-soft: 0.96 0.04 85;
+  --c-bad: 0.5 0.19 27;
+  --c-bad-soft: 0.95 0.03 25;
   color-scheme: light;
 }
 
 :root.dark {
-  --c-bg: 13 17 23;
-  --c-surface: 22 27 34;
-  --c-subtle: 33 38 45;
-  --c-line: 48 54 61;
-  --c-edge: 125 133 144;
-  --c-ink: 230 237 243;
-  --c-muted: 154 164 178;
-  --c-accent: 110 168 254;
-  --c-accent-fg: 13 17 23;
-  --c-accent-soft: 24 41 69;
-  --c-ok: 63 185 80;
-  --c-ok-soft: 20 46 28;
-  --c-warn: 226 168 50;
-  --c-warn-soft: 54 41 14;
-  --c-bad: 255 123 114;
-  --c-bad-soft: 60 24 24;
+  --c-bg: 0.15 0.008 60;
+  --c-surface: 0.15 0.008 60;
+  --c-subtle: 0.2 0.008 60;
+  --c-line: 0.29 0.01 60;
+  --c-edge: 0.5 0.015 60;
+  --c-ink: 0.97 0.003 90;
+  --c-muted: 0.72 0.012 70;
+  --c-accent: 0.97 0.003 90;
+  --c-accent-fg: 0.15 0.008 60;
+  --c-accent-soft: 0.24 0.008 60;
+  --c-ok: 0.78 0.17 150;
+  --c-ok-soft: 0.27 0.05 150;
+  --c-warn: 0.8 0.13 80;
+  --c-warn-soft: 0.28 0.05 80;
+  --c-bad: 0.74 0.16 25;
+  --c-bad-soft: 0.28 0.06 25;
   color-scheme: dark;
 }
 
@@ -53,21 +54,162 @@ html {
 body {
   margin: 0;
   min-height: 100dvh;
-  background-color: rgb(var(--c-bg));
-  color: rgb(var(--c-ink));
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: oklch(var(--c-bg));
+  color: oklch(var(--c-ink));
+  font-family: 'Instrument Sans Variable', 'Instrument Sans', system-ui, sans-serif;
   line-height: 1.5;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 :focus-visible {
-  outline: 2px solid rgb(var(--c-accent));
+  outline: 2px solid oklch(var(--c-accent));
   outline-offset: 2px;
+}
+
+::selection {
+  background: oklch(var(--c-ink));
+  color: oklch(var(--c-bg));
+}
+
+/* The landing hero's 12 by 8 line grid, drawn without extra DOM. */
+.grid-lines {
+  background-image:
+    linear-gradient(to right, oklch(var(--c-ink) / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(var(--c-ink) / 0.035) 1px, transparent 1px);
+  background-size: 8.3333% 100%, 100% 12.5%;
+}
+
+/* Lets a section run edge to edge from inside the centred page column. */
+.bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+
+/* Headlines arrive one blurred character at a time, as on the landing hero. */
+@keyframes char-in {
+  from {
+    opacity: 0;
+    filter: blur(40px);
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+}
+
+.char-in > span {
+  display: inline-block;
+  animation: char-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.char-in > span:nth-child(2) { animation-delay: 40ms; }
+.char-in > span:nth-child(3) { animation-delay: 80ms; }
+.char-in > span:nth-child(4) { animation-delay: 120ms; }
+.char-in > span:nth-child(5) { animation-delay: 160ms; }
+.char-in > span:nth-child(6) { animation-delay: 200ms; }
+.char-in > span:nth-child(7) { animation-delay: 240ms; }
+.char-in > span:nth-child(8) { animation-delay: 280ms; }
+.char-in > span:nth-child(9) { animation-delay: 320ms; }
+.char-in > span:nth-child(10) { animation-delay: 360ms; }
+.char-in > span:nth-child(11) { animation-delay: 400ms; }
+.char-in > span:nth-child(12) { animation-delay: 440ms; }
+.char-in > span:nth-child(13) { animation-delay: 480ms; }
+.char-in > span:nth-child(n + 14) { animation-delay: 520ms; }
+
+/* Sections rise in order with the landing's easing. The delay follows sibling position. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.rise:nth-child(2) { animation-delay: 80ms; }
+.rise:nth-child(3) { animation-delay: 160ms; }
+.rise:nth-child(4) { animation-delay: 240ms; }
+.rise:nth-child(5) { animation-delay: 320ms; }
+.rise:nth-child(6) { animation-delay: 400ms; }
+.rise:nth-child(7) { animation-delay: 480ms; }
+.rise:nth-child(n + 8) { animation-delay: 560ms; }
+
+/* A new table row, such as a payment arriving during polling. */
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.row-in {
+  animation: row-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Charts wipe in from the left. */
+@keyframes line-reveal {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+.line-reveal {
+  animation: line-reveal 1s cubic-bezier(0.77, 0, 0.175, 1) both;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fade-in 0.3s ease both;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.marquee {
+  animation: marquee 40s linear infinite;
+}
+
+.marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Lift on hover, with the landing's overshoot. */
+.hover-lift {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
 }
 
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  .marquee {
+    animation: none;
   }
 }

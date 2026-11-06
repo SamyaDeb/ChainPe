@@ -1,80 +1,66 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import clsx from 'clsx'
-import { MoreHorizontal } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { Link } from '@/lib/router'
 import type { NavItem } from './AppShell'
 
-const itemCls = 'flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 px-1 text-xs font-medium'
+const iconBtn = 'inline-flex h-10 w-10 items-center justify-center rounded-full text-ink transition-colors duration-300 hover:bg-ink/5'
 
 /**
- * Five bottom items for narrow screens: four pages and a More panel for the rest.
- * The panel is closed by Escape, by navigating, and by tapping outside it.
+ * The landing page's full-screen menu. A native dialog traps focus, closes on Escape
+ * and hands focus back to the menu button.
  */
-export function MobileNav({ path, main, more }: { path: string; main: NavItem[]; more: NavItem[] }) {
-  // The panel is open only for the page it was opened on, so navigating closes it without an effect.
-  const [openAt, setOpenAt] = useState<string | null>(null)
-  const open = openAt === path
-  const button = useRef<HTMLButtonElement>(null)
-  const activeMore = more.find((m) => m.path === path)
-
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      setOpenAt(null)
-      button.current?.focus()
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open])
+export function MobileNav({ path, items, footer }: { path: string; items: NavItem[]; footer: ReactNode }) {
+  const dialog = useRef<HTMLDialogElement>(null)
+  const [open, setOpen] = useState(false)
+  const close = () => dialog.current?.close()
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 sm:hidden">
-      {open ? <div aria-hidden className="fixed inset-0 -z-10" onClick={() => setOpenAt(null)} /> : null}
-      <nav aria-label="Main" className="flex border-t border-line bg-surface">
-        {main.map((item) => {
-          const active = path === item.path
-          return (
-            <Link key={item.path} to={item.path} aria-current={active ? 'page' : undefined} className={clsx(itemCls, active ? 'text-accent' : 'text-muted')}>
-              <item.icon size={20} aria-hidden />
-              <span className="whitespace-nowrap">{item.label}</span>
-            </Link>
-          )
-        })}
-        <button
-          ref={button}
-          type="button"
-          aria-expanded={open}
-          aria-controls="more-panel"
-          onClick={() => setOpenAt(open ? null : path)}
-          className={clsx(itemCls, activeMore || open ? 'text-accent' : 'text-muted')}
-        >
-          <MoreHorizontal size={20} aria-hidden />
-          <span className="whitespace-nowrap">More</span>
-          {activeMore ? <span className="sr-only">, current page is {activeMore.label}</span> : null}
-        </button>
-      </nav>
-      {open ? (
-        <ul id="more-panel" aria-label="More pages" className="absolute bottom-full right-2 mb-2 w-56 rounded-lg border border-line bg-surface p-1 shadow-lg">
-          {more.map((item) => {
-            const active = path === item.path
-            return (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  aria-current={active ? 'page' : undefined}
-                  className={clsx(
-                    'flex min-h-12 items-center gap-3 rounded-md px-3 text-sm font-medium',
-                    active ? 'bg-accent-soft text-accent' : 'text-ink hover:bg-subtle',
-                  )}
-                >
-                  <item.icon size={18} aria-hidden /> {item.label}
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
-      ) : null}
-    </div>
+    <>
+      <button
+        type="button"
+        aria-label="Open menu"
+        aria-expanded={open}
+        className={iconBtn}
+        onClick={() => {
+          dialog.current?.showModal()
+          setOpen(true)
+        }}
+      >
+        <Menu size={22} aria-hidden />
+      </button>
+      <dialog ref={dialog} aria-label="Menu" onClose={() => setOpen(false)} className="m-0 h-dvh max-h-none w-screen max-w-none bg-bg text-ink">
+        {open ? (
+          <div className="flex h-full flex-col overflow-y-auto px-6 py-5">
+            <div className="flex items-center justify-between">
+              <span className="font-brand text-xl font-semibold">ChainPe</span>
+              <button type="button" aria-label="Close menu" className={iconBtn} onClick={close}>
+                <X size={22} aria-hidden />
+              </button>
+            </div>
+            <nav aria-label="Main" className="flex-1 py-8">
+              <ul className="flex flex-col gap-3">
+                {items.map((item) => {
+                  const active = path === item.path
+                  return (
+                    <li key={item.path} className="rise">
+                      <Link
+                        to={item.path}
+                        onClick={close}
+                        aria-current={active ? 'page' : undefined}
+                        className={clsx('font-display text-4xl tracking-tight transition-colors duration-300 sm:text-5xl', active ? 'text-ink' : 'text-muted hover:text-ink')}
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </nav>
+            <div className="border-t border-ink/10 pt-5">{footer}</div>
+          </div>
+        ) : null}
+      </dialog>
+    </>
   )
 }

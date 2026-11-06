@@ -14,11 +14,11 @@ import { formatDateTime } from '@/lib/time'
 /** A newly created key. It lives in this component's state only: it is never stored or logged. */
 function ShownOnce({ created, onDone }: { created: CreatedKey; onDone: () => void }) {
   return (
-    <div role="alert" className="rounded-md border border-warn bg-warn-soft p-3">
+    <div role="alert" className="border border-warn bg-warn-soft p-4">
       <p className="flex items-center gap-2 text-sm font-semibold text-warn">
         <AlertTriangle size={16} aria-hidden /> Copy this key now. It is shown once and cannot be retrieved later.
       </p>
-      <div className="mt-2 flex items-center justify-between gap-2 rounded-md border border-line bg-surface py-1 pl-3 pr-1">
+      <div className="mt-2 flex items-center justify-between gap-2 border border-ink/10 bg-bg py-1.5 pl-4 pr-1.5">
         <code className="min-w-0 break-all font-mono text-sm text-ink">{created.key}</code>
         <CopyButton value={created.key} label="ingest key" />
       </div>

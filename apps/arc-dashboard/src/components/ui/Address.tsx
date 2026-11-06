@@ -2,13 +2,13 @@ import { ExternalLink } from 'lucide-react'
 import { addressUrl, isAddressLike, shortHex, txUrl } from '@/lib/explorer'
 import { CopyButton } from './Copy'
 
-const linkCls = 'inline-flex items-center gap-1 text-accent underline-offset-2 hover:underline'
+const linkCls = 'inline-flex items-center gap-1 text-ink underline decoration-ink/30 underline-offset-4 transition-colors duration-300 hover:decoration-ink'
 
 /** 0x1234…abcd with copy. Links to the explorer only when the value is a real address. */
 export function AddressView({ address, copy = true }: { address: string; copy?: boolean }) {
   const url = addressUrl(address)
   return (
-    <span className="inline-flex items-center gap-0.5 font-mono text-sm tabular-nums">
+    <span className="inline-flex items-center gap-0.5 whitespace-nowrap font-mono text-sm tabular-nums">
       {url ? (
         <a href={url} target="_blank" rel="noopener noreferrer" className={linkCls} aria-label={`Address ${address}, opens in the explorer`}>
           {shortHex(address)}

@@ -18,7 +18,7 @@ function avg(v: string | null): string {
 }
 
 const columns: Array<Column<ReputationItem>> = [
-  { header: 'Score', cell: (r) => <span className="text-base font-semibold tabular-nums">{formatScore(r.value, r.valueDecimals) ?? '\u2014'}</span> },
+  { header: 'Score', cell: (r) => <span className="font-display text-3xl tracking-tight">{formatScore(r.value, r.valueDecimals) ?? '\u2014'}</span> },
   { header: 'Rated by', cell: (r) => <AddressView address={r.client} /> },
   {
     header: 'Paid you?',
@@ -32,27 +32,27 @@ const columns: Array<Column<ReputationItem>> = [
 function Notice({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Card as="div">
-      <p className="font-semibold text-ink">{title}</p>
-      <div className="mt-1 text-sm text-muted">{children}</div>
+      <p className="font-display text-4xl tracking-tight text-ink">{title}</p>
+      <div className="mt-3 text-muted">{children}</div>
     </Card>
   )
 }
 
 function Ratings({ d }: { d: ReputationData }) {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid gap-4 md:grid-cols-[3fr_2fr]">
+    <div className="flex flex-col gap-6">
+      <div className="grid gap-6 md:grid-cols-[3fr_2fr]">
         <Card>
-          <p className="text-sm font-medium text-muted">From wallets that paid you</p>
-          <p className="mt-1 text-5xl font-semibold tabular-nums text-ink">{avg(d.payerAverage)}</p>
-          <p className="mt-1 text-sm text-muted">
+          <p className="text-muted">From wallets that paid you</p>
+          <p className="mt-4 font-display text-[clamp(5rem,14vw,10rem)] leading-[0.9] tracking-tight text-ink">{avg(d.payerAverage)}</p>
+          <p className="mt-4 font-mono text-sm text-muted">
             {d.payerCount} {d.payerCount === 1 ? 'rating' : 'ratings'} from paying wallets
           </p>
         </Card>
         <Card>
-          <p className="text-sm font-medium text-muted">All ratings, including wallets with no verified payment: anyone can rate an agent</p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">{avg(d.allAverage)}</p>
-          <p className="mt-1 text-sm text-muted">
+          <p className="text-muted">All ratings, including wallets with no verified payment: anyone can rate an agent</p>
+          <p className="mt-4 font-display text-6xl leading-none tracking-tight text-ink lg:text-7xl">{avg(d.allAverage)}</p>
+          <p className="mt-4 font-mono text-sm text-muted">
             {d.allCount} {d.allCount === 1 ? 'rating' : 'ratings'} in total
           </p>
         </Card>
