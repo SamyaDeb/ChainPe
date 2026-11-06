@@ -17,7 +17,7 @@ Every link and number in the root `README.md`, checked live in a browser or on d
 | Snowtrace tx `0x953923f2…2006` (June payment) | Page loads |
 | https://faucet.circle.com | OK |
 | **https://studio.arc.io/app/6872b96e-…** | **Redirects to Circle login.** A judge without access may not see it. Check Studio's share settings before submitting |
-| Provider dashboard | **TODO(dashboard-url)**, not deployed yet |
+| https://chainpe.vercel.app/dashboard | OK, loads (checked 2026-11-06) |
 | shields.io badges | Static images |
 
 ## Numbers

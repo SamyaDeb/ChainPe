@@ -1,5 +1,7 @@
 # Build plan
 
+**What is left to do now lives in [HACKATHON-PLAN.md](HACKATHON-PLAN.md).**
+
 Build in this order. A real Arc payment must work before anything is polished. Each phase ends with
 an acceptance check; do not start the next phase until it passes (except where marked parallel).
 
@@ -71,8 +73,8 @@ Use a third wallet for that test: the smoke test made the buyer wallet a provide
 
 ## Phase 6 — dashboard in Arc Studio
 
-- [ ] ARC-STUDIO.md run 2, then run 3.
-- [ ] Pull to `apps/arc-dashboard`; deploy (Vercel); keep Studio workspace URL.
+- [x] ARC-STUDIO.md run 2, then run 3.
+- [x] Pull to `apps/arc-dashboard`; deploy (Vercel); keep Studio workspace URL.
 
 **Accept:** connecting the seller wallet shows only its services, revenue (exact + Gateway), buyers, ratings, doctor status; another wallet (a third one, not the buyer, which is also a provider) sees nothing.
 
