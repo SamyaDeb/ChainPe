@@ -106,6 +106,15 @@ export function parseNetwork(value: string): ChainPeNetwork {
   throw new Error(`Invalid network "${value}" (expected ${Object.keys(NETWORKS).join(" or ")}).`);
 }
 
+/** Arc mainnet takes real USDC and ChainPe has not run there yet, so starting a proxy on it needs an explicit flag. */
+export function assertMainnetAllowed(network: ChainPeNetwork, allowMainnet = false): void {
+  if (network === "arc" && !allowMainnet) {
+    throw new Error(
+      "Arc mainnet takes real USDC, and ChainPe has not been tested there yet. Use --network arc-testnet, or pass --allow-mainnet to start anyway."
+    );
+  }
+}
+
 /** Maps an x402 network id (CAIP-2) or ChainPe name to the ChainPe network name. */
 export function fromX402Network(x402: string): ChainPeNetwork | undefined {
   return Object.values(NETWORKS).find((n) => n.caip2 === x402 || n.name === x402)?.name;

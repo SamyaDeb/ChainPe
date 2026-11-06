@@ -14,7 +14,7 @@ import ora from "ora";
 
 import type { ChainPeConfig, ChainPeNetwork } from "./types.js";
 import { isValidAddress, getUsdcBalance, formatUsdc } from "./evm.js";
-import { getNetwork, parseNetwork } from "./chains.js";
+import { assertMainnetAllowed, getNetwork, parseNetwork } from "./chains.js";
 import {
   ALL_RAILS,
   assertExactSupported,
@@ -145,7 +145,7 @@ async function runInit(): Promise<void> {
       message: "Arc network",
       options: [
         { value: "arc-testnet", label: "Arc Testnet", hint: "recommended for testing" },
-        { value: "arc", label: "Arc (mainnet)" },
+        { value: "arc", label: "Arc (mainnet)", hint: "real USDC, not tested yet, start needs --allow-mainnet" },
       ],
     })
   )) as ChainPeNetwork;
@@ -209,6 +209,7 @@ async function runStart(options: {
   facilitatorUrl?: string;
   rails?: string;
   telemetry?: boolean;
+  allowMainnet?: boolean;
 }): Promise<void> {
   printBanner();
   const config = await loadConfig();
@@ -223,6 +224,7 @@ async function runStart(options: {
 
   try {
     config.network = resolveNetwork(options.network, config);
+    assertMainnetAllowed(config.network, options.allowMainnet);
     const info = getNetwork(config.network);
     const rails = options.rails ? parseRails(options.rails) : (config.rails ?? ALL_RAILS);
     config.rails = rails;
@@ -381,6 +383,7 @@ program
   .option("--facilitator-url <url>", "Override the Circle facilitator URL (advanced)")
   .option("--rails <rails>", "Payment rails to accept: exact,gateway (default: config, then both)")
   .option("--no-telemetry", "Send nothing to chainpe-cloud")
+  .option("--allow-mainnet", "Start on Arc mainnet, which takes real USDC and is not tested yet")
   .action(runStart);
 program
   .command("login")

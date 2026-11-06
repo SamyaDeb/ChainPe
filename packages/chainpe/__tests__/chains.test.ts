@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { isAddress } from "viem";
-import { explorerTxUrl, fromX402Network, getNetwork, NETWORKS, parseNetwork } from "../src/chains.js";
+import { assertMainnetAllowed, explorerTxUrl, fromX402Network, getNetwork, NETWORKS, parseNetwork } from "../src/chains.js";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "../src");
 
@@ -38,6 +38,12 @@ describe("Arc networks", () => {
     expect(parseNetwork("arc-testnet")).toBe("arc-testnet");
     expect(() => parseNetwork("fuji")).toThrow(/Invalid network/);
     expect(() => parseNetwork("constructor")).toThrow(/Invalid network/);
+  });
+
+  it("needs an explicit flag for Arc mainnet only", () => {
+    expect(() => assertMainnetAllowed("arc")).toThrow(/--allow-mainnet/);
+    expect(() => assertMainnetAllowed("arc", true)).not.toThrow();
+    expect(() => assertMainnetAllowed("arc-testnet")).not.toThrow();
   });
 
   it("builds explorer links", () => {
