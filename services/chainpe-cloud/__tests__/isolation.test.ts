@@ -50,7 +50,7 @@ describe('provider isolation', () => {
     const services = await request(h.app).get('/v1/me/services').set(...auth(a.token)).expect(200)
     expect(services.body.services).toHaveLength(1)
     const reputation = await request(h.app).get('/v1/me/reputation').set(...auth(a.token)).expect(200)
-    expect(reputation.body.count).toBe(1)
+    expect(reputation.body).toMatchObject({ payerCount: 1, payerAverage: '95.00', allCount: 2, allAverage: '67.50' })
     const csv = await request(h.app).get('/v1/me/payments.csv').set(...auth(a.token)).expect(200)
     expect(csv.text.split('\n').length).toBeGreaterThan(3)
   })

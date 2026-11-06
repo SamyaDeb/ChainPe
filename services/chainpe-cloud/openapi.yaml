@@ -304,7 +304,9 @@ paths:
       summary: ERC-8004 ratings
       description: |
         Shown only while the provider owns the token. When `agentIdStatus` is `unknown`, ownership could not be read: say
-        so, and do not show "no ratings". **Free:** average and count, with `items: null`. **Pro:** every review.
+        so, and do not show "no ratings". Anyone can rate an agent, so lead with `payerAverage`: ratings from wallets
+        with at least one verified, non-self-pay payment to this provider. `allAverage` includes unsolicited ratings.
+        **Free:** averages and counts, with `items: null`. **Pro:** every review, each with `fromPayer`.
       security: [{ session: [] }]
       responses:
         '200':
@@ -749,19 +751,21 @@ components:
     Reputation:
       type: object
       additionalProperties: false
-      required: [agentId, agentIdStatus, average, count, items]
+      required: [agentId, agentIdStatus, payerAverage, payerCount, allAverage, allCount, items]
       properties:
         agentId: { type: [string, 'null'] }
         agentIdStatus: { $ref: '#/components/schemas/AgentIdStatus' }
-        average: { type: [string, 'null'], description: 'Two decimals, as a string. Null with no ratings, or when not attributed.' }
-        count: { type: integer }
+        payerAverage: { type: [string, 'null'], description: 'Ratings from verified, non-self-pay payers. Two decimals, as a string. Null with none, or when not attributed. Show this first.' }
+        payerCount: { type: integer }
+        allAverage: { type: [string, 'null'], description: 'Every rating, including from wallets that never paid. Two decimals, as a string. Null with none, or when not attributed.' }
+        allCount: { type: integer }
         items:
           type: [array, 'null']
           description: Null on Free.
           items:
             type: object
             additionalProperties: false
-            required: [client, feedbackIndex, value, valueDecimals, tag1, tag2, endpoint, feedbackUri, blockTs, txHash]
+            required: [client, feedbackIndex, value, valueDecimals, tag1, tag2, endpoint, feedbackUri, blockTs, txHash, fromPayer]
             properties:
               client: { $ref: '#/components/schemas/Address' }
               feedbackIndex: { type: string }
@@ -773,6 +777,7 @@ components:
               feedbackUri: { type: [string, 'null'], description: Untrusted. Do not link this. }
               blockTs: { $ref: '#/components/schemas/DateTime' }
               txHash: { type: string }
+              fromPayer: { type: boolean, description: 'True if this client has a verified, non-self-pay payment to this provider.' }
     Health_:
       type: object
       additionalProperties: false

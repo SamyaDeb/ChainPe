@@ -108,7 +108,7 @@ describe('Free', () => {
     expect((await get('/v1/me/services').expect(200)).body.services).toHaveLength(3)
   })
 
-  it('sees the average rating only, with no review list', async () => {
+  it('sees the average ratings only, with no review list', async () => {
     h.chain.register(seller.address, { agentId: 7n })
     h.views.invalidate(address)
     const row = { agentId: '7', client: BUYER, valueDecimals: 0, block: 1n, blockTs: new Date(), txHash: hex32(1) }
@@ -119,10 +119,68 @@ describe('Free', () => {
       { ...row, feedbackIndex: 4n, value: '905', valueDecimals: 1 },
     ])
     const free = await get('/v1/me/reputation').expect(200)
-    expect(free.body).toMatchObject({ agentId: '7', average: '90.17', count: 3, items: null })
+    expect(free.body).toMatchObject({ agentId: '7', allAverage: '90.17', allCount: 3, payerAverage: null, payerCount: 0, items: null })
     makePro()
     const pro = await get('/v1/me/reputation').expect(200)
     expect(pro.body.items).toHaveLength(3)
+  })
+
+  describe('reputation by payer', () => {
+    const stranger = '0x00000000000000000000000000000000000000e8'
+    const selfWallet = '0x00000000000000000000000000000000000000f1'
+    const pay = (id: string, payer: string, verification: 'verified' | 'unverified' | 'failed', selfPay = false, provider = address) =>
+      db.insert(paymentEvents).values({
+        provider,
+        id,
+        ts: new Date(),
+        effectiveTs: new Date(),
+        route: '/weather',
+        method: 'GET',
+        rail: 'exact',
+        network: CAIP2,
+        amountAtomic: '10000',
+        payer,
+        payTo: provider,
+        status: 'completed',
+        latencyMs: 1,
+        verification,
+        selfPay,
+      })
+    const rate = (feedbackIndex: bigint, client: string, value: string) =>
+      db.insert(feedback).values({ agentId: '7', client, feedbackIndex, value, valueDecimals: 0, block: feedbackIndex, blockTs: new Date(), txHash: hex32(Number(feedbackIndex)) })
+
+    beforeEach(() => {
+      h.chain.register(seller.address, { agentId: 7n })
+      h.views.invalidate(address)
+    })
+
+    it('leads with paying wallets, and leaves out an unsolicited rating', async () => {
+      await pay('chainpe_1', BUYER.toLowerCase(), 'verified')
+      await rate(1n, BUYER.toLowerCase(), '100')
+      await rate(2n, stranger, '80')
+      const free = await get('/v1/me/reputation').expect(200)
+      expect(free.body).toMatchObject({ payerAverage: '100.00', payerCount: 1, allAverage: '90.00', allCount: 2, items: null })
+      makePro()
+      const pro = await get('/v1/me/reputation').expect(200)
+      const flags = Object.fromEntries(pro.body.items.map((i: { client: string; fromPayer: boolean }) => [i.client.toLowerCase(), i.fromPayer]))
+      expect(flags).toEqual({ [BUYER.toLowerCase()]: true, [stranger]: false })
+    })
+
+    it('does not count an unverified or failed payment, self-pay, or a payment to someone else', async () => {
+      const other = '0x00000000000000000000000000000000000000d1'
+      const another = '0x00000000000000000000000000000000000000d2'
+      const elsewhere = '0x00000000000000000000000000000000000000d3'
+      await pay('chainpe_1', other, 'unverified')
+      await pay('chainpe_2', another, 'failed')
+      await pay('chainpe_3', selfWallet, 'verified', true)
+      await pay('chainpe_4', elsewhere, 'verified', false, '0x00000000000000000000000000000000000000c1')
+      await rate(1n, other, '10')
+      await rate(2n, another, '20')
+      await rate(3n, selfWallet, '100')
+      await rate(4n, elsewhere, '30')
+      const res = await get('/v1/me/reputation').expect(200)
+      expect(res.body).toMatchObject({ payerAverage: null, payerCount: 0, allCount: 4 })
+    })
   })
 
   it('sees the latest health only', async () => {
@@ -319,12 +377,12 @@ describe('agentId staleness (review L-1)', () => {
     h.chain.register(seller.address, { agentId: 7n })
     h.views.invalidate(address)
     await addFeedback()
-    expect((await get('/v1/me/reputation').expect(200)).body).toMatchObject({ agentIdStatus: 'owned', average: '95.00', count: 1 })
+    expect((await get('/v1/me/reputation').expect(200)).body).toMatchObject({ agentIdStatus: 'owned', allAverage: '95.00', allCount: 1 })
 
     h.chain.owners.set('7', newAccount().address.toLowerCase())
     h.clock.offset = 61_000 // the ownerOf cache lapses
     const stale = (await get('/v1/me/reputation').expect(200)).body
-    expect(stale).toMatchObject({ agentId: null, agentIdStatus: 'not_owner', average: null, count: 0 })
+    expect(stale).toMatchObject({ agentId: null, agentIdStatus: 'not_owner', payerAverage: null, payerCount: 0, allAverage: null, allCount: 0 })
     expect((await get('/v1/me').expect(200)).body).toMatchObject({ agentId: null, agentIdStatus: 'not_owner' })
   })
 
@@ -336,7 +394,7 @@ describe('agentId staleness (review L-1)', () => {
       throw new Error('RPC unreachable')
     }
     const res = (await get('/v1/me/reputation').expect(200)).body
-    expect(res).toMatchObject({ agentIdStatus: 'unknown', average: null })
+    expect(res).toMatchObject({ agentIdStatus: 'unknown', payerAverage: null, allAverage: null })
   })
 
   it('reports none with no agentId', async () => {
