@@ -2,7 +2,25 @@
 
 All notable changes to ChainPe are documented here.
 
-## [Latest] — 2026-06-17
+## [3.0.0-arc.0] — 2026-11-06 (Arc, ETHGlobal Mumbai)
+
+Built during ETHGlobal Mumbai. Details and proof: [`docs/arc/`](arc/README.md) and [`docs/arc/PROOF.md`](arc/PROOF.md).
+
+### Changed
+- The CLI now runs on Circle's Arc (`arc-testnet`, `arc`). Avalanche support was removed from the CLI; the June version stays at tag `avalanche-june-2026`.
+- Moved from x402 v1 to x402 v2.
+- Payments settle through Circle's Facilitator Service, before the provider's API is called.
+
+### Added
+- Circle Gateway nanopayments as a second payment option, plus `chainpe deposit`, `balance` and `withdraw`.
+- `ChainPeAccounts` contract on Arc testnet for provider accounts and the Pro plan, built and deployed with Arc Studio.
+- `chainpe identity`, `register`, `deregister`, `list`, `plan`, `upgrade` and `doctor`.
+- `chainpe-cloud`: wallet sign-in, telemetry, and revenue verified against Arc and Circle's records.
+- Provider dashboard (`apps/arc-dashboard`), built with Arc Studio.
+
+---
+
+## [2.0.0] — 2026-06-17 (Avalanche mainnet)
 
 ### Mainnet deployment
 
@@ -19,7 +37,7 @@ All notable changes to ChainPe are documented here.
 
 ---
 
-## [1.0.0] - 2024-07
+## [1.0.0] - 2026-06-13
 
 ### Added
 - Initial release of ChainPe x402 reverse proxy gateway
