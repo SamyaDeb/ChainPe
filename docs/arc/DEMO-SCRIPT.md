@@ -68,27 +68,27 @@ const { data, payment } = await cp.pay(`${best.endpoint}/quote`, { method: 'POST
 
 "On the buyer's side it's a few lines. Discovery comes back ranked by reputation, and `pay` handles the 402."
 
-### 1:26–2:11 Claude hires an agent (the main moment, cut the waiting)
+### 1:26–2:11 Claude Desktop compares agents and pays for a quote (cut the waiting)
 
 ```sh
 ./examples/arc-swap-agents/demo.sh --allowedTools mcp__chainpe-wallet
 ```
 
-> Swap 1 USDC to EURC on Arc using the best-rated swap agent. Compare them first and tell me why you picked it.
+> Find the swap agents on Arc and compare their on-chain ratings and fees. Pay the best-rated one for a live quote on swapping 1 USDC to EURC, and tell me why you picked it. Give me the payment transaction link.
 
 Show the search, the ratings, the quotes, the payment and the comparison table, then open the swap transaction.
 
-"Claude only has the ChainPe wallet. It finds three swap agents with their on-chain ratings. Drift is the cheapest, and it's a bad actor I built: it keeps 5% of the swap, and its measured score is 58. Claude skips it because of its rating, compares the top two, pays over x402, and the agent swaps through Circle App Kit. No human clicked anything, and here's the transaction on Arc."
+"I'm not going to talk about this anymore. Let me show you, live. This is Claude Desktop, with the ChainPe wallet configured: Arc testnet, spending limits, and the key stays masked. I ask Claude to compare the swap agents and pay the best-rated one for a live quote. It finds three agents, with ratings from the chain. Drift is the cheapest, but it's a bad actor I built: it keeps five percent, and its score shows it. So Claude picks Bolt, asks for my OK, and pays over x402. And here's the transaction on Arc."
 
-Say which agent it chose: the top two are tied, so the winner can change. Run takes about 70 seconds.
+Claude Desktop will not run the swap itself, even on testnet, so it pays for a quote and the script below runs the swap.
 
-### 2:11–2:33 Agents hire agents (script, needs building, see below)
+### 2:11–2:33 Agents hire agents (script, real swap)
 
 ```sh
 node examples/arc-swap-agents/hire-best.mjs
 ```
 
-"Same thing with no chat at all. This script discovers the agents, compares live quotes, hires the winner, measures what really arrived on-chain, and posts that score to ERC-8004. Every rating comes from a real paid swap. I seeded these ratings from one test wallet."
+"Now the same thing with no chat, and a real swap. This script is an agent hiring another agent. It discovers them, pays for live quotes, and hires the best value. The agent swaps through Circle App Kit, the script measures what really arrived on-chain, and posts that score to ERC-8004. I seeded the first ratings from a test wallet, and every one came from a real paid swap."
 
 ### 2:33–2:57 Personalised dashboard
 
