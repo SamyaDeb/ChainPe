@@ -10,6 +10,7 @@ Built during ETHGlobal Mumbai. Details and proof: [`docs/arc/`](arc/README.md) a
 - The npm packages moved from `@chainpeavax` to the `@chainpearc` scope: `@chainpeavax/cli` is now `@chainpearc/cli`, `@chainpeavax/sdk` is `@chainpearc/sdk`, `@chainpeavax/ai-tools` is `@chainpearc/ai-tools`, and `@chainpeavax/agent` is `@chainpearc/agent`. `@chainpearc/wallet-mcp` is new. Versions: `@chainpearc/cli` 3.0.0, `@chainpearc/sdk` 0.3.0, `@chainpearc/ai-tools` 0.3.0, `@chainpearc/agent` 3.0.0, `@chainpearc/wallet-mcp` 0.3.0.
 - The CLI now runs on Circle's Arc (`arc-testnet`, `arc`). Avalanche support was removed from the CLI; the June version stays at tag `avalanche-june-2026`.
 - Moved from x402 v1 to x402 v2.
+- The website docs were rewritten for Arc. June deployment records and benchmarks moved to `docs/avalanche/`, and the Avalanche env templates moved to `contracts/.env.example` and `docs/avalanche/env.mainnet.example`.
 - Payments settle through Circle's Facilitator Service, before the provider's API is called.
 
 - `@chainpearc/sdk`, `@chainpearc/ai-tools` and `@chainpearc/wallet-mcp` moved to Arc and x402 v2. Avalanche was removed from them.
@@ -37,7 +38,7 @@ Built during ETHGlobal Mumbai. Details and proof: [`docs/arc/`](arc/README.md) a
 - All contracts deployed and live on **Avalanche C-Chain mainnet (chainId 43114)**:
   - `ChainPeRegistry` (UUPS proxy) at `0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E`
   - `PolicyVault` (UUPS proxy) at `0xFe38A9fE7bdA837549fed1b3608d138Bd9a168d8`
-  - ERC-8004 Identity, Reputation, Validation registries (UUPS proxies) — see `docs/DEPLOYMENTS.md`
+  - ERC-8004 Identity, Reputation, Validation registries (UUPS proxies) — see `docs/avalanche/DEPLOYMENTS.md`
   - `ChainPeICMReceiver` / `ChainPeICMSender` for Avalanche ICM cross-L1 payments
 - Fee token updated to Circle USDC on Avalanche C-Chain (`0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E`)
 - SDK default network changed from `'fuji'` to `'avalanche'`
