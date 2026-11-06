@@ -1,0 +1,47 @@
+{
+  "name": "chainpe-cloud",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ChainPe provider backend: wallet sign-in, proxy telemetry, Arc indexing and verified revenue for the dashboard.",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsup src/server.ts --format esm --target node22 --clean",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "fixtures": "UPDATE_FIXTURES=1 vitest run __tests__/contract.test.ts"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "drizzle-orm": "^0.36.4",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.3",
+    "jose": "^5.10.0",
+    "pg": "^8.23.1",
+    "viem": "^2.57.16",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.20.5",
+    "@types/pg": "^8.23.1",
+    "@types/supertest": "^6.0.3",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "drizzle-kit": "^0.28.1",
+    "supertest": "^7.3.1",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7",
+    "yaml": "^2.9.1"
+  }
+}
