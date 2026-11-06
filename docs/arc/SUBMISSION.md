@@ -31,7 +31,7 @@ Prize: "Arc Studio Continuity Track: Bring Your Project to Arc" (ETHGlobal Mumba
 - [x] Deploy the dashboard; replace every `TODO(dashboard-url)` (README, this file)
 - [ ] Make the Arc Studio workspace viewable by judges, or note how they get access
 - [ ] Submit the Circle form ([LISTING.md](LISTING.md)); then say "submitted" in the README
-- [x] Build the landing site (`cd apps/landing && npm install && npm run build`) and redeploy chainpe.vercel.app
+- [ ] Build the landing site (`cd apps/landing && npm install && npm run build`) and redeploy chainpe.vercel.app
 - [ ] Merge `arc` into `main` (or set `arc` as the default branch) so judges see the new README first
 - [ ] Update the commit count in the README just before you submit
 - [ ] Record the video ([DEMO-SCRIPT.md](DEMO-SCRIPT.md))
