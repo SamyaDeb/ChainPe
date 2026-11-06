@@ -166,7 +166,7 @@ export class PolicyVaultClient {
   constructor(options: PolicyVaultOptions) {
     if (!options.privateKey) throw new Error('PolicyVaultClient: privateKey required')
     if (!options.vaultAddress) throw new Error('PolicyVaultClient: vaultAddress required')
-    this.network = options.network ?? 'fuji'
+    this.network = options.network ?? 'arc-testnet'
     this.vault = getAddress(options.vaultAddress)
     this.account = privateKeyToAccount(normalizeKey(options.privateKey))
   }

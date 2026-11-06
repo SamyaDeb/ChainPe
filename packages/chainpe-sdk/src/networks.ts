@@ -1,99 +1,117 @@
 /**
- * Network constants for the Avalanche C-Chain (Fuji testnet + mainnet).
+ * Network constants for Circle's Arc.
  *
- * These mirror the values used across the ChainPe wallet/agent packages and the
- * live Fuji deployment (see docs/DEPLOYMENTS.md). Baking the deployed addresses
- * in as defaults is what lets the SDK work with zero config on Fuji.
+ * Arc pays gas in USDC. The native balance has 18 decimals while the ERC-20
+ * interface at the USDC address has 6, so amounts always go through the ERC-20.
  */
 import { createPublicClient, http, getAddress, type Chain, type PublicClient } from 'viem'
-import { avalanche, avalancheFuji } from 'viem/chains'
-import type { Network as X402Network } from 'x402/types'
+import { arc, arcTestnet } from 'viem/chains'
 import type { ChainPeNetwork } from './types.js'
 
 export const USDC_DECIMALS = 6
 
-/** ChainPe network id → x402 network id. */
-const X402_NETWORKS: Record<ChainPeNetwork, X402Network> = {
-  fuji: 'avalanche-fuji',
-  avalanche: 'avalanche'
+const ARC_USDC = '0x3600000000000000000000000000000000000000' as const
+
+interface NetworkInfo {
+  chain: Chain
+  caip2: string
+  gatewayChain: 'arcTestnet' | 'arc'
+  rpcUrl: () => string
+  explorer: string
+  /** ChainPeAccounts, where it is deployed. */
+  accounts?: `0x${string}`
+  reputation: `0x${string}`
 }
 
-const RPC_URLS: Record<ChainPeNetwork, string> = {
-  fuji: 'https://api.avax-test.network/ext/bc/C/rpc',
-  avalanche: 'https://api.avax.network/ext/bc/C/rpc'
+const NETWORKS: Record<ChainPeNetwork, NetworkInfo> = {
+  'arc-testnet': {
+    chain: arcTestnet,
+    caip2: 'eip155:5042002',
+    gatewayChain: 'arcTestnet',
+    rpcUrl: () => process.env.ARC_TESTNET_RPC_URL ?? 'https://rpc.testnet.arc.io',
+    explorer: 'https://explorer.testnet.arc.io',
+    accounts: '0xD315322c9D83A6f50A04236A2a242e0259bfB580',
+    reputation: '0x8004B663056A597Dffe9eCcC1965A193B7388713'
+  },
+  arc: {
+    chain: arc,
+    caip2: 'eip155:5042',
+    gatewayChain: 'arc',
+    rpcUrl: () => process.env.ARC_RPC_URL ?? 'https://rpc.mainnet.arc.io',
+    explorer: 'https://explorer.arc.io',
+    reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63'
+  }
 }
 
-/** Canonical Circle USDC (6 decimals) per network. */
-const USDC_ADDRESS: Record<ChainPeNetwork, `0x${string}`> = {
-  fuji: '0x5425890298aed601595a70AB815c96711a31Bc65',
-  avalanche: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E'
+function info(network: ChainPeNetwork): NetworkInfo {
+  if (!Object.hasOwn(NETWORKS, network)) {
+    throw new Error(`Invalid network "${network}" (expected arc-testnet or arc).`)
+  }
+  return NETWORKS[network]
 }
 
-/** Deployed ChainPeRegistry per network (override via constructor/env). */
-const DEFAULT_REGISTRY: Record<ChainPeNetwork, `0x${string}` | undefined> = {
-  fuji: '0x91677a35599f052E99Ed0ab9E45c17E736a22Bf6',
-  avalanche: '0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E'
+/** Validates a network name. Throws on anything but an Arc network. */
+export function assertNetwork(network: ChainPeNetwork): ChainPeNetwork {
+  info(network)
+  return network
 }
 
-/** Deployed ERC-8004 Reputation Registry per network. */
-const DEFAULT_REPUTATION: Record<ChainPeNetwork, `0x${string}` | undefined> = {
-  fuji: '0x89476DfEf9c72a668fa5E86f154B73EDB053aFe4',
-  avalanche: '0xfe7Df66e6BFbd3A76B68dF26b9312E6c85a38543'
+export function getCaip2(network: ChainPeNetwork): string {
+  return info(network).caip2
 }
 
-const CHAINS = { fuji: avalancheFuji, avalanche } as const
-
-export function getX402Network(network: ChainPeNetwork): X402Network {
-  return X402_NETWORKS[network]
+export function getGatewayChain(network: ChainPeNetwork): 'arcTestnet' | 'arc' {
+  return info(network).gatewayChain
 }
 
 export function rpcUrlFor(network: ChainPeNetwork): string {
-  return RPC_URLS[network]
+  return info(network).rpcUrl()
 }
 
+export function explorerFor(network: ChainPeNetwork): string {
+  return info(network).explorer
+}
+
+/** Arc's USDC, through its 6-decimal ERC-20 interface. */
 export function getUsdcAddress(network: ChainPeNetwork): `0x${string}` {
-  return USDC_ADDRESS[network]
+  info(network)
+  return ARC_USDC
 }
 
 export function chainFor(network: ChainPeNetwork): Chain {
-  return CHAINS[network]
+  const { chain, explorer } = info(network)
+  return {
+    ...chain,
+    rpcUrls: { default: { http: [rpcUrlFor(network)] } },
+    blockExplorers: { default: { name: 'Arc Explorer', url: explorer } }
+  }
 }
 
 export function publicClientFor(network: ChainPeNetwork): PublicClient {
   return createPublicClient({
-    chain: CHAINS[network],
-    transport: http(RPC_URLS[network])
+    chain: chainFor(network),
+    transport: http(rpcUrlFor(network))
   })
 }
 
-/**
- * Resolves the ChainPeRegistry address: explicit arg → env → built-in default.
- * Throws when none is available (e.g. mainnet without an override).
- */
-export function resolveRegistryAddress(
-  network: ChainPeNetwork,
-  explicit?: string
-): `0x${string}` {
-  const candidate =
-    explicit ?? process.env.CHAINPE_REGISTRY_ADDRESS ?? DEFAULT_REGISTRY[network]
-  if (!candidate) {
-    throw new Error(
-      `No ChainPe registry address for network "${network}". Pass registryAddress or set CHAINPE_REGISTRY_ADDRESS.`
-    )
-  }
-  return getAddress(candidate)
-}
-
-/** Resolves the ERC-8004 Reputation Registry, or undefined when unset. */
-export function resolveReputationRegistry(
+/** ChainPeAccounts: explicit arg → env → built-in. Undefined where it is not deployed. */
+export function resolveAccountsAddress(
   network: ChainPeNetwork,
   explicit?: string
 ): `0x${string}` | undefined {
   const candidate =
-    explicit ??
-    process.env.ERC8004_REPUTATION_REGISTRY ??
-    DEFAULT_REPUTATION[network]
+    explicit ?? process.env.CHAINPE_ACCOUNTS_ADDRESS ?? info(network).accounts
   return candidate ? getAddress(candidate) : undefined
+}
+
+/** Arc's ERC-8004 Reputation Registry: explicit arg → env → built-in. */
+export function resolveReputationRegistry(
+  network: ChainPeNetwork,
+  explicit?: string
+): `0x${string}` {
+  return getAddress(
+    explicit ?? process.env.ERC8004_REPUTATION_REGISTRY ?? info(network).reputation
+  )
 }
 
 export function normalizeKey(key: string): `0x${string}` {

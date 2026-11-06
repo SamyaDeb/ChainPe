@@ -1,97 +1,83 @@
 # @chainpearc/sdk
 
-[![npm](https://img.shields.io/npm/v/@chainpearc/sdk.svg)](https://www.npmjs.com/package/chainpe-sdk)
+[![npm](https://img.shields.io/npm/v/@chainpearc/sdk.svg)](https://www.npmjs.com/package/@chainpearc/sdk)
 
-> **This package still targets Avalanche.** Arc support is planned. For Arc today, use the [`@chainpearc/cli`](https://www.npmjs.com/package/@chainpearc/cli) CLI.
-
-**x402 USDC payments + on-chain ERC-8004 reputation for the Avalanche agent economy — in 3 lines.**
-
-Give any app or AI agent the ability to **discover, pay for, and rate** HTTP APIs
-per request in USDC, settled on Avalanche C-Chain. The provider's facilitator pays
-the gas, so your wallet only needs USDC.
+**Let any app or AI agent find, pay for and rate APIs per call, in USDC on Arc.**
 
 ```bash
 npm install @chainpearc/sdk
 ```
 
-## Quickstart (the 3 lines)
+> **Use Arc testnet for now.** It is the default. ChainPe has not been tested with real USDC on Arc mainnet.
+
+## Quickstart
+
+Get free test USDC at https://faucet.circle.com (pick Arc Testnet). On Arc, gas is also paid in USDC.
 
 ```ts
 import { ChainPe } from '@chainpearc/sdk'
 
-const cp = new ChainPe({ privateKey: process.env.PRIVATE_KEY!, network: 'avalanche' })
-const res = await cp.fetch('https://api.example.com/paid') // auto-pays a 402
+const cp = new ChainPe({ privateKey: process.env.PRIVATE_KEY! })
+const res = await cp.fetch('https://chainpe-arc-demo-production.up.railway.app/forecast?city=Mumbai')
 const data = await res.json()
 ```
 
-`cp.fetch` is a drop-in `fetch`: it makes the request, and if the server answers
-`402 Payment Required`, it signs a USDC payment (EIP-3009), retries with the
-`X-PAYMENT` header, and returns the final `Response`.
+`cp.fetch` works like `fetch`. If the server answers `402 Payment Required`, it checks the price against your limit, signs a USDC payment, retries and returns the final `Response`.
 
-## Discover + pay an agent (ranked by reputation)
+## Find, pay and rate
 
 ```ts
-const cp = new ChainPe({ privateKey, network: 'avalanche' })
+const services = await cp.discover({ query: 'weather', maxPrice: '0.01' })
 
-// Ranked: scored services first, highest ⭐ first.
-const services = await cp.discover('summarize')
+const result = await cp.pay('https://chainpe-arc-demo-production.up.railway.app/forecast?city=Mumbai')
+console.log(result.data)     // the parsed response
+console.log(result.payment)  // { amount, recipient, network, rail, txHash or transferId }
 
-const best = services[0]
-const result = await cp.pay(best.endpoint, {
-  method: 'POST',
-  headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ text: '…' }),
-  autoFeedback: true // leave on-chain ERC-8004 feedback after paying
-})
-
-console.log(result.data)        // parsed response body
-console.log(result.payment)     // { amount, recipient, network, txHash }
-console.log(result.reputation)  // { agentId, score, txHash } when autoFeedback
+await cp.giveFeedback(services[0].agentId!, 90)
 ```
+
+`discover` searches Circle's Discovery API and the `ChainPeAccounts` contract, so it also finds ChainPe providers Circle has not listed yet. A service's `endpoint` is either a full route (Circle) or the provider's base URL (ChainPe). For a base URL, read `<endpoint>/openapi.json` for its paths.
+
+## Two ways to pay
+
+| Rail | How it works | Needs |
+|---|---|---|
+| `exact` | Moves USDC from your wallet for each call, starting at $0.01. Circle settles it on Arc. | USDC in your wallet |
+| `gateway` | Pays from a prepaid Circle Gateway deposit with no gas, from fractions of a cent. Circle settles in batches. | A deposit: `await cp.depositGateway('1')` |
+
+By default ChainPe uses Gateway when your deposit covers the price, and your wallet otherwise. To change that, pass `rails`, in order of preference.
 
 ## API
 
 `new ChainPe(options)`
 
-| option | default | purpose |
+| Option | Default | Purpose |
 |---|---|---|
-| `privateKey` | — (required) | EOA key that signs payments + feedback |
-| `network` | `'avalanche'` | `'avalanche'` or `'fuji'` |
-| `registryAddress` | deployed default (mainnet) | ChainPeRegistry address |
-| `reputationRegistry` | deployed default (mainnet) | ERC-8004 Reputation Registry |
-| `maxPerCall` | `'1'` | max USDC to auto-pay for one 402 |
-| `autoFeedback` | `false` | post positive feedback after a paid call |
-| `facilitatorUrl` | — | reserved for facilitator-routed flows |
+| `privateKey` | required | The key that signs payments and ratings |
+| `network` | `'arc-testnet'` | `'arc-testnet'` or `'arc'` |
+| `rails` | `['gateway', 'exact']` | Payment rails, in order of preference |
+| `maxPerCall` | `'1'` | Most USDC to pay for one call. A higher price is refused before signing |
+| `autoFeedback` | `false` | Rate the provider 100 after a paid call. This costs gas |
+| `accountsAddress` | the deployed contract | `ChainPeAccounts`. Also read from `CHAINPE_ACCOUNTS_ADDRESS` |
+| `reputationRegistry` | Arc's registry | ERC-8004 registry. Also read from `ERC8004_REPUTATION_REGISTRY` |
 
-Methods:
+| Method | Returns | What it does |
+|---|---|---|
+| `fetch(url, opts?)` | `Response` | Calls a URL, paying a 402 |
+| `pay(url, opts?)` | `PaidResult` | The same, with the parsed body and payment details |
+| `discover(query?)` | `RankedService[]` | Finds services. Takes a search string or `{ query, tags, maxPrice, category, gatewayOnly, limit }` |
+| `balance()` | `{ usdc, gateway }` | Your wallet and Gateway balances |
+| `depositGateway(amount)` | `{ txHash, amount }` | Deposits USDC into Circle Gateway |
+| `getReputation(agentId)` | `{ count, score }` or `null` | Reads a provider's rating |
+| `giveFeedback(agentId, score, opts?)` | tx hash | Posts a 0 to 100 rating. You can't rate your own agent |
+| `getAddress()` | `string` | Your wallet address |
 
-- **`fetch(url, opts?)` → `Response`** — drop-in fetch that auto-pays a 402.
-- **`pay(url, opts?)` → `PaidResult`** — same, but returns parsed `data` plus
-  `payment` and (optional) `reputation` details.
-- **`discover(query?)` → `RankedService[]`** — read the on-chain registry,
-  annotate each service with its ERC-8004 reputation, ranked best-first.
-  `query` is a search string or `{ query, tags, maxPrice }`.
-- **`getReputation(agentId)` → `ReputationSummary | null`** — aggregate score.
-- **`giveFeedback(agentId, score, opts?)` → `txHash`** — post 0–100 feedback.
-- **`getAddress()` → `string`** — the wallet address.
-- **`balance()` → `{ usdc, avax }`** — on-chain balances (human units).
+`PolicyVaultClient` is also exported. No `PolicyVault` contract is deployed on Arc yet, so it needs a `vaultAddress` of your own.
 
-## Environment overrides
+## Errors
 
-`registryAddress` / `reputationRegistry` fall back to `CHAINPE_REGISTRY_ADDRESS`
-and `ERC8004_REPUTATION_REGISTRY` env vars, then the built-in deployed defaults.
-
-## Live on Avalanche C-Chain
-
-Works out of the box against the deployed mainnet contracts (see `docs/DEPLOYMENTS.md`):
-ChainPeRegistry `0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E`, ERC-8004 Reputation
-`0xfe7Df66e6BFbd3A76B68dDF26b9312E6c85a38543`. USDC is available on major CEXes and bridges (e.g., [Stargate](https://stargate.finance)).
-
-Run the example:
-
-```bash
-CHAINPE_PRIVATE_KEY=0x... npx tsx examples/quickstart.ts
-```
+- A price above `maxPerCall` throws before anything is signed.
+- A server that refuses a signed payment throws `ChainPePaymentError`, with the cause in `.reason`, such as `insufficient_funds`.
 
 ## License
 

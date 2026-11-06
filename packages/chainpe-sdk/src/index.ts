@@ -1,17 +1,19 @@
 /**
- * @chainpearc/sdk — x402 USDC payments + on-chain ERC-8004 reputation for the
- * Avalanche agent economy, in a few lines.
+ * @chainpearc/sdk — x402 USDC payments on Arc, service discovery and ERC-8004
+ * reputation, in a few lines.
  *
  * @example
  * ```ts
  * import { ChainPe } from '@chainpearc/sdk'
  *
- * const cp = new ChainPe({ privateKey: process.env.PRIVATE_KEY!, network: 'fuji' })
+ * const cp = new ChainPe({ privateKey: process.env.PRIVATE_KEY! })
  * const res = await cp.fetch('https://api.example.com/paid')
  * console.log(await res.json())
  * ```
  */
-export { ChainPe } from './chainpe.js'
+export { ChainPe, railPolicy } from './chainpe.js'
+
+export { searchCircle, mapCircleItem, mergeListings, CIRCLE_DISCOVERY_URL } from './discovery.js'
 
 export {
   RegistryClient,
@@ -37,10 +39,11 @@ export type {
 
 export {
   publicClientFor,
-  resolveRegistryAddress,
+  resolveAccountsAddress,
   resolveReputationRegistry,
   getUsdcAddress,
-  getX402Network,
+  getCaip2,
+  explorerFor,
   rpcUrlFor,
   USDC_DECIMALS
 } from './networks.js'
@@ -49,6 +52,7 @@ export { ChainPePaymentError } from './types.js'
 export type {
   ChainPeNetwork,
   ChainPeOptions,
+  PaymentRail,
   FetchOptions,
   ChainPeService,
   DiscoverOptions,
