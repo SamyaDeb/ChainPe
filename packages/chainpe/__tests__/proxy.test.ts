@@ -154,6 +154,67 @@ async function acceptsOf(url: string) {
   return decodePaymentRequiredHeader(res.headers.get("payment-required") as string).accepts;
 }
 
+/** Asks the way a TLS-terminating proxy would: plain HTTP, with its own Host and forwarded headers. */
+function viaProxy(url: string, path: string, headers: Record<string, string>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const { hostname, port } = new URL(url);
+    const req = http.request({ hostname, port, path, headers }, (res) => {
+      res.resume();
+      expect(res.statusCode).toBe(402);
+      const required = decodePaymentRequiredHeader(res.headers["payment-required"] as string);
+      resolve(required.resource.url);
+    });
+    req.on("error", reject);
+    req.end();
+  });
+}
+
+describe("resource.url behind a TLS-terminating proxy", () => {
+  const publicUrl = "https://seller.example.com";
+  const internal = { host: "10.0.0.5:8080", "x-forwarded-proto": "http" };
+
+  it("is publicUrl + path when publicUrl is set, whatever the hop says", async () => {
+    const url = await startProxy({}, { publicUrl });
+    expect(await viaProxy(url, "/weather", internal)).toBe(`${publicUrl}/weather`);
+  });
+
+  it("keeps the query", async () => {
+    const url = await startProxy({}, { publicUrl });
+    expect(await viaProxy(url, "/weather?city=Pune&units=c", internal)).toBe(`${publicUrl}/weather?city=Pune&units=c`);
+  });
+
+  it("does not double a slash or lose a path prefix in publicUrl", async () => {
+    let url = await startProxy({}, { publicUrl: `${publicUrl}/` });
+    expect(await viaProxy(url, "/weather", internal)).toBe(`${publicUrl}/weather`);
+    proxy?.close();
+    url = await startProxy({}, { publicUrl: `${publicUrl}/api/` });
+    expect(await viaProxy(url, "/weather", internal)).toBe(`${publicUrl}/api/weather`);
+  });
+
+  it("refuses to start on a malformed publicUrl", async () => {
+    await expect(startProxy({}, { publicUrl: "not a url" })).rejects.toThrow(/not a valid URL/);
+  });
+
+  it("trusts the first X-Forwarded-Proto hop when publicUrl is unset", async () => {
+    const url = await startProxy({});
+    expect(await viaProxy(url, "/weather?city=Pune", { host: "seller.example.com", "x-forwarded-proto": "https,http" })).toBe(
+      "https://seller.example.com/weather?city=Pune"
+    );
+  });
+
+  it("is plain http with no publicUrl and no proxy", async () => {
+    const url = await startProxy({});
+    expect((await viaProxy(url, "/weather", {})).startsWith(`${url}/weather`)).toBe(true);
+  });
+
+  it("still pays, and forwards the original path to the backend", async () => {
+    const url = await startProxy({ settle: vi.fn().mockResolvedValue(settled) }, { publicUrl });
+    const res = await payingFetch().pay(`${url}/weather?city=Pune`);
+    expect(res.status).toBe(200);
+    expect(backendCalls.map((call) => call.url)).toEqual(["/weather?city=Pune"]);
+  });
+});
+
 describe("the 402 for each rail", () => {
   it("lists exact then Gateway on a $0.01 route, with the same price and payTo", async () => {
     const url = await startProxy({});

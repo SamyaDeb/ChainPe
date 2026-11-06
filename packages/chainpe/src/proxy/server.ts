@@ -146,9 +146,35 @@ function discoveryDocuments(config: ChainPeConfig, documents: ProxyServerOptions
   };
 }
 
+/**
+ * The x402 middleware builds `resource.url` from the request's protocol, Host and
+ * path. Behind a TLS-terminating proxy those describe the internal hop, and buyers
+ * and Circle's listing need the public URL. This gives the middleware a read-only
+ * view of the request with the public origin; the backend still gets the original.
+ */
+function withPublicOrigin(publicUrl: string): (req: Request) => Request {
+  let base: URL;
+  try {
+    base = new URL(publicUrl);
+  } catch {
+    throw new Error(`publicUrl "${publicUrl}" is not a valid URL.`);
+  }
+  const protocol = base.protocol.slice(0, -1);
+  const prefix = base.pathname.replace(/\/+$/, "");
+  return (req) =>
+    Object.create(req, {
+      protocol: { value: protocol },
+      headers: { value: { ...req.headers, host: base.host } },
+      originalUrl: { value: `${prefix}${req.originalUrl}` },
+    }) as Request;
+}
+
 export function createProxyServer(options: ProxyServerOptions): Express {
   const { config, additionalRoutes, onPayment, facilitator, gateway, documents } = options;
   const app = express();
+  // With no publicUrl, the only source of the scheme is the proxy in front of us.
+  if (!config.publicUrl) app.set("trust proxy", 1);
+  const gateRequest = config.publicUrl ? withPublicOrigin(config.publicUrl) : (req: Request) => req;
 
   app.use(cors({ exposedHeaders: ["PAYMENT-REQUIRED", "PAYMENT-RESPONSE", "X-CHAINPE-AGENT-ID"] }));
 
@@ -272,7 +298,7 @@ export function createProxyServer(options: ProxyServerOptions): Express {
       next();
       return;
     }
-    void paymentGate(req, res, next);
+    void paymentGate(gateRequest(req), res, next);
   });
 
   // Reverse proxy to the provider backend.
