@@ -1,57 +1,56 @@
-# Submission — Arc Studio Continuity Track
+# Submission: Arc Studio Continuity Track
 
-## Checklist (all required by the Arc section of the ETHGlobal Mumbai prize page)
+Prize: "Arc Studio Continuity Track: Bring Your Project to Arc" (ETHGlobal Mumbai, November 2026).
 
-- [ ] Submission names the prize: "Arc Studio Continuity Track: Bring Your Project to Arc"
-- [ ] Shareable Arc Studio project URL (from `arc-studio open`) that judges can open
-- [ ] Working MVP: frontend (`apps/arc-dashboard`) + backend (proxy, `chainpe-cloud`)
-- [ ] Architecture diagram in the README (export from `docs/arc/ARCHITECTURE.md`)
-- [ ] Video demo + presentation: core functions, Arc Studio usage, Circle tools used
-- [ ] Documentation (this folder) and public GitHub repo
-- [ ] README section "Before the hackathon / During the hackathon" with the `avalanche-june-2026` tag and dated commits
-- [ ] `docs/arc/STUDIO-LOG.md` with Studio runs: webUrl, traceId, deployments
+## Prize requirements
 
-## README block to paste
+| Requirement | Status | Link |
+|---|---|---|
+| Built with Arc Studio | Done: contracts (runs 1, 1b) and dashboard (runs 2, 2b, 3) | [STUDIO-LOG.md](STUDIO-LOG.md) |
+| Shareable Arc Studio project URL | **Check sharing**: the URL redirects to Circle login | https://studio.arc.io/app/6872b96e-b3c0-4cdb-abe3-5f17865cdf5a |
+| Working MVP, frontend and backend | Backend live; dashboard built, **not deployed yet** | [README live links](../../README.md#live-links) |
+| Architecture diagram | Done | [README](../../README.md#how-it-works), [ARCHITECTURE.md](ARCHITECTURE.md) |
+| Video demo and presentation | **You record it** | [DEMO-SCRIPT.md](DEMO-SCRIPT.md) |
+| Documentation | Done | [docs/arc/README.md](README.md) |
+| Public GitHub repo | Done (branch `arc`) | https://github.com/SamyaDeb/ChainPeAvax |
+| Before / during the hackathon | Done | [README section](../../README.md#before-and-during-the-hackathon) |
 
-```md
-## Before the hackathon (June 2026, Avalanche)
-- x402 proxy CLI, SDK, AI tools, MCP wallet, ERC-8004 reputation, PolicyVault, hosted facilitator + indexer
-- Live on Avalanche C-Chain mainnet 2026-06-17 (tag `avalanche-june-2026`)
+## Done
 
-## During ETHGlobal Mumbai (Arc)
-- x402 v1 → v2; Arc mainnet/testnet networks
-- Settlement through Circle Facilitator Service (seller proofs, pending handling)
-- Circle Gateway nanopayments as a second rail
-- ChainPeAccounts contract on Arc (provider accounts + Pro plan) — built and deployed with Arc Studio
-- Provider dashboard — built with Arc Studio
-- `chainpe doctor` listing readiness for Circle's Agent Marketplace
-- Arc canonical ERC-8004 identity + reputation
-```
+- [x] Contract `ChainPeAccounts` deployed with Arc Studio, source verified ([PROOF.md](PROOF.md))
+- [x] Live paid calls on both payment options, verified by chainpe-cloud ([PROOF.md](PROOF.md))
+- [x] `chainpe doctor` green with real paid calls (11 of 11)
+- [x] Circle listing pack ready ([LISTING.md](LISTING.md))
+- [x] README rewritten; old Avalanche README kept in `docs/avalanche/`
+- [x] Website copy updated for Arc (apps/landing)
 
-## Demo script (≈ 3 minutes)
+## Only you can do these
 
-1. **0:00 Pain.** Circle's seller guide: Node 22, Express, five packages, custom middleware, then a manual listing.
-2. **0:25 One command.** `chainpe start --network arc-testnet` in front of a plain API. `curl -i` shows the 402 with two options (exact + Gateway).
-3. **0:55 Agent pays.** Claude with the ChainPe MCP wallet discovers and pays once via exact, once via Gateway. Show the Arc explorer tx.
-4. **1:30 Dashboard.** Connect the seller wallet: revenue split by rail, buyer wallet, ERC-8004 rating from the agent. Switch wallet → empty (personalised).
-5. **2:00 Doctor.** `chainpe doctor` all green; Circle listing submitted.
-6. **2:20 Arc Studio.** Open the Studio workspace: `ChainPeAccounts`, tests, deployment trace, dashboard source.
-7. **2:45 Close.** Before/after: live on Avalanche in June, rebuilt on Arc this weekend. Business model: free CLI, Pro dashboard in USDC.
+- [ ] Run the 10 Phase 8 paid calls in your terminal and add them to PROOF.md ([PAID-CALLS-RUNBOOK.md](PAID-CALLS-RUNBOOK.md))
+- [ ] Send [TRY-IT.md](TRY-IT.md) to a friend; add their transaction to PROOF.md
+- [ ] Deploy the dashboard; replace every `TODO(dashboard-url)` (README, this file)
+- [ ] Make the Arc Studio workspace viewable by judges, or note how they get access
+- [ ] Submit the Circle form ([LISTING.md](LISTING.md)); then say "submitted" in the README
+- [ ] Build the landing site (`cd apps/landing && npm install && npm run build`) and redeploy chainpe.vercel.app
+- [ ] Merge `arc` into `main` (or set `arc` as the default branch) so judges see the new README first
+- [ ] Update the commit count in the README just before you submit
+- [ ] Record the video ([DEMO-SCRIPT.md](DEMO-SCRIPT.md))
+- [ ] Submit on ETHGlobal and name the prize
 
-## Pitch (30 s)
+## 30-second pitch
 
-"Agents can pay for APIs on Arc today, but developers still write payment code, wire a facilitator
-and get listed by hand. ChainPe turns any existing API into an agent-payable service on Arc in one
-command. Circle settles it, Gateway handles nanopayments, Arc's ERC-8004 registry rates it, and every
-registered developer gets a personalised dashboard — free to start, Pro in USDC. It ran on Avalanche
-in June; this weekend we rebuilt it on Arc with Arc Studio."
+"AI agents want to pay for APIs, but most APIs only take API keys and monthly plans.
+ChainPe puts a price on any API with one command. Agents pay per call in USDC on Arc, and Circle settles each payment before the API answers.
+Every developer gets a dashboard that shows revenue checked against Arc and Circle's records.
+The tool is free, the Pro dashboard is paid in USDC, and we take no cut of payments.
+ChainPe ran on Avalanche in June. This weekend we rebuilt it on Arc with Arc Studio."
 
 ## Likely judge questions
 
 | Question | Answer |
 |---|---|
-| Who is the user? | Developers selling API calls, MCP tools or agents. Not merchants. |
-| Why not just use Circle's seller guide? | Zero code, any language, both rails, listing prep, reputation, dashboard. |
-| How do you make money? | Pro dashboard subscription paid in USDC on Arc; no cut of payments. |
-| What did you build this weekend? | See README "During" + STUDIO-LOG.md + commits after the June tag. |
-| Merchants? | Card networks will serve goods merchants; agents already pay developers per call in USDC. |
+| Who is the user? | Developers who sell API calls, MCP tools or agents. Not shops. |
+| Why not just follow Circle's seller guide? | No code changes, any language, both payment options, listing checks, ratings and a dashboard. |
+| How do you make money? | The Pro dashboard, paid in USDC on Arc. No cut of payments. |
+| What did you build this weekend? | The README "During" table, the Studio log, and 79 commits after the June tag. |
+| What about shops and merchants? | Card networks will bring agent shoppers to shops. Agents already pay developers per call in USDC. |
