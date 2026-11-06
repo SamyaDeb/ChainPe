@@ -6,17 +6,17 @@ app" proof: one payment + reputation core, many surfaces.
 
 | Surface | Entry | Tools |
 |---|---|---|
-| Vercel AI SDK | `vercel-agent.ts` | `@chainpe/ai-tools/vercel` |
-| LangChain (ReAct) | `langchain-agent.ts` | `@chainpe/ai-tools/langchain` |
-| CLI (curl-level) | `chainpe fetch <url>` | `@chainpe/cli` → `@chainpe/sdk` |
+| Vercel AI SDK | `vercel-agent.ts` | `@chainpearc/ai-tools/vercel` |
+| LangChain (ReAct) | `langchain-agent.ts` | `@chainpearc/ai-tools/langchain` |
+| CLI (curl-level) | `chainpe fetch <url>` | `@chainpearc/cli` → `@chainpearc/sdk` |
 
-All three settle USDC on Avalanche C-Chain through the same `@chainpe/sdk` core.
+All three settle USDC on Avalanche C-Chain through the same `@chainpearc/sdk` core.
 
 ## Setup
 
 ```bash
 cp .env.example .env     # CHAINPE_PRIVATE_KEY + ANTHROPIC_API_KEY
-npm install              # links the local @chainpe/* packages (build them first)
+npm install              # links the local @chainpearc/* packages (build them first)
 ```
 
 > Build the workspace packages once from the repo root so the `file:` links

@@ -9,13 +9,13 @@
 ### Step 1: Install ChainPe Provider Package
 
 ```bash
-npm install -g @chainpe/chainpe
+npm install -g @chainpearc/chainpe
 ```
 
 Or use it in your project:
 
 ```bash
-npm install @chainpe/chainpe
+npm install @chainpearc/chainpe
 ```
 
 ### Step 2: Get Your Avalanche Wallet Address
@@ -417,7 +417,7 @@ All payments land directly in your wallet on-chain. View them at:
 FROM node:18
 WORKDIR /app
 COPY . .
-RUN npm install -g @chainpe/chainpe
+RUN npm install -g @chainpearc/chainpe
 CMD ["chainpe", "start"]
 ```
 

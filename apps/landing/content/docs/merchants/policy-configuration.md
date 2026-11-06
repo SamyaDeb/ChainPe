@@ -30,7 +30,7 @@ npx hardhat run scripts/deploy-policyvault.ts --network avalanche
 ## Configuring a policy via SDK
 
 ```ts
-import { PolicyVaultClient } from '@chainpe/sdk'
+import { PolicyVaultClient } from '@chainpearc/sdk'
 
 const vault = new PolicyVaultClient({
   privateKey: process.env.OWNER_KEY!,

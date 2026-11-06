@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",
-    "@chainpe/ai-tools": "file:../../packages/chainpe-ai-tools",
-    "@chainpe/sdk": "file:../../packages/chainpe-sdk",
+    "@chainpearc/ai-tools": "file:../../packages/chainpe-ai-tools",
+    "@chainpearc/sdk": "file:../../packages/chainpe-sdk",
     "@langchain/anthropic": "^0.3.0",
     "@langchain/core": "^0.3.0",
     "@langchain/langgraph": "^0.2.0",

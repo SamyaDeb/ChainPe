@@ -20,13 +20,13 @@ chainpe/
 │   │       ├── registry.ts            On-chain registration via viem
 │   │       └── proxy/                 x402-express payment proxy + facilitator
 │   │
-│   ├── chainpe-agent/        Consumer agent SDK (@chainpe/agent)
+│   ├── chainpe-agent/        Consumer agent SDK (@chainpearc/agent)
 │   │   └── src/
 │   │       ├── agent.ts               Autonomous AI agent (discover → pay → use)
 │   │       ├── registry.ts            On-chain service discovery
 │   │       └── tools/                 AI tool definitions
 │   │
-│   ├── chainpe-sdk/            Shared SDK types + helpers (@chainpe/sdk)
+│   ├── chainpe-sdk/            Shared SDK types + helpers (@chainpearc/sdk)
 │   ├── chainpe-ai-tools/     LLM tool schemas for MCP / function calling
 │   └── chainpe-wallet/       MCP wallet server (62 tests)
 │       └── scripts/build-mcpb.sh      Builds .mcpb for Claude Desktop

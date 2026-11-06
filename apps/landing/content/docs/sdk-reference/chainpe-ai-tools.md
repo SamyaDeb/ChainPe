@@ -1,17 +1,17 @@
 ---
 id: sdk-reference-ai-tools
-title: "@chainpe/ai-tools"
+title: "@chainpearc/ai-tools"
 sidebar_position: 3
 ---
 
-# @chainpe/ai-tools
+# @chainpearc/ai-tools
 
 Framework adapters that wrap the ChainPe SDK as native tool objects for Vercel AI SDK and LangChain.
 
 ## Installation
 
 ```bash
-npm install @chainpe/ai-tools
+npm install @chainpearc/ai-tools
 ```
 
 ## Subpath exports
@@ -20,13 +20,13 @@ The package uses subpath exports so you only import the framework you need:
 
 ```ts
 // Vercel AI SDK
-import { createChainPeTools } from '@chainpe/ai-tools/vercel'
+import { createChainPeTools } from '@chainpearc/ai-tools/vercel'
 
 // LangChain
-import { createChainPeLangChainTools } from '@chainpe/ai-tools/langchain'
+import { createChainPeLangChainTools } from '@chainpearc/ai-tools/langchain'
 
 // Framework-agnostic core
-import { runFetch, runDiscover, fetchInputSchema, discoverInputSchema } from '@chainpe/ai-tools'
+import { runFetch, runDiscover, fetchInputSchema, discoverInputSchema } from '@chainpearc/ai-tools'
 ```
 
 ## Vercel AI SDK adapter
@@ -147,7 +147,7 @@ const DISCOVER_TOOL_DESCRIPTION: string    // LLM description for discoverServic
 
 ## ChainPeToolOptions
 
-Identical to `ChainPeOptions` from `@chainpe/sdk`:
+Identical to `ChainPeOptions` from `@chainpearc/sdk`:
 
 ```ts
 interface ChainPeToolOptions {

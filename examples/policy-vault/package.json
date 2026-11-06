@@ -8,7 +8,7 @@
     "demo": "node demo.mjs"
   },
   "dependencies": {
-    "@chainpe/sdk": "file:../../packages/chainpe-sdk",
+    "@chainpearc/sdk": "file:../../packages/chainpe-sdk",
     "dotenv": "^16.5.0",
     "viem": "^2.21.0"
   }

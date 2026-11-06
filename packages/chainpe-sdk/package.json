@@ -1,5 +1,5 @@
 {
-  "name": "@chainpe/sdk",
+  "name": "@chainpearc/sdk",
   "version": "0.3.0",
   "description": "ChainPe SDK \u2014 add x402 USDC payments + on-chain ERC-8004 reputation to any app in 3 lines, on Avalanche C-Chain.",
   "type": "module",

@@ -1,5 +1,5 @@
 {
-  "name": "@chainpe/wallet-mcp",
+  "name": "@chainpearc/wallet-mcp",
   "version": "0.3.0",
   "description": "ChainPe Wallet — MCP server giving Claude an Avalanche C-Chain x402 wallet that discovers and pays for services on the ChainPe on-chain registry",
   "type": "module",

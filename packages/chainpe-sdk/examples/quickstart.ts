@@ -1,5 +1,5 @@
 /**
- * @chainpe/sdk quickstart — payments in 3 lines.
+ * @chainpearc/sdk quickstart — payments in 3 lines.
  *
  * Run against the live Avalanche Fuji facilitator:
  *   CHAINPE_PRIVATE_KEY=0x... PAID_URL=https://... npx tsx examples/quickstart.ts

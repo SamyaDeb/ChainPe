@@ -5,7 +5,7 @@
  * ```ts
  * import { generateText } from 'ai'
  * import { anthropic } from '@ai-sdk/anthropic'
- * import { createChainPeTools } from '@chainpe/ai-tools/vercel'
+ * import { createChainPeTools } from '@chainpearc/ai-tools/vercel'
  *
  * const tools = createChainPeTools({ privateKey, network: 'fuji', autoFeedback: true })
  *

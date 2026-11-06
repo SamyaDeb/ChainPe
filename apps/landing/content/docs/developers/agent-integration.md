@@ -10,18 +10,18 @@ This page covers integrating ChainPe into autonomous agents — systems that dis
 
 ## chainpe-agent
 
-The `@chainpe/agent` package provides a standalone LLM agent loop that discovers and pays for ChainPe services. It is framework-independent (uses its own LLM client, not Vercel AI SDK or LangChain).
+The `@chainpearc/agent` package provides a standalone LLM agent loop that discovers and pays for ChainPe services. It is framework-independent (uses its own LLM client, not Vercel AI SDK or LangChain).
 
 ### Installation
 
 ```bash
-npm install @chainpe/agent
+npm install @chainpearc/agent
 ```
 
 ### Configuration
 
 ```ts
-import { AgentRunner } from '@chainpe/agent'
+import { AgentRunner } from '@chainpearc/agent'
 
 const runner = new AgentRunner({
   // Wallet config
@@ -45,7 +45,7 @@ console.log(result)
 
 ### Available tools in the agent
 
-The `@chainpe/agent` exposes these built-in tools:
+The `@chainpearc/agent` exposes these built-in tools:
 
 | Tool | Description |
 |---|---|
@@ -61,7 +61,7 @@ The `@chainpe/agent` exposes these built-in tools:
 
 ## chainpe-wallet-mcp (Claude Desktop)
 
-The `@chainpe/wallet-mcp` MCP extension gives Claude Desktop an Avalanche x402 wallet. After building and installing it, Claude can:
+The `@chainpearc/wallet-mcp` MCP extension gives Claude Desktop an Avalanche x402 wallet. After building and installing it, Claude can:
 
 1. Search the marketplace (`search_bazaar`)
 2. Make paid API calls (`x402_fetch`)
@@ -127,7 +127,7 @@ Each seller agent:
 For long-running agents with controlled budgets:
 
 ```ts
-import { PolicyVaultClient } from '@chainpe/sdk'
+import { PolicyVaultClient } from '@chainpearc/sdk'
 
 // Setup (done once by the operator)
 const owner = new PolicyVaultClient({

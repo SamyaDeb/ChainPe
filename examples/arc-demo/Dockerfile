@@ -16,9 +16,9 @@ COPY examples/arc-demo ./examples/arc-demo
 
 # The lock file was written on a Mac and holds only darwin-arm64 native builds, so tsup cannot run on Linux without
 # these. Keep the versions equal to esbuild and rollup in package-lock.json.
-RUN npm ci --workspace=@chainpe/cli --include-workspace-root --ignore-scripts \
+RUN npm ci --workspace=@chainpearc/cli --include-workspace-root --ignore-scripts \
   && npm install --no-save --ignore-scripts @esbuild/linux-x64@0.27.7 @rollup/rollup-linux-x64-gnu@4.62.0 \
-  && npm run build --workspace=@chainpe/cli
+  && npm run build --workspace=@chainpearc/cli
 
 ENV NODE_ENV=production
 ENV CHAINPE_CONFIG=/app/examples/arc-demo/config.json

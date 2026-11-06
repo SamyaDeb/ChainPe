@@ -6,12 +6,12 @@ sidebar_position: 3
 
 # AI Framework Tools
 
-`@chainpe/ai-tools` wraps the ChainPe SDK as framework-native tool objects for Vercel AI SDK and LangChain. Drop them into your agent's tool set and it can discover and pay for APIs autonomously.
+`@chainpearc/ai-tools` wraps the ChainPe SDK as framework-native tool objects for Vercel AI SDK and LangChain. Drop them into your agent's tool set and it can discover and pay for APIs autonomously.
 
 ## Installation
 
 ```bash
-npm install @chainpe/ai-tools
+npm install @chainpearc/ai-tools
 ```
 
 ## Available tools
@@ -28,7 +28,7 @@ Both adapters expose two tools:
 ```ts
 import { generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
-import { createChainPeTools } from '@chainpe/ai-tools/vercel'
+import { createChainPeTools } from '@chainpearc/ai-tools/vercel'
 
 const tools = createChainPeTools({
   privateKey: process.env.CHAINPE_PRIVATE_KEY!,
@@ -116,7 +116,7 @@ interface ChainPeToolOptions {
 ```ts
 import { ChatAnthropic } from '@langchain/anthropic'
 import { createReactAgent } from '@langchain/langgraph/prebuilt'
-import { createChainPeLangChainTools } from '@chainpe/ai-tools/langchain'
+import { createChainPeLangChainTools } from '@chainpearc/ai-tools/langchain'
 
 const { chainpeFetchTool, discoverServiceTool } = createChainPeLangChainTools({
   privateKey: process.env.CHAINPE_PRIVATE_KEY!,
@@ -151,7 +151,7 @@ import {
   discoverInputSchema,
   FETCH_TOOL_DESCRIPTION,
   DISCOVER_TOOL_DESCRIPTION
-} from '@chainpe/ai-tools'
+} from '@chainpearc/ai-tools'
 
 const client = getClient({ privateKey, network: 'avalanche' })
 
@@ -171,7 +171,7 @@ Here is a complete Vercel AI SDK agent that discovers and hires two services:
 ```ts
 import { generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
-import { createChainPeTools } from '@chainpe/ai-tools/vercel'
+import { createChainPeTools } from '@chainpearc/ai-tools/vercel'
 
 async function runBuyerAgent(task: string) {
   const tools = createChainPeTools({

@@ -12,18 +12,18 @@ This section covers integrating ChainPe into your applications, agents, and AI f
 
 | Use case | Package | Guide |
 |---|---|---|
-| Add USDC micropayments to any Node.js app | `@chainpe/sdk` | [SDK Setup](./sdk-setup.md) |
-| Build a Vercel AI SDK agent that pays for APIs | `@chainpe/ai-tools` | [AI Tools](./ai-tools.md) |
-| Build a LangChain agent that pays for APIs | `@chainpe/ai-tools` | [AI Tools](./ai-tools.md) |
-| Build a standalone LLM agent with discovery+pay | `@chainpe/agent` | [Agent Integration](./agent-integration.md) |
-| Use Claude to pay for APIs | `@chainpe/wallet-mcp` | [Agent Integration](./agent-integration.md) |
+| Add USDC micropayments to any Node.js app | `@chainpearc/sdk` | [SDK Setup](./sdk-setup.md) |
+| Build a Vercel AI SDK agent that pays for APIs | `@chainpearc/ai-tools` | [AI Tools](./ai-tools.md) |
+| Build a LangChain agent that pays for APIs | `@chainpearc/ai-tools` | [AI Tools](./ai-tools.md) |
+| Build a standalone LLM agent with discovery+pay | `@chainpearc/agent` | [Agent Integration](./agent-integration.md) |
+| Use Claude to pay for APIs | `@chainpearc/wallet-mcp` | [Agent Integration](./agent-integration.md) |
 
 ## Core SDK capabilities
 
-The `@chainpe/sdk` package is the foundation. All other packages build on it.
+The `@chainpearc/sdk` package is the foundation. All other packages build on it.
 
 ```ts
-import { ChainPe, RegistryClient, PolicyVaultClient, getReputation, giveFeedback } from '@chainpe/sdk'
+import { ChainPe, RegistryClient, PolicyVaultClient, getReputation, giveFeedback } from '@chainpearc/sdk'
 ```
 
 **`ChainPe` class** — the main entry point:

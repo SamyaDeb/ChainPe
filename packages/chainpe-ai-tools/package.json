@@ -1,5 +1,5 @@
 {
-  "name": "@chainpe/ai-tools",
+  "name": "@chainpearc/ai-tools",
   "version": "0.3.0",
   "description": "ChainPe agent tools — drop-in x402 pay + discover tools for the Vercel AI SDK and LangChain, on Avalanche C-Chain.",
   "type": "module",
@@ -34,7 +34,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@chainpe/sdk": "^0.3.0"
+    "@chainpearc/sdk": "^0.3.0"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.3.0",

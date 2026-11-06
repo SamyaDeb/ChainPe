@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import type { ChainPe } from '@chainpe/sdk'
+import type { ChainPe } from '@chainpearc/sdk'
 import {
   getClient,
   runFetch,

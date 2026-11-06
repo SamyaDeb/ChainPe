@@ -1,5 +1,5 @@
 {
-  "name": "@chainpe/contracts",
+  "name": "@chainpearc/contracts",
   "version": "2.0.0",
   "description": "ChainPe on-chain registry smart contracts for Avalanche C-Chain (Solidity)",
   "type": "commonjs",

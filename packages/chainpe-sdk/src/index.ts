@@ -1,10 +1,10 @@
 /**
- * @chainpe/sdk — x402 USDC payments + on-chain ERC-8004 reputation for the
+ * @chainpearc/sdk — x402 USDC payments + on-chain ERC-8004 reputation for the
  * Avalanche agent economy, in a few lines.
  *
  * @example
  * ```ts
- * import { ChainPe } from '@chainpe/sdk'
+ * import { ChainPe } from '@chainpearc/sdk'
  *
  * const cp = new ChainPe({ privateKey: process.env.PRIVATE_KEY!, network: 'fuji' })
  * const res = await cp.fetch('https://api.example.com/paid')

@@ -1,11 +1,11 @@
 /**
- * @chainpe/ai-tools — ChainPe x402 pay + discover tools for AI agents.
+ * @chainpearc/ai-tools — ChainPe x402 pay + discover tools for AI agents.
  *
  * Framework adapters live behind subpath exports so you only pull in the
  * framework you use:
  *
- *   import { createChainPeTools } from '@chainpe/ai-tools/vercel'
- *   import { createChainPeLangChainTools } from '@chainpe/ai-tools/langchain'
+ *   import { createChainPeTools } from '@chainpearc/ai-tools/vercel'
+ *   import { createChainPeLangChainTools } from '@chainpearc/ai-tools/langchain'
  *
  * This entry exposes the shared, framework-agnostic core (schemas + the
  * `runFetch` / `runDiscover` executors) for custom integrations.

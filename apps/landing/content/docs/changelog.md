@@ -10,7 +10,7 @@ All notable changes to ChainPe are documented here.
 
 ## 3.0.0 — 2026-11-06
 
-- The npm packages moved to the `@chainpe` scope: `@chainpe/cli`, `@chainpe/sdk`, `@chainpe/ai-tools`, `@chainpe/agent` and `@chainpe/wallet-mcp`.
+- The npm packages moved to the `@chainpearc` scope: `@chainpearc/cli`, `@chainpearc/sdk`, `@chainpearc/ai-tools`, `@chainpearc/agent` and `@chainpearc/wallet-mcp`.
 
 ---
 
@@ -29,7 +29,7 @@ All notable changes to ChainPe are documented here.
 - Complete README rewrite documenting all surfaces
 - `docs/WHY-AVALANCHE.md` — measured finality + fees, ICM rationale
 
-**Phase 1 — @chainpe/sdk**
+**Phase 1 — @chainpearc/sdk**
 - `ChainPe` class with `fetch()`, `pay()`, `discover()`, `getReputation()`, `giveFeedback()`, `balance()`
 - `RegistryClient` with `listAllServices()`, `filterServices()`, `rankByReputation()`
 - `PolicyVaultClient` with owner/agent/relayer roles and EIP-712 signing
@@ -37,7 +37,7 @@ All notable changes to ChainPe are documented here.
 - `ChainPePaymentError` with `txHash` and `reason`
 - Published to npm
 
-**Phase 2 — @chainpe/ai-tools + CLI**
+**Phase 2 — @chainpearc/ai-tools + CLI**
 - Vercel AI SDK adapter: `createChainPeTools()` → `chainpeFetch`, `discoverService`
 - LangChain adapter: `createChainPeLangChainTools()` → `chainpe_fetch`, `discover_service`
 - Framework-agnostic core: `runFetch`, `runDiscover`, zod schemas, tool descriptions
@@ -74,7 +74,7 @@ All notable changes to ChainPe are documented here.
 - `previewSpend()` view function
 - `cleanupDailySpent()` for gas reclaim
 - `PolicyVaultUpgradeable.sol` — UUPS version for mainnet
-- `PolicyVaultClient` in `@chainpe/sdk`
+- `PolicyVaultClient` in `@chainpearc/sdk`
 
 **Phase 7 — Avalanche bench + ICM**
 - `contracts/contracts/icm/ChainPeICMSender.sol` and `ChainPeICMReceiver.sol`

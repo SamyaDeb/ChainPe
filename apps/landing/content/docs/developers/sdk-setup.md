@@ -6,18 +6,18 @@ sidebar_position: 2
 
 # SDK Setup
 
-Full documentation for initializing and configuring `@chainpe/sdk`.
+Full documentation for initializing and configuring `@chainpearc/sdk`.
 
 ## Installation
 
 ```bash
-npm install @chainpe/sdk
+npm install @chainpearc/sdk
 ```
 
 ## ChainPe constructor
 
 ```ts
-import { ChainPe } from '@chainpe/sdk'
+import { ChainPe } from '@chainpearc/sdk'
 
 const cp = new ChainPe(options: ChainPeOptions)
 ```
@@ -225,7 +225,7 @@ const txHash = await cp.giveFeedback('42', 100, {
 ## Error handling
 
 ```ts
-import { ChainPePaymentError } from '@chainpe/sdk'
+import { ChainPePaymentError } from '@chainpearc/sdk'
 
 try {
   const result = await cp.pay('https://api.example.com/data')

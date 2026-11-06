@@ -11,7 +11,7 @@
 import 'dotenv/config'
 import { generateText, stepCountIs } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
-import { createChainPeTools } from '@chainpe/ai-tools/vercel'
+import { createChainPeTools } from '@chainpearc/ai-tools/vercel'
 
 const privateKey = process.env.CHAINPE_PRIVATE_KEY
 if (!privateKey) throw new Error('Set CHAINPE_PRIVATE_KEY in .env')

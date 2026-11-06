@@ -157,7 +157,7 @@ curl https://chainpe-facilitator-production.up.railway.app/status
 
 ## 10. npm publish failures
 
-**Symptom:** `npm publish @chainpe/sdk` fails with "You do not have permission" or "Package already exists".
+**Symptom:** `npm publish @chainpearc/sdk` fails with "You do not have permission" or "Package already exists".
 
 **Fixes:**
 - Ensure you are logged in: `npm login` with an account that maintains the package

@@ -25,7 +25,7 @@ buyer (orchestrator.mjs)
 | One-shot launcher | `launch.sh` |
 
 Each seller runs its LLM backend behind the **same ChainPe x402 gateway** that
-`chainpe start` uses (started programmatically via `@chainpe/cli`), so two
+`chainpe start` uses (started programmatically via `@chainpearc/cli`), so two
 sellers run side by side. The gateway advertises each seller's `agentId` on the
 402 response (feature 3b) so the buyer can leave feedback without scanning the
 registry.
@@ -33,12 +33,12 @@ registry.
 ## Setup
 
 ```bash
-# From the repo root, once: build the local @chainpe/* packages.
+# From the repo root, once: build the local @chainpearc/* packages.
 npm install && npm run build
 
 # Here:
 cp .env.example .env      # fill in keys (see below)
-npm install               # links the local @chainpe/* packages
+npm install               # links the local @chainpearc/* packages
 ```
 
 You need **three distinct wallets**: the buyer (`CHAINPE_PRIVATE_KEY`) and one per

@@ -26,8 +26,8 @@ cd contracts && npm test  # 44+ contract tests
 chainpe/
 ├── contracts/         # Hardhat — Solidity contracts + tests
 ├── packages/
-│   ├── chainpe-sdk/   # @chainpe/sdk — core payments + reputation
-│   ├── chainpe-ai-tools/  # @chainpe/ai-tools — Vercel + LangChain adapters
+│   ├── chainpe-sdk/   # @chainpearc/sdk — core payments + reputation
+│   ├── chainpe-ai-tools/  # @chainpearc/ai-tools — Vercel + LangChain adapters
 │   ├── chainpe/       # chainpe — provider proxy + consumer CLI
 │   ├── chainpe-wallet/  # chainpe-wallet-mcp — Claude MCP extension
 │   └── chainpe-agent/ # chainpe-agent — standalone agent loop
@@ -96,7 +96,7 @@ Use conventional commits:
 
 Please open a GitHub issue with:
 - Node.js version (`node --version`)
-- Package version (`npm list @chainpe/sdk`)
+- Package version (`npm list @chainpearc/sdk`)
 - Full error output
 - Minimal reproduction steps
 

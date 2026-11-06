@@ -275,7 +275,7 @@ async function runInit(): Promise<void> {
   console.log(chalk.gray("  Private key: OS Keychain (encrypted)"));
   console.log();
   console.log(chalk.gray("  Usage:"));
-  console.log(chalk.white('    import { ChainPeAgent } from "@chainpe/agent";'));
+  console.log(chalk.white('    import { ChainPeAgent } from "@chainpearc/agent";'));
   console.log(chalk.white("    const agent = new ChainPeAgent();"));
   console.log(chalk.white('    const result = await agent.run("Your task here");'));
   console.log();

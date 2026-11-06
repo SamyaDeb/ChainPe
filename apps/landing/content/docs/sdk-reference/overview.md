@@ -13,13 +13,13 @@ Complete API reference for all ChainPe npm packages.
 
 | Package | npm | Description |
 |---|---|---|
-| `@chainpe/sdk` | [@chainpe/sdk](https://www.npmjs.com/package/chainpe-sdk) | Core payments + reputation SDK |
-| `@chainpe/ai-tools` | [@chainpe/ai-tools](https://www.npmjs.com/package/chainpe-ai-tools) | Vercel AI SDK + LangChain adapters |
-| `@chainpe/agent` | [chainpe-agent](https://www.npmjs.com/package/@chainpe/agent) | Standalone LLM agent loop |
+| `@chainpearc/sdk` | [@chainpearc/sdk](https://www.npmjs.com/package/chainpe-sdk) | Core payments + reputation SDK |
+| `@chainpearc/ai-tools` | [@chainpearc/ai-tools](https://www.npmjs.com/package/chainpe-ai-tools) | Vercel AI SDK + LangChain adapters |
+| `@chainpearc/agent` | [chainpe-agent](https://www.npmjs.com/package/@chainpearc/agent) | Standalone LLM agent loop |
 | `chainpe` | — | Provider proxy + consumer CLI |
 
 ## Navigation
 
-- [@chainpe/sdk](./chainpe-sdk.md) — `ChainPe`, `RegistryClient`, `PolicyVaultClient`, all types
-- [@chainpe/ai-tools](./chainpe-ai-tools.md) — Vercel + LangChain tool adapters
+- [@chainpearc/sdk](./chainpe-sdk.md) — `ChainPe`, `RegistryClient`, `PolicyVaultClient`, all types
+- [@chainpearc/ai-tools](./chainpe-ai-tools.md) — Vercel + LangChain tool adapters
 - [chainpe-agent](./chainpe-agent.md) — `AgentRunner` and built-in tools

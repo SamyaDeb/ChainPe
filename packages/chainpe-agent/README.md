@@ -1,8 +1,8 @@
 # chainpe-agent
 
-[![npm](https://img.shields.io/npm/v/@chainpe/agent.svg)](https://www.npmjs.com/package/@chainpe/agent)
+[![npm](https://img.shields.io/npm/v/@chainpearc/agent.svg)](https://www.npmjs.com/package/@chainpearc/agent)
 
-> **This package still targets Avalanche.** Arc support is planned. For Arc today, use the [`@chainpe/cli`](https://www.npmjs.com/package/@chainpe/cli) CLI.
+> **This package still targets Avalanche.** Arc support is planned. For Arc today, use the [`@chainpearc/cli`](https://www.npmjs.com/package/@chainpearc/cli) CLI.
 
 **Pre-built AI Agent with x402 Payment Capabilities on Avalanche**
 
@@ -11,13 +11,13 @@ ChainPe Agent is an AI agent SDK that can discover, pay for, and use monetized A
 ## Installation
 
 ```bash
-npm install -g @chainpe/agent
+npm install -g @chainpearc/agent
 ```
 
 Or as a library:
 
 ```bash
-npm install @chainpe/agent
+npm install @chainpearc/agent
 ```
 
 ## Quick Start
@@ -67,7 +67,7 @@ chainpe-agent run "Find a weather service and get the weather for San Francisco"
 ## Programmatic Usage
 
 ```typescript
-import { ChainPeAgent } from "@chainpe/agent";
+import { ChainPeAgent } from "@chainpearc/agent";
 
 // Create agent (reads config from ~/.chainpe/agent.json)
 const agent = new ChainPeAgent();

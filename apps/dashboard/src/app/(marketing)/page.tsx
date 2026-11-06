@@ -115,7 +115,7 @@ const faqs = [
   },
   {
     q: 'How do I get started?',
-    a: 'Install the SDK with npm install @chainpe/agent and you\'re ready to go. The SDK integrates with the Vercel AI SDK and works with any LLM provider. Check our docs for a 5-minute quickstart guide.',
+    a: 'Install the SDK with npm install @chainpearc/agent and you\'re ready to go. The SDK integrates with the Vercel AI SDK and works with any LLM provider. Check our docs for a 5-minute quickstart guide.',
   },
 ]
 

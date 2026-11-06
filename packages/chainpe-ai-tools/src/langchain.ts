@@ -5,7 +5,7 @@
  * ```ts
  * import { ChatAnthropic } from '@langchain/anthropic'
  * import { createReactAgent } from '@langchain/langgraph/prebuilt'
- * import { createChainPeLangChainTools } from '@chainpe/ai-tools/langchain'
+ * import { createChainPeLangChainTools } from '@chainpearc/ai-tools/langchain'
  *
  * const { chainpeFetchTool, discoverServiceTool } = createChainPeLangChainTools({
  *   privateKey, network: 'fuji', autoFeedback: true
