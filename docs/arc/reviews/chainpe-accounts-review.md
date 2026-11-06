@@ -3,8 +3,8 @@
 Independent review of the contract Arc Studio wrote in run 1 (`0x1fd61443d8ec25b41c4e2bd5e010109e6aefefbb`), against
 spec 06 and how specs 08 and 10 use it. Reviewed on 2026-11-06, from `contracts-arc/contracts/ChainPeAccounts.sol`.
 
-**Current deployment:** `0xD315322c9D83a6f50A04236A2a242e0259bfB580` (run 1b). Its runtime bytecode is byte-identical to a local compile of the fixed
-source, and the source is verified on the explorer.
+**Current deployment:** `0xD315322c9D83a6f50A04236A2a242e0259bfB580` (run 1b). Its runtime bytecode is identical to a local compile of the fixed
+source once the immutables `usdc` and `identityRegistry` are filled, and the source is verified on the explorer.
 
 **Result:** no High. One Medium (M-1), fixed through Studio in run 1b. Six Low and five Info items are accepted or
 handed to later phases. No Lows were fixed, to keep the Studio round trip to the single required change.

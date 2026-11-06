@@ -27,7 +27,7 @@ Reuse `packages/chainpe/src/erc8004.ts` with network-aware addresses.
 
 - Buyer side (`cp.giveFeedback`, MCP `give_feedback`) after a successful paid call; score 0–100, tags `x402`, `<route>`.
 - The registry blocks self-feedback; the CLI never rates its own agent.
-- The proxy advertises `agentId` in the 402 `extra` so buyers don't search for it (existing behaviour).
+- The proxy advertises `agentId` in the `X-CHAINPE-AGENT-ID` response header so buyers don't search for it. The SDK and MCP wallet read that header first.
 
 ## Acceptance
 

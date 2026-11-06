@@ -138,7 +138,7 @@ all USDC `Transfer` logs are also emitted by system address `0xffffFFFfFFfffffff
 
 | Var | Where | Meaning |
 |---|---|---|
-| `CHAINPE_NETWORK` | all | `arc` \| `arc-testnet` \| `avalanche` \| `fuji` |
+| `CHAINPE_NETWORK` | all | `arc` \| `arc-testnet` (CLI). Packages not yet ported still accept `avalanche` \| `fuji` |
 | `ARC_RPC_URL`, `ARC_TESTNET_RPC_URL` | all | RPC overrides |
 | `CHAINPE_SELLER_PRIVATE_KEY` | CLI | payout key; signs seller proofs and Gateway withdrawals |
 | `CIRCLE_API_KEY` | CLI | Facilitator production key (optional on testnet trial) |
