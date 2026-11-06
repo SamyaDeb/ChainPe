@@ -7,7 +7,7 @@ All notable changes to ChainPe are documented here.
 Built during ETHGlobal Mumbai. Details and proof: [`docs/arc/`](arc/README.md) and [`docs/arc/PROOF.md`](arc/PROOF.md).
 
 ### Changed
-- The npm packages lost the Avalanche name: `@chainpeavax/cli` is now `chainpe`, `@chainpeavax/sdk` is `chainpe-sdk`, `@chainpeavax/ai-tools` is `chainpe-ai-tools`, and `@chainpeavax/agent` is `chainpe-agent`.
+- The npm packages lost the Avalanche name: `@chainpeavax/cli` is now `chainpe`, `@chainpeavax/sdk` is `chainpe-sdk`, `@chainpeavax/ai-tools` is `chainpe-ai-tools`, and `@chainpeavax/agent` is `chainpe-agent`. New versions: `chainpe` 3.0.0, `chainpe-sdk` 0.3.0, `chainpe-ai-tools` 0.3.0, `chainpe-agent` 3.0.0.
 - The CLI now runs on Circle's Arc (`arc-testnet`, `arc`). Avalanche support was removed from the CLI; the June version stays at tag `avalanche-june-2026`.
 - Moved from x402 v1 to x402 v2.
 - Payments settle through Circle's Facilitator Service, before the provider's API is called.

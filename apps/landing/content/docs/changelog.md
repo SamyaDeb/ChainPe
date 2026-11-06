@@ -10,7 +10,7 @@ All notable changes to ChainPe are documented here.
 
 ## 3.0.0 — 2026-11-06
 
-- The npm packages lost the Avalanche name: `@chainpeavax/cli` is now `chainpe`, `@chainpeavax/sdk` is `chainpe-sdk`, `@chainpeavax/ai-tools` is `chainpe-ai-tools`, and `@chainpeavax/agent` is `chainpe-agent`.
+- The npm packages lost the Avalanche name: `@chainpeavax/cli` is now `chainpe`, `@chainpeavax/sdk` is `chainpe-sdk`, `@chainpeavax/ai-tools` is `chainpe-ai-tools`, and `@chainpeavax/agent` is `chainpe-agent`. New versions: `chainpe` 3.0.0, `chainpe-sdk` 0.3.0, `chainpe-ai-tools` 0.3.0, `chainpe-agent` 3.0.0.
 
 ---
 
