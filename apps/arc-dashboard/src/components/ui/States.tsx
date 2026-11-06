@@ -24,6 +24,8 @@ export function Skeleton({ rows = 3 }: { rows?: number }) {
 export function errorMessage(error: unknown): { title: string; body: string } {
   if (isApiError(error)) {
     switch (error.code) {
+      case 'fees_due':
+        return { title: 'Your data is locked', body: 'Unpaid ChainPe fees have reached the limit. Your API and paid calls keep working. Approve USDC in Billing to unlock this.' }
       case 'chain_unavailable':
         return { title: 'Arc could not be read', body: 'The chain could not be reached right now. Your data is fine. Retry in a moment.' }
       case 'rate_limited':
@@ -51,6 +53,11 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
         <div className="min-w-0 flex-1">
           <p className="font-display text-3xl tracking-tight text-ink">{title}</p>
           <p className="mt-1 break-words text-sm text-muted">{body}</p>
+          {isApiError(error) && error.code === 'fees_due' ? (
+            <Link to="/billing" className="mt-4 inline-block text-sm font-medium text-ink underline underline-offset-4">
+              Go to Billing
+            </Link>
+          ) : null}
           {onRetry ? (
             <Button className="mt-4" onClick={onRetry}>
               <RefreshCw size={16} aria-hidden /> Retry

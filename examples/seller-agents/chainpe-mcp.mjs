@@ -31,7 +31,7 @@ import 'dotenv/config'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
-import { ChainPe } from '@chainpe/sdk'
+import { ChainPe } from '@chainpearc/sdk'
 
 // ── Init ────────────────────────────────────────────────────────────────────
 

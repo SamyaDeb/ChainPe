@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getAddress, isAddressEqual, type Address, type Hash } from 'viem'
+import { getAccount, getWalletClient } from 'wagmi/actions'
 import type { Me } from '@/api/schema'
 import { accountsAbi, usdcAbi } from '@/lib/accounts'
 import { ACCOUNTS_ADDRESS, USDC_ADDRESS } from '@/lib/env'
 import { formatUsdcExact } from '@/lib/money'
-import { arcTestnet, ensureArcTestnet, errorText, getProvider, getWalletClient, isUserRejection, publicClient } from '@/lib/wallet'
+import { switchToArc, wagmiConfig } from '@/lib/wagmi'
+import { arcTestnet, errorText, isUserRejection, publicClient } from '@/lib/wallet'
 
 export type StepId = 'network' | 'approve' | 'subscribe' | 'sync'
 export type StepState = 'idle' | 'active' | 'done' | 'skipped' | 'warn' | 'error'
@@ -102,22 +104,20 @@ export function useUpgrade({ me, address, refreshMe, onDone }: Args) {
 
   const run = useCallback(
     async (periods: number) => {
-      const provider = getProvider()
       let current: StepId = 'network'
       setSteps(INITIAL)
       setStarted(true)
       setRunning(true)
       try {
-        if (!provider) throw new StepFailure('No browser wallet was found. Install MetaMask or Rabby.')
-        const wallet = getWalletClient(provider)
-        const accounts = await wallet.requestAddresses()
-        const account = accounts[0]
-        if (!account || !isAddressEqual(account, address as Address)) {
+        const account = getAccount(wagmiConfig).address
+        if (!account) throw new StepFailure('Connect your wallet first.')
+        if (!isAddressEqual(account, address as Address)) {
           throw new StepFailure('Your wallet is on a different account than the one you signed in with. Switch accounts, then sign in again.')
         }
 
         patch('network', { state: 'active' })
-        await ensureArcTestnet(provider)
+        await switchToArc()
+        const wallet = await getWalletClient(wagmiConfig, { chainId: arcTestnet.id })
         patch('network', { state: 'done' })
         current = 'approve'
 

@@ -51,7 +51,7 @@ chainpe start          # the proxy now settles through the hosted facilitator
 ```
 
 A provider settling a real 402 through the URL closes the Phase 4 facilitator
-acceptance. Record the URL in `docs/DEPLOYMENTS.md` and the root README.
+acceptance. Record the URL in `docs/avalanche/DEPLOYMENTS.md` and the root README.
 
 ## Operating notes
 

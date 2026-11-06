@@ -13,5 +13,5 @@ export default defineConfig({
   sourcemap: true,
   target: 'node18',
   // Frameworks are peer deps — never bundle them.
-  external: ['ai', '@langchain/core', 'zod', '@chainpeavax/sdk']
+  external: ['ai', '@langchain/core', 'zod', '@chainpearc/sdk']
 })

@@ -168,10 +168,11 @@ describe("free discovery paths", () => {
     expect(backendCalls).toEqual([]);
   });
 
-  it("do not open anything next to them: near matches stay behind the payment gate", async () => {
-    const { url } = await start(config());
-    for (const path of ["/openapi.json/", "/OPENAPI.JSON", "/openapi.jsonx", "/.well-known/agent.json/x", "/.well-known/x402x"]) {
-      expect((await fetch(`${url}${path}`)).status, path).toBe(402);
+  it("do not open anything next to them: near matches never reach the backend", async () => {
+    const near = ["/openapi.json/", "/OPENAPI.JSON", "/openapi.jsonx", "/.well-known/agent.json/x", "/.well-known/x402x"];
+    for (const [overrides, status] of [[{}, 404], [{ chargeUnlistedPaths: true }, 402]] as const) {
+      const { url } = await start(config(overrides));
+      for (const path of near) expect((await fetch(`${url}${path}`)).status, path).toBe(status);
     }
     expect(backendCalls).toEqual([]);
   });
@@ -385,5 +386,30 @@ describe("runChecks against a real proxy", () => {
     });
     expect(check(down.checks, 12).status).toBe("unknown");
     expect(down.ok).toBe(true);
+  });
+});
+
+describe("writeMissingDocuments", () => {
+  it("writes the served documents once, and never overwrites them", async () => {
+    const { mkdtempSync, readFileSync, writeFileSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const { documentPaths, writeMissingDocuments } = await import("../src/doctor/documents.js");
+    const paths = documentPaths(join(mkdtempSync(join(tmpdir(), "chainpe-docs-")), "config.json"));
+    expect(await writeMissingDocuments(config(), paths)).toEqual(["/.well-known/x402", "/openapi.json", "discovery"]);
+    expect(JSON.parse(readFileSync(paths.x402, "utf-8")).resources[0].path).toBe("/weather");
+    writeFileSync(paths.openapi, "{\"edited\":true}");
+    expect(await writeMissingDocuments(config(), paths)).toEqual([]);
+    expect(readFileSync(paths.openapi, "utf-8")).toBe("{\"edited\":true}");
+  });
+
+  it("writes nothing without routes or a publicUrl", async () => {
+    const { mkdtempSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const { documentPaths, writeMissingDocuments } = await import("../src/doctor/documents.js");
+    const paths = documentPaths(join(mkdtempSync(join(tmpdir(), "chainpe-docs-")), "config.json"));
+    expect(await writeMissingDocuments(config({ routes: [] }), paths)).toEqual([]);
+    expect(await writeMissingDocuments(config({ publicUrl: undefined }), paths)).toEqual([]);
   });
 });

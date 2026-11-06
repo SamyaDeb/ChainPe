@@ -69,6 +69,17 @@ export async function resolveCredentials(env: NodeJS.ProcessEnv = process.env, f
   return readStoredCredentials(file).catch(() => undefined);
 }
 
+/** ChainPe's hosted API. It only covers Arc testnet, so that is the only network it is the default for. */
+export const HOSTED_CLOUD_URL = "https://chainpe-cloud-production.up.railway.app";
+
+/** --cloud-url, then $CHAINPE_CLOUD_URL, then the saved one, then the hosted API on Arc testnet. */
+export function chooseCloudUrl(network: string, flag?: string, env?: string, stored?: string): string {
+  const chosen = flag || env || stored;
+  if (chosen) return chosen;
+  if (network === "arc-testnet") return HOSTED_CLOUD_URL;
+  throw new Error(`The hosted dashboard only covers Arc testnet, not ${network}. Pass --cloud-url <url> to use your own chainpe-cloud.`);
+}
+
 /** The signature and the ingest key travel to this URL, so it must be https, except on this machine. */
 export function assertCloudUrl(raw: string): string {
   let url: URL;

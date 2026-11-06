@@ -7,7 +7,8 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { getAddress, isAddressEqual } from 'viem'
+import { isAddressEqual } from 'viem'
+import { getAccount, signMessage, watchAccount } from 'wagmi/actions'
 import { createApi, isApiError, type ChainPeApi } from '@/api/client'
 import type { Me } from '@/api/schema'
 import { USE_MOCK } from '@/lib/env'
@@ -20,10 +21,11 @@ import {
   setActiveToken,
   type Session,
 } from '@/lib/session'
-import { errorText, getProvider, getWalletClient, isUserRejection } from '@/lib/wallet'
+import { disconnectAll, wagmiConfig } from '@/lib/wagmi'
+import { errorText, isUserRejection } from '@/lib/wallet'
 import { checkSiweMessage } from './siwe'
 
-export type SignInStep = 'idle' | 'connecting' | 'nonce' | 'signing' | 'verifying'
+export type SignInStep = 'idle' | 'nonce' | 'signing' | 'verifying'
 
 export type IssueKind =
   | 'config'
@@ -123,28 +125,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIssue(next)
   }, [])
 
-  // A restored live session may belong to a wallet account that changed while the page was closed.
-  const [restoredAddress] = useState<string | null>(() => (USE_MOCK ? null : (session?.address ?? null)))
-  useEffect(() => {
-    const provider = getProvider()
-    if (!restoredAddress || !provider) return
-    let cancelled = false
-    provider
-      .request({ method: 'eth_accounts' })
-      .then((accounts) => {
-        const first = accounts[0]
-        // An empty list means a locked wallet: leave the session alone.
-        if (cancelled || !first) return
-        if (!isAddressEqual(first, restoredAddress as `0x${string}`)) {
-          clearAll({ kind: 'session_ended', message: 'Your wallet account changed, so you were signed out.' })
-        }
-      })
-      .catch(() => undefined)
-    return () => {
-      cancelled = true
-    }
-  }, [restoredAddress, clearAll])
-
   const startSession = useCallback((s: Session) => {
     setActiveToken(s.token)
     saveSession(s)
@@ -206,41 +186,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(id)
   }, [expiresAt, clearAll])
 
-  // A different wallet account, or a disconnect, ends the session and drops all cached data.
+  // A different wallet account, or a disconnect, ends the session and drops all cached data. This also covers a
+  // reload, when the wallet reconnects. A wallet that never reconnects may only be locked, so the session stays.
   useEffect(() => {
     if (!sessionAddress || USE_MOCK) return
-    const provider = getProvider()
-    if (!provider) return
-    const onAccounts = (accounts: readonly string[]) => {
-      const first = accounts[0]
-      if (!first || !isAddressEqual(first as `0x${string}`, sessionAddress as `0x${string}`)) {
-        clearAll({ kind: 'session_ended', message: 'Your wallet account changed, so you were signed out.' })
-      }
-    }
-    const onDisconnect = () =>
-      clearAll({ kind: 'session_ended', message: 'Your wallet disconnected, so you were signed out.' })
-    provider.on('accountsChanged', onAccounts)
-    provider.on('disconnect', onDisconnect)
-    return () => {
-      provider.removeListener('accountsChanged', onAccounts)
-      provider.removeListener('disconnect', onDisconnect)
-    }
+    return watchAccount(wagmiConfig, {
+      onChange(account, previous) {
+        if (account.status === 'connected' && !isAddressEqual(account.address, sessionAddress as `0x${string}`)) {
+          clearAll({ kind: 'session_ended', message: 'Your wallet account changed, so you were signed out.' })
+        } else if (account.status === 'disconnected' && previous.status === 'connected') {
+          clearAll({ kind: 'session_ended', message: 'Your wallet disconnected, so you were signed out.' })
+        }
+      },
+    })
   }, [sessionAddress, clearAll])
 
   const signInWithWallet = useCallback(async () => {
     setIssue(null)
-    const provider = getProvider()
-    if (!provider) {
-      setIssue({ kind: 'no_wallet', message: 'No browser wallet was found. Install MetaMask or Rabby, then reload this page.' })
+    const { address } = getAccount(wagmiConfig)
+    if (!address) {
+      setIssue({ kind: 'no_wallet', message: 'Connect a wallet first.' })
       return
     }
     try {
-      setStep('connecting')
-      const wallet = getWalletClient(provider)
-      const [account] = await wallet.requestAddresses()
-      if (!account) throw new Error('Your wallet did not share an account.')
-      const address = getAddress(account)
-
       setStep('nonce')
       const nonce = await api.nonce(address)
       const problem = checkSiweMessage(nonce.message, address, window.location.host)
@@ -251,7 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setPendingMessage(nonce.message)
       setStep('signing')
-      const signature = await wallet.signMessage({ account: address, message: nonce.message })
+      const signature = await signMessage(wagmiConfig, { account: address, message: nonce.message })
 
       setStep('verifying')
       const verified = await api.verify(nonce.message, signature)
@@ -290,6 +258,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       /* the session is cleared either way */
     } finally {
       clearAll(null)
+      // Also ends a phone pairing, so the next person at this browser has to scan again.
+      if (!USE_MOCK) await disconnectAll().catch(() => undefined)
     }
   }, [api, clearAll])
 

@@ -1,5 +1,5 @@
 /**
- * Configuration Manager (Avalanche C-Chain)
+ * Configuration manager for the agent on Arc
  *
  * Loads/saves agent configuration from ~/.chainpe/agent.json.
  *
@@ -14,12 +14,12 @@ import { isAddress, getAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
 import type { AgentConfig, LLMProvider, PaymentToken, LLMMode, ChainPeNetwork } from "./types.js";
+import { DEFAULT_MAX_PER_CALL, DEFAULT_MAX_PER_RUN } from "./types.js";
 import { savePrivateKey, getPrivateKey } from "./keychain.js";
 import { addressFromPrivateKey } from "./wallet.js";
 
 const CONFIG_DIR = path.join(os.homedir(), ".chainpe");
 const CONFIG_FILE = path.join(CONFIG_DIR, "agent.json");
-const DEFAULT_REGISTRY_PATH = path.join(CONFIG_DIR, "registry.json");
 
 async function ensureConfigDir(): Promise<void> {
   await fs.mkdir(CONFIG_DIR, { recursive: true });
@@ -47,8 +47,7 @@ export async function saveConfig(config: AgentConfig): Promise<void> {
       useKeychain: config.wallet.useKeychain !== false,
     },
     payment: config.payment,
-    registryPath: config.registryPath,
-    registryAddress: config.registryAddress,
+    accountsAddress: config.accountsAddress,
     reputationRegistry: config.reputationRegistry,
     network: config.network,
   };
@@ -66,10 +65,6 @@ export async function configExists(): Promise<boolean> {
 
 export function getConfigPath(): string {
   return CONFIG_FILE;
-}
-
-export function getDefaultRegistryPath(): string {
-  return DEFAULT_REGISTRY_PATH;
 }
 
 // ============================================================================
@@ -125,8 +120,9 @@ export interface ConfigBuilder {
   llmBaseURL?: string;
   walletAddress: string;
   preferredToken: PaymentToken;
-  registryPath?: string;
-  registryAddress?: string;
+  maxPricePerRequest?: string;
+  maxPerRun?: string;
+  accountsAddress?: string;
   reputationRegistry?: string;
   network?: ChainPeNetwork;
 }
@@ -143,11 +139,14 @@ export function buildConfig(builder: ConfigBuilder): AgentConfig {
   return {
     llm,
     wallet: { address: builder.walletAddress, useKeychain: true },
-    payment: { preferredToken: builder.preferredToken },
-    registryPath: builder.registryPath || DEFAULT_REGISTRY_PATH,
-    registryAddress: builder.registryAddress,
+    payment: {
+      preferredToken: builder.preferredToken,
+      maxPricePerRequest: builder.maxPricePerRequest || DEFAULT_MAX_PER_CALL,
+      maxPerRun: builder.maxPerRun || DEFAULT_MAX_PER_RUN,
+    },
+    accountsAddress: builder.accountsAddress,
     reputationRegistry: builder.reputationRegistry,
-    network: builder.network || "fuji",
+    network: builder.network || "arc-testnet",
   };
 }
 

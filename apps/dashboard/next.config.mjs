@@ -15,7 +15,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self'",
-              "connect-src 'self' https://api.avax-test.network https://api.avax.network wss://api.avax-test.network wss://api.avax.network",
+              "connect-src 'self'",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -38,18 +38,6 @@ const nextConfig = {
             value: 'camera=(), microphone=(), geolocation=()',
           },
         ],
-      },
-    ]
-  },
-  async rewrites() {
-    return [
-      {
-        source: '/docs',
-        destination: '/docs/index.html',
-      },
-      {
-        source: '/docs/:path*',
-        destination: '/docs/:path*',
       },
     ]
   },

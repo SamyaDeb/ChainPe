@@ -1,6 +1,6 @@
 /**
  * ChainPe Agent SDK
- * Pre-built AI agent with x402 payment capabilities on Avalanche C-Chain.
+ * A pre-built AI agent that finds, pays for and uses x402 services on Arc.
  *
  * SECURITY: Wallet private keys are stored in the OS keychain, never in plaintext files.
  */
@@ -18,10 +18,8 @@ export {
   configExists,
   buildConfig,
   getConfigPath,
-  getDefaultRegistryPath,
   isValidPrivateKey,
   isValidAddress,
-  addressFromPrivateKey,
   toChecksum,
   DEFAULT_MODELS,
   getDefaultModel,
@@ -44,42 +42,10 @@ export {
 } from "./keychain.js";
 
 // Wallet
-export {
-  createWalletFromPrivateKey,
-  createWalletFromAddress,
-  createClient,
-  getWalletBalance,
-  hasSufficientUsdc,
-  formatAmount,
-  parseAmount,
-  formatBalance,
-  type WalletInstance,
-  type WalletBalance,
-} from "./wallet.js";
+export { addressFromPrivateKey, getWalletBalance, formatBalance, type WalletBalance } from "./wallet.js";
 
-// Registry
-export {
-  RegistryClient,
-  loadRegistry,
-  registryExists,
-  searchServices,
-  findServiceByName,
-  findServiceById,
-  getAllTags,
-  getServiceStats,
-  type SearchOptions,
-} from "./registry.js";
-
-// Payment
-export { PaymentClient, createPaymentClient, type PaymentClientOptions } from "./payment.js";
-
-// Reputation (ERC-8004, on-chain)
-export {
-  getReputation,
-  giveFeedback,
-  resolveReputationRegistry,
-  type ReputationSummary,
-} from "./reputation.js";
+// Discovery, payments and reputation come from the SDK
+export { ChainPe, discoverServices } from "@chainpearc/sdk";
 
 // Tools (for advanced users who want to customize the agent)
 export {
@@ -87,6 +53,7 @@ export {
   createCallPaidApiTool,
   createCallFreeApiTool,
   formatServiceForDisplay,
+  RunBudget,
   type DiscoverServiceToolOptions,
   type CallPaidApiToolOptions,
 } from "./tools/index.js";

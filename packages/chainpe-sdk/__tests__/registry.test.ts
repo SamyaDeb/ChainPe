@@ -12,46 +12,52 @@ const PAY = '0x1111111111111111111111111111111111111111'
 
 function raw(over: Partial<RawService> = {}): RawService {
   return {
+    key: '0xabc',
+    provider: DEV,
+    payTo: PAY,
+    agentId: 5n,
     name: 'translate',
     description: 'Translate text',
     tags: 'ai, nlp',
     endpoint: 'https://api.example.com/translate',
     pricePerRequest: '0.01',
-    paymentToken: 'USDC',
-    network: 'fuji',
-    payTo: PAY,
-    developer: DEV,
-    agentId: 5n,
+    network: 'eip155:5042002',
+    acceptsExact: true,
+    acceptsGateway: true,
+    active: true,
     createdAt: 1_700_000_000n,
     updatedAt: 1_700_000_500n,
-    exists: true,
     ...over
   }
 }
 
 function svc(over: Partial<ChainPeService> = {}): ChainPeService {
-  return { ...decodeService(raw()), ...over }
+  return { ...decodeService(raw(), 'arc-testnet'), ...over }
 }
 
 describe('decodeService', () => {
-  it('builds id, splits tags, maps payTo and agentId', () => {
-    const s = decodeService(raw())
-    expect(s.id).toBe(`${DEV}:translate`)
+  it('maps the key, tags, payTo, agentId and rails', () => {
+    const s = decodeService(raw(), 'arc-testnet')
+    expect(s.id).toBe('0xabc')
     expect(s.tags).toEqual(['ai', 'nlp'])
     expect(s.walletAddress).toBe(PAY)
+    expect(s.developer).toBe(DEV)
     expect(s.agentId).toBe('5')
     expect(s.paymentToken).toBe('USDC')
+    expect(s.network).toBe('arc-testnet')
+    expect(s.rails).toEqual(['gateway', 'exact'])
+    expect(s.source).toBe('chainpe')
     expect(s.createdAt).toMatch(/^20/)
   })
 
   it('treats agentId 0 as unlinked (undefined)', () => {
-    expect(decodeService(raw({ agentId: 0n })).agentId).toBeUndefined()
+    expect(decodeService(raw({ agentId: 0n }), 'arc-testnet').agentId).toBeUndefined()
   })
 
-  it('defaults empty paymentToken to USDC and drops empty tags', () => {
-    const s = decodeService(raw({ paymentToken: '', tags: ' , ai ,, ' }))
-    expect(s.paymentToken).toBe('USDC')
+  it('drops empty tags and lists only accepted rails', () => {
+    const s = decodeService(raw({ tags: ' , ai ,, ', acceptsGateway: false }), 'arc-testnet')
     expect(s.tags).toEqual(['ai'])
+    expect(s.rails).toEqual(['exact'])
   })
 })
 
@@ -72,6 +78,11 @@ describe('filterServices', () => {
   it('filters by tag and max price', () => {
     expect(filterServices([a, b], { tags: ['data'] })).toEqual([b])
     expect(filterServices([a, b], { maxPrice: '0.1' })).toEqual([a])
+  })
+
+  it('filters to Gateway services', () => {
+    const exactOnly = svc({ rails: ['exact'] })
+    expect(filterServices([a, exactOnly], { gatewayOnly: true })).toEqual([a])
   })
 
   it('returns all with empty options', () => {

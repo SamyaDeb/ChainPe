@@ -12,7 +12,7 @@ import 'dotenv/config'
 import { ChatAnthropic } from '@langchain/anthropic'
 import { HumanMessage } from '@langchain/core/messages'
 import { createReactAgent } from '@langchain/langgraph/prebuilt'
-import { createChainPeLangChainTools } from '@chainpe/ai-tools/langchain'
+import { createChainPeLangChainTools } from '@chainpearc/ai-tools/langchain'
 
 const privateKey = process.env.CHAINPE_PRIVATE_KEY
 if (!privateKey) throw new Error('Set CHAINPE_PRIVATE_KEY in .env')
@@ -25,7 +25,7 @@ const prompt =
 
 const { chainpeFetchTool, discoverServiceTool } = createChainPeLangChainTools({
   privateKey,
-  network: 'fuji',
+  network: 'arc-testnet',
   autoFeedback: true
 })
 

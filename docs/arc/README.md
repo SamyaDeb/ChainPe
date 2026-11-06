@@ -9,6 +9,7 @@ Read in this order.
 | 3 | [ARCHITECTURE.md](ARCHITECTURE.md) | Components, flows, Arc + Circle constants, env vars |
 | 4 | [ARC-STUDIO.md](ARC-STUDIO.md) | How Arc Studio CLI is used (contracts + dashboard) |
 | 5 | [BUILD-PLAN.md](BUILD-PLAN.md) | Phases, order, acceptance criteria |
+| 5a | [HACKATHON-PLAN.md](HACKATHON-PLAN.md) | What is left to do, phase by phase (H1 to H8) |
 | 6 | [SUBMISSION.md](SUBMISSION.md) | Prize checklist, demo script, pitch, README before/after |
 | 7 | [STUDIO-LOG.md](STUDIO-LOG.md) | Arc Studio runs: webUrl, traceId, deployments (judge evidence) |
 
@@ -27,6 +28,7 @@ Read in this order.
 | [09-buyer-sdk-mcp.md](specs/09-buyer-sdk-mcp.md) | SDK, AI tools, MCP wallet on Arc |
 | [10-erc8004-identity.md](specs/10-erc8004-identity.md) | Identity + reputation on Arc's registries |
 | [11-policyvault-arc.md](specs/11-policyvault-arc.md) | Stretch: on-chain spend caps on Arc |
+| [12-usage-fees.md](specs/12-usage-fees.md) | The usage fee: a percentage of verified revenue, collected from an allowance |
 
 ## Arc Studio prompts
 

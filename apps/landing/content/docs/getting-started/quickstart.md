@@ -1,172 +1,90 @@
 ---
-id: quickstart
-title: Quickstart
-sidebar_position: 2
+title: Pay an API in 5 minutes
+description: Pay $0.01 in test USDC to a live weather API from your own wallet.
 ---
 
-# Quickstart
+You'll pay **$0.01 in test USDC** to a live weather API. No real money is involved, because everything runs on Arc testnet.
 
-Make your first USDC micropayment to a ChainPe-registered API on Avalanche C-Chain in under 5 minutes.
+**You need:** Node.js 22.18 or newer.
 
-## Prerequisites
-
-- Node.js 18+
-- An Avalanche C-Chain wallet private key (0x-prefixed hex, 32 bytes)
-- USDC on Avalanche C-Chain — available on major CEXes and bridges (e.g., [Stargate](https://stargate.finance))
-
-You do NOT need AVAX in the agent wallet. The ChainPe facilitator pays gas on your behalf.
-
-## Step 1 — Install
+## 1. Install the CLI
 
 ```bash
-npm install @chainpeavax/sdk
+mkdir chainpe-try && cd chainpe-try
+npm init -y
+npm install @chainpearc/cli
 ```
 
-## Step 2 — Create a ChainPe client
+This keeps everything in one folder, and you run it with `npx chainpe`. To use plain `chainpe` everywhere, run `npm install -g @chainpearc/cli` instead, and drop `npx` from the commands below.
 
-```ts
-import { ChainPe } from '@chainpeavax/sdk'
+## 2. Make a test wallet
 
-const cp = new ChainPe({
-  privateKey: process.env.CHAINPE_PRIVATE_KEY!,
-  network: 'avalanche',
-  // Optional: set a per-call spending cap (default: 1 USDC)
-  maxPerCall: '0.10',
-  // Optional: auto-post ERC-8004 reputation after each paid call
-  autoFeedback: false
-})
-
-console.log('Wallet address:', cp.getAddress())
-```
-
-## Step 3 — Check your balance
-
-```ts
-const balances = await cp.balance()
-console.log(`USDC: ${balances.usdc}`)
-console.log(`AVAX: ${balances.avax}`)
-```
-
-## Step 4 — Discover available services
-
-```ts
-const services = await cp.discover()
-for (const svc of services) {
-  console.log(`${svc.name} — ${svc.pricePerRequest} USDC — ${svc.endpoint}`)
-  if (svc.reputation) {
-    console.log(`  Reputation: ${svc.reputation.score} (${svc.reputation.count} ratings)`)
-  }
-}
-```
-
-## Step 5 — Make a paid API call
-
-```ts
-// cp.fetch() is a drop-in fetch() replacement.
-// It intercepts HTTP 402, signs a USDC payment, and retries automatically.
-const response = await cp.fetch('https://api.example.com/data')
-const data = await response.json()
-console.log(data)
-```
-
-If the endpoint returns `402 Payment Required`, the SDK will:
-1. Parse the x402 payment requirements from the response body
-2. Sign a USDC `transferWithAuthorization` (EIP-3009) with your private key
-3. Attach the payment header (`X-PAYMENT`) and retry the request
-4. Return the successful `200` response
-
-## Step 6 — Use `pay()` for structured results
-
-`cp.pay()` is like `cp.fetch()` but returns a structured object including payment details:
-
-```ts
-const result = await cp.pay<{ answer: string }>('https://api.example.com/ask', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ question: 'What is the capital of France?' })
-})
-
-console.log('Status:', result.status)
-console.log('Answer:', result.data.answer)
-
-if (result.payment) {
-  console.log('Paid:', result.payment.amount, 'USDC')
-  console.log('Recipient:', result.payment.recipient)
-  console.log('Tx hash:', result.payment.txHash)
-}
-```
-
-## Step 7 — Register your own service (optional)
-
-If you have an API you want to monetize, initialize the CLI:
+Use a new wallet just for this. Never use one that holds real money.
 
 ```bash
-npm install -g @chainpeavax/cli
-chainpe init      # interactive wizard → saves to ~/.chainpe/config.json
-chainpe start     # starts the x402 payment proxy
-chainpe register  # publishes your service on-chain
+node -e "const {generatePrivateKey,privateKeyToAccount}=require('viem/accounts');const k=generatePrivateKey();console.log('address:',privateKeyToAccount(k).address);console.log('key:    ',k)"
 ```
 
-See [Merchant Registration](../merchants/registration.md) for a full walkthrough.
-
-## Complete working example
-
-```ts
-import { ChainPe } from '@chainpeavax/sdk'
-
-async function main() {
-  const cp = new ChainPe({
-    privateKey: process.env.CHAINPE_PRIVATE_KEY!,
-    network: 'avalanche',
-    maxPerCall: '0.10'
-  })
-
-  // Check balance
-  const { usdc } = await cp.balance()
-  console.log(`Balance: ${usdc} USDC`)
-
-  // Discover what's available
-  const services = await cp.discover({ maxPrice: '0.05' })
-  console.log(`Found ${services.length} services under 0.05 USDC/call`)
-
-  if (services.length === 0) {
-    console.log('No services found. Try the live indexer:')
-    console.log('https://chainpe-indexer-production.up.railway.app/services')
-    return
-  }
-
-  const target = services[0]
-  console.log(`Calling: ${target.name} at ${target.endpoint}`)
-
-  // Make the paid call
-  const result = await cp.pay(target.endpoint)
-  console.log('Response:', result.data)
-  console.log('Payment:', result.payment)
-}
-
-main().catch(console.error)
+```bash
+export CHAINPE_PRIVATE_KEY=<the key it printed>
 ```
 
-## Expected output
+> The CLI also reads a `.env` file from the current folder. A key already exported in your shell takes priority over it.
 
+## 3. Get free test USDC
+
+Open https://faucet.circle.com, pick **Arc Testnet** and **USDC**, paste your address and request funds. Gas on Arc is paid in USDC, so this one drop covers everything.
+
+## 4. Pay
+
+```bash
+npx chainpe fetch "https://chainpe-arc-demo-production.up.railway.app/forecast?city=Mumbai" \
+  --network arc-testnet --rail exact --max 0.02
 ```
-Balance: 5.00 USDC
-Found 2 services under 0.05 USDC/call
-Calling: Weather Oracle at https://weather.chainpe.app
-Response: { temperature: 22, unit: "C", location: "San Francisco" }
-Payment: { amount: "0.01", recipient: "0xAbc...", txHash: "0x123..." }
+
+Three things happen:
+
+1. The API answers `402` with a price of $0.01. That's under your `--max` of $0.02, so the CLI carries on. A higher price would stop here, before anything is signed.
+2. The CLI signs a USDC transfer of exactly $0.01 to the seller.
+3. Circle settles it on Arc, and only then does the API run.
+
+You'll see the status, a transaction link and the forecast JSON:
+
+```text
+  ✓ 200
+    Tx:       0x11027eae…
+    Explorer: https://explorer.testnet.arc.io/tx/0x11027eae…
+
+{"success":true,"data":{ ... }}
 ```
 
-## Troubleshooting
+Open the explorer link to see your USDC transfer on-chain.
 
-**`x402: server accepts [...] but wallet is on fuji`**
-The endpoint is on a different network. Pass `network: 'avalanche'` to use mainnet services.
+## 5. Try a nanopayment
 
-**`x402: payment of X USDC exceeds maxPerCall`**
-Increase `maxPerCall` in the constructor, or the endpoint is more expensive than expected.
+`/weather` costs $0.001. That's below the $0.01 floor for a normal payment, so it only takes Circle Gateway, which pays from a prepaid balance with no gas per call.
 
-**`ChainPePaymentError: x402: failed to sign payment`**
-Check that `CHAINPE_PRIVATE_KEY` is a valid 0x-prefixed 64-hex-character private key.
+```bash
+npx chainpe deposit 1 --network arc-testnet
 
-**Response status 402 after payment**
-The facilitator could not settle. Check that you have USDC on Avalanche C-Chain at your wallet address. The hosted facilitator is at `https://chainpe-facilitator-production.up.railway.app`.
+npx chainpe fetch "https://chainpe-arc-demo-production.up.railway.app/weather?city=Mumbai" \
+  --network arc-testnet --rail gateway --max 0.01
+```
+
+This time you get a Gateway payment id instead of a transaction hash, because Circle settles these in batches. [Compare the two rails](/docs/concepts/payment-rails).
+
+## If it failed
+
+| You see | Meaning | Fix |
+|---|---|---|
+| `insufficient_funds` | The wallet doesn't hold enough USDC | The faucet drop may not have landed. Wait a minute and retry |
+| `insufficient_balance` | Your Gateway deposit is too low | Run `npx chainpe deposit 1 --network arc-testnet` |
+| `rejected by spendControls` | The price is above `--max` | Raise `--max` if you accept the price. Nothing was signed |
+| `filtered out by policies` | The route has no option on your `--rail` | `/weather` is Gateway only, so use `--rail gateway` |
+
+Everything else is in the [error reference](/docs/reference/errors).
+
+## Next
+
+- [Sell your own API](/docs/getting-started/sell-your-api)
+- [Pay from code with the SDK](/docs/developers/sdk)

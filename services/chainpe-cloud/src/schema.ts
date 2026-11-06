@@ -214,6 +214,43 @@ export const myWallets = pgTable(
   (t) => [primaryKey({ columns: [t.provider, t.address] })]
 )
 
+/** The moment a provider opted in to the usage fee by approving ChainPeFees. Spec 12. */
+export const feeAccounts = pgTable('fee_accounts', {
+  provider: text('provider').primaryKey(),
+  enrolledAt: time('enrolled_at').notNull(),
+})
+
+/** One fee per verified payment. batch_id is null until a collection claims it. */
+export const feeAccruals = pgTable(
+  'fee_accruals',
+  {
+    provider: text('provider').notNull(),
+    eventId: text('event_id').notNull(),
+    revenueAtomic: atomic('revenue_atomic').notNull(),
+    feeBps: integer('fee_bps').notNull(),
+    feeAtomic: atomic('fee_atomic').notNull(),
+    accruedAt: time('accrued_at').notNull(),
+    batchId: text('batch_id'),
+  },
+  (t) => [primaryKey({ columns: [t.provider, t.eventId] }), index('fee_accruals_open').on(t.provider, t.batchId)]
+)
+
+/** A batchId can be sent again safely after a crash, because the contract refuses to collect one twice. */
+export const feeBatches = pgTable(
+  'fee_batches',
+  {
+    id: text('id').primaryKey(),
+    provider: text('provider').notNull(),
+    revenueAtomic: atomic('revenue_atomic').notNull(),
+    feeAtomic: atomic('fee_atomic').notNull(),
+    status: text('status').$type<'pending' | 'collected' | 'failed'>().notNull(),
+    txHash: text('tx_hash'),
+    createdAt: time('created_at').notNull(),
+    updatedAt: time('updated_at').notNull(),
+  },
+  (t) => [index('fee_batches_provider').on(t.provider, t.createdAt), index('fee_batches_status').on(t.status)]
+)
+
 export const indexerState = pgTable('indexer_state', {
   id: integer('id').primaryKey(),
   lastBlock: bigint('last_block', { mode: 'bigint' }).notNull(),

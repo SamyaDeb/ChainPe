@@ -1,7 +1,7 @@
 {
-  "name": "@chainpeavax/agent",
-  "version": "2.0.0",
-  "description": "ChainPe Agent SDK \u2014 Pre-built AI agent with x402 payment capabilities on Avalanche C-Chain",
+  "name": "@chainpearc/agent",
+  "version": "3.1.0",
+  "description": "ChainPe Agent: an AI agent that finds, pays for and uses x402 services in USDC on Arc.",
   "type": "module",
   "bin": {
     "chainpe-agent": "./dist/cli.js"
@@ -32,32 +32,33 @@
     "dev": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "vitest run"
   },
   "keywords": [
     "x402",
-    "avalanche",
-    "c-chain",
+    "arc",
+    "circle",
+    "usdc",
     "ai-agent",
     "sdk",
     "micropayments",
     "pay-per-request",
-    "http-402",
-    "blockchain",
-    "usdc",
     "vercel-ai-sdk",
     "openai",
-    "anthropic"
+    "anthropic",
+    "chainpe"
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=18"
+    "node": ">=22.18"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.70",
     "@ai-sdk/google": "^2.0.62",
     "@ai-sdk/openai": "^2.0.100",
     "@ai-sdk/openai-compatible": "^2.0.35",
+    "@chainpearc/sdk": "^0.4.0",
     "@clack/prompts": "^0.9.1",
     "ai": "^6.0.116",
     "chalk": "^5.4.1",
@@ -66,17 +67,16 @@
     "keytar": "^7.9.0",
     "ora": "^8.2.0",
     "picocolors": "^1.1.1",
-    "viem": "^2.21.0",
-    "x402": "^1.2.0",
-    "x402-fetch": "^1.2.0",
-    "zod": "^3.25.76"
+    "viem": "^2.57.5",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/gradient-string": "^1.1.6",
     "@types/node": "^22.15.21",
     "tsup": "^8.5.0",
     "tsx": "^4.19.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1"
   },
   "files": [
     "dist",

@@ -52,10 +52,10 @@ function withEndpoints(chain: Chain, rpcUrl: string, explorer: string): Chain {
   };
 }
 
-const ARC_TESTNET_RPC = process.env.ARC_TESTNET_RPC_URL ?? "https://rpc.testnet.arc.io";
+const ARC_TESTNET_RPC = process.env.ARC_TESTNET_RPC_URL || "https://rpc.testnet.arc.io";
 const ARC_TESTNET_EXPLORER = "https://explorer.testnet.arc.io";
-const ARC_TESTNET_ACCOUNTS = getAddress(process.env.CHAINPE_ACCOUNTS_ADDRESS ?? "0xD315322c9D83A6f50A04236A2a242e0259bfB580");
-const ARC_RPC = process.env.ARC_RPC_URL ?? "https://rpc.mainnet.arc.io";
+const ARC_TESTNET_ACCOUNTS = getAddress(process.env.CHAINPE_ACCOUNTS_ADDRESS || "0xD315322c9D83A6f50A04236A2a242e0259bfB580");
+const ARC_RPC = process.env.ARC_RPC_URL || "https://rpc.mainnet.arc.io";
 const ARC_EXPLORER = "https://explorer.arc.io";
 
 export const NETWORKS: Record<ChainPeNetwork, NetworkInfo> = {
@@ -104,6 +104,15 @@ export function getNetwork(network: ChainPeNetwork): NetworkInfo {
 export function parseNetwork(value: string): ChainPeNetwork {
   if (Object.hasOwn(NETWORKS, value)) return value as ChainPeNetwork;
   throw new Error(`Invalid network "${value}" (expected ${Object.keys(NETWORKS).join(" or ")}).`);
+}
+
+/** Arc mainnet takes real USDC and ChainPe has not run there yet, so starting a proxy on it needs an explicit flag. */
+export function assertMainnetAllowed(network: ChainPeNetwork, allowMainnet = false): void {
+  if (network === "arc" && !allowMainnet) {
+    throw new Error(
+      "Arc mainnet takes real USDC, and ChainPe has not been tested there yet. Use --network arc-testnet, or pass --allow-mainnet to start anyway."
+    );
+  }
 }
 
 /** Maps an x402 network id (CAIP-2) or ChainPe name to the ChainPe network name. */

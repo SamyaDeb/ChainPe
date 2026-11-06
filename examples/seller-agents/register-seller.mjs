@@ -20,7 +20,7 @@ import {
 } from 'viem'
 import { avalancheFuji, avalanche } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
-import { ChainPeRegistryClient } from '@chainpe/cli'
+import { ChainPeRegistryClient } from '@chainpearc/cli'
 
 const network = process.env.CHAINPE_NETWORK || 'fuji'
 const registryAddress = process.env.CHAINPE_REGISTRY_ADDRESS

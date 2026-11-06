@@ -1,38 +1,48 @@
 /**
- * ChainPeRegistry reader (read-only, viem).
+ * ChainPeAccounts reader (read-only, viem).
  *
- * Reads service registrations from the on-chain `ChainPeRegistry` via the
- * paginated `getServices` view. Pure decode/filter/rank helpers are exported so
- * they can be unit-tested without an RPC connection.
+ * Reads active service listings through the paginated `getServices` view. Pure
+ * decode/filter/rank helpers are exported so they can be unit-tested without an
+ * RPC connection.
  */
 import { publicClientFor } from './networks.js'
 import type {
   ChainPeNetwork,
   ChainPeService,
   DiscoverOptions,
+  PaymentRail,
   RankedService
 } from './types.js'
 
 const SERVICE_COMPONENTS = [
+  { name: 'key', type: 'bytes32' },
+  { name: 'provider', type: 'address' },
+  { name: 'payTo', type: 'address' },
+  { name: 'agentId', type: 'uint256' },
   { name: 'name', type: 'string' },
   { name: 'description', type: 'string' },
   { name: 'tags', type: 'string' },
   { name: 'endpoint', type: 'string' },
   { name: 'pricePerRequest', type: 'string' },
-  { name: 'paymentToken', type: 'string' },
   { name: 'network', type: 'string' },
-  { name: 'payTo', type: 'address' },
-  { name: 'developer', type: 'address' },
-  { name: 'agentId', type: 'uint256' },
+  { name: 'acceptsExact', type: 'bool' },
+  { name: 'acceptsGateway', type: 'bool' },
+  { name: 'active', type: 'bool' },
   { name: 'createdAt', type: 'uint64' },
-  { name: 'updatedAt', type: 'uint64' },
-  { name: 'exists', type: 'bool' }
+  { name: 'updatedAt', type: 'uint64' }
 ] as const
 
-const REGISTRY_ABI = [
+const ACCOUNTS_ABI = [
   {
     type: 'function',
-    name: 'getServiceCount',
+    name: 'serviceCount',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }]
+  },
+  {
+    type: 'function',
+    name: 'MAX_SERVICES_PER_PAGE',
     stateMutability: 'view',
     inputs: [],
     outputs: [{ name: '', type: 'uint256' }]
@@ -50,27 +60,35 @@ const REGISTRY_ABI = [
 ] as const
 
 export interface RawService {
+  key: string
+  provider: string
+  payTo: string
+  agentId: bigint
   name: string
   description: string
   tags: string
   endpoint: string
   pricePerRequest: string
-  paymentToken: string
   network: string
-  payTo: string
-  developer: string
-  agentId: bigint
+  acceptsExact: boolean
+  acceptsGateway: boolean
+  active: boolean
   createdAt: bigint
   updatedAt: bigint
-  exists: boolean
 }
 
 /** Decodes an on-chain service tuple into the public {@link ChainPeService}. */
-export function decodeService(raw: RawService): ChainPeService {
+export function decodeService(
+  raw: RawService,
+  network: ChainPeNetwork
+): ChainPeService {
   const createdAt = Number(raw.createdAt)
   const updatedAt = Number(raw.updatedAt)
+  const rails: PaymentRail[] = []
+  if (raw.acceptsGateway) rails.push('gateway')
+  if (raw.acceptsExact) rails.push('exact')
   return {
-    id: `${raw.developer}:${raw.name}`,
+    id: raw.key,
     name: raw.name,
     description: raw.description,
     tags: raw.tags
@@ -79,17 +97,19 @@ export function decodeService(raw: RawService): ChainPeService {
       .filter(Boolean),
     endpoint: raw.endpoint,
     pricePerRequest: raw.pricePerRequest,
-    paymentToken: (raw.paymentToken || 'USDC') as 'USDC',
+    paymentToken: 'USDC',
     walletAddress: raw.payTo,
-    network: (raw.network as ChainPeNetwork) ?? 'fuji',
-    developer: raw.developer,
+    network,
+    rails,
+    source: 'chainpe',
+    developer: raw.provider,
     agentId: raw.agentId > 0n ? raw.agentId.toString() : undefined,
     createdAt: createdAt ? new Date(createdAt * 1000).toISOString() : undefined,
     updatedAt: updatedAt ? new Date(updatedAt * 1000).toISOString() : undefined
   }
 }
 
-/** Filters services by free-text query, tags, and max price. Pure. */
+/** Filters services by free-text query, tags, max price and rail. Pure. */
 export function filterServices(
   services: ChainPeService[],
   options: DiscoverOptions
@@ -114,6 +134,9 @@ export function filterServices(
     const max = parseFloat(options.maxPrice)
     results = results.filter(s => parseFloat(s.pricePerRequest) <= max)
   }
+  if (options.gatewayOnly) {
+    results = results.filter(s => s.rails.includes('gateway'))
+  }
   return results
 }
 
@@ -136,7 +159,7 @@ export function rankByReputation(services: RankedService[]): RankedService[] {
   })
 }
 
-/** Reads the on-chain ChainPeRegistry. */
+/** Reads the on-chain ChainPeAccounts contract. */
 export class RegistryClient {
   constructor(
     private readonly network: ChainPeNetwork,
@@ -147,29 +170,36 @@ export class RegistryClient {
     return this.address
   }
 
-  /** Lists ALL services via the paginated on-chain view (page size 100). */
+  /** Lists every active service. Deactivated listings stay on-chain, so they are dropped here. */
   async listAllServices(): Promise<ChainPeService[]> {
     const client = publicClientFor(this.network)
-    const count = (await client.readContract({
-      address: this.address,
-      abi: REGISTRY_ABI,
-      functionName: 'getServiceCount'
-    })) as bigint
+    const [count, maxPage] = (await Promise.all([
+      client.readContract({
+        address: this.address,
+        abi: ACCOUNTS_ABI,
+        functionName: 'serviceCount'
+      }),
+      client.readContract({
+        address: this.address,
+        abi: ACCOUNTS_ABI,
+        functionName: 'MAX_SERVICES_PER_PAGE'
+      })
+    ])) as [bigint, bigint]
 
     const total = Number(count)
-    if (total === 0) return []
-
-    const pageSize = 100
+    const pageSize = Number(maxPage)
     const out: ChainPeService[] = []
     for (let offset = 0; offset < total; offset += pageSize) {
       const limit = Math.min(pageSize, total - offset)
       const page = (await client.readContract({
         address: this.address,
-        abi: REGISTRY_ABI,
+        abi: ACCOUNTS_ABI,
         functionName: 'getServices',
         args: [BigInt(offset), BigInt(limit)]
       })) as unknown as RawService[]
-      for (const raw of page) out.push(decodeService(raw))
+      for (const raw of page) {
+        if (raw.active) out.push(decodeService(raw, this.network))
+      }
     }
     return out
   }

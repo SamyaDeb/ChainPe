@@ -9,7 +9,7 @@
 import fs from "fs/promises";
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
-import { createProxyMiddleware, type Options as ProxyOptions } from "http-proxy-middleware";
+import { createProxyMiddleware, fixRequestBody, type Options as ProxyOptions } from "http-proxy-middleware";
 import { decodePaymentResponseHeader, decodePaymentSignatureHeader } from "@x402/core/http";
 import type { FacilitatorClient } from "@x402/core/server";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
@@ -17,7 +17,8 @@ import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { isBatchPayment } from "@circle-fin/x402-batching/server";
 
 import type { ChainPeConfig, PaymentEvent, RouteConfig } from "../types.js";
-import { createRoutesConfig, formatRoutesForDisplay } from "./routeConfig.js";
+import { createRoutesConfig, formatRoutesForDisplay, matchesListedRoute } from "./routeConfig.js";
+import { mcpClassifier, mcpPath, mcpRoutes, type McpDecision } from "./mcp.js";
 import { buildAgentCard } from "../agentCard.js";
 import { getNetwork } from "../chains.js";
 import { AGENT_CARD_PATH } from "../erc8004.js";
@@ -256,14 +257,29 @@ export function createProxyServer(options: ProxyServerOptions): Express {
     });
   }
 
-  // x402 routes.
-  const routesConfig = createRoutesConfig(config, [...(config.routes ?? []), ...(additionalRoutes ?? [])], gateway);
+  // x402 routes. Paid MCP tools are routes of their own.
+  const listedRoutes = [...(config.routes ?? []), ...(additionalRoutes ?? [])];
+  const routesConfig = createRoutesConfig(config, [...listedRoutes, ...mcpRoutes(config)], gateway);
   logger.info("Configured x402 routes:");
   for (const r of formatRoutesForDisplay(routesConfig)) {
     logger.info(`  ${r.path} → ${r.price} ${r.token} (${r.rails.join(", ")})`);
   }
 
   app.use(discoveryDocuments(config, documents));
+
+  if (config.mcp) app.use(mcpClassifier(config));
+
+  // With routes listed, a path outside them answers 404 rather than charging for a page that does not exist.
+  if (listedRoutes.length > 0 && !config.chargeUnlistedPaths) {
+    const mcp = config.mcp ? mcpPath(config.mcp) : undefined;
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      if (req.method === "OPTIONS" || req.path === mcp || matchesListedRoute(listedRoutes, req.method, req.path)) {
+        next();
+        return;
+      }
+      res.status(404).json({ error: "not_found", message: "No paid route at this path. See /openapi.json for the routes." });
+    });
+  }
 
   // Payment tracking runs first so that refused payments are recorded too.
   app.use((req: Request, res: Response, next: NextFunction) => {
@@ -273,8 +289,8 @@ export function createProxyServer(options: ProxyServerOptions): Express {
       return;
     }
     const start = Date.now();
-    const route = req.path;
     res.on("finish", () => {
+      const route = (res.locals.mcp as McpDecision | undefined)?.gatePath ?? req.path;
       const event = toPaymentEvent(signature, res, req.method, route, Date.now() - start);
       if (!event) return;
       analytics.recordPayment(event);
@@ -294,11 +310,13 @@ export function createProxyServer(options: ProxyServerOptions): Express {
   );
   const paymentGate = paymentMiddleware(routesConfig, resourceServer);
   app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.method === "OPTIONS") {
+    const mcp = res.locals.mcp as McpDecision | undefined;
+    if (req.method === "OPTIONS" || mcp?.free) {
       next();
       return;
     }
-    void paymentGate(gateRequest(req), res, next);
+    const gated = gateRequest(req);
+    void paymentGate(mcp?.gatePath ? (Object.create(gated, { path: { value: mcp.gatePath } }) as Request) : gated, res, next);
   });
 
   // Reverse proxy to the provider backend.
@@ -310,6 +328,8 @@ export function createProxyServer(options: ProxyServerOptions): Express {
     on: {
       proxyReq: (proxyReq, req) => {
         for (const header of PAYMENT_REQUEST_HEADERS) proxyReq.removeHeader(header);
+        // The MCP body was parsed to price it, so it is sent on again.
+        fixRequestBody(proxyReq, req as Request);
         logger.verbose(`Proxying ${req.method} ${req.url} → ${config.targetUrl}`);
       },
       proxyRes: (proxyRes, req) => logger.verbose(`Response ${config.targetUrl}${req.url}: ${proxyRes.statusCode}`),

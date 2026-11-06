@@ -1,6 +1,6 @@
 # Website copy changes (Phase 8)
 
-Every text or link changed in `apps/landing`. Design untouched. The testimonials section was removed from `app/page.tsx` (all four quotes were invented); its file is kept.
+Every text or link changed in `apps/landing`. Design untouched. The testimonials section was removed from `app/page.tsx` (all four quotes were invented), and its file was deleted later.
 
 | File | Before | After |
 |---|---|---|
@@ -113,3 +113,9 @@ Every text or link changed in `apps/landing`. Design untouched. The testimonials
 | `page.tsx` | <TestimonialsSection /> |  |
 
 Also in `apps/dashboard` (the legacy June marketing page): "native AVAX" payment claims → USDC (6 strings). In `docs/CHANGELOG.md`: the wrong `1.0.0 - 2024-07` date → `2026-06-13`, plus a new Arc entry.
+
+Later: the `apps/dashboard` marketing page and its metadata moved from Avalanche to Arc. Its finality and fee figures now come from the Arc docs (under 1 second; a target of about $0.001 per USDC transfer), and "No other chain provides this combination" was removed as unproven. In `apps/landing/components/landing/footer-section.tsx`, "Smart Contracts Live on Mainnet" → "Smart Contracts Live on Arc Testnet", because `ChainPeAccounts` is not deployed on mainnet.
+
+Later: the docs at `apps/landing/content/docs` were rewritten for Arc, from 46 pages to 22, using the READMEs, specs and code as sources. Pages for features with no Arc version were removed (merchants, ICM, `PolicyVault`, upgradeable contracts, the old facilitator and indexer APIs), and the "June Avalanche version" banner went with them. The landing page's docs links now go to `/docs` instead of GitHub. `apps/dashboard` no longer ships the June docs build, and its `/docs` redirects to the new docs.
+
+Later: the landing page moved to one layout system (`components/landing/section-layout.tsx`): one container, one section spacing, one two-column split and equal-size boxes. The hero's scrolling stats and the integrations marquees became fixed grids. Test counts were updated to the real numbers (101, 307, 209, 84). Dead links were removed from the footer (X, Discord, Privacy, Terms), and the wrong npm link from the developers section. The docs gained pages for the proxy, `chainpe doctor`, paying without the SDK and errors, written from the source and checked against a local proxy and the live demo.

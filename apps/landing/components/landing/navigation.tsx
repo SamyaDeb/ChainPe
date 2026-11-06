@@ -39,8 +39,8 @@ export function Navigation() {
         }`}
       >
         <div 
-          className={`flex items-center justify-between transition-all duration-500 px-6 lg:px-8 ${
-            isScrolled ? "h-14" : "h-20"
+          className={`flex items-center justify-between transition-all duration-500 ${
+            isScrolled ? "h-14 px-6 lg:px-8" : "h-20 px-6 lg:px-12"
           }`}
         >
           {/* Logo */}
@@ -64,14 +64,15 @@ export function Navigation() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <a href="https://github.com/SamyaDeb/ChainPeAvax/tree/arc/docs/arc" className={`text-foreground/70 hover:text-foreground transition-all duration-500 ${isScrolled ? "text-xs" : "text-sm"}`}>
+            <a href="/docs" className={`text-foreground/70 hover:text-foreground transition-all duration-500 ${isScrolled ? "text-xs" : "text-sm"}`}>
               Docs
             </a>
             <Button
               size="sm"
               className={`bg-foreground hover:bg-foreground/90 text-background rounded-full transition-all duration-500 ${isScrolled ? "px-4 h-8 text-xs" : "px-6"}`}
+              onClick={() => { window.location.href = '/dashboard'; }}
             >
-              Get started
+              Dashboard
             </Button>
           </div>
 
@@ -133,16 +134,19 @@ export function Navigation() {
               className="flex-1 rounded-full h-14 text-base"
               onClick={() => {
                 setIsMobileMenuOpen(false);
-                window.location.href = 'https://github.com/SamyaDeb/ChainPeAvax/tree/arc/docs/arc';
+                window.location.href = '/docs';
               }}
             >
               Docs
             </Button>
             <Button 
               className="flex-1 bg-foreground text-background rounded-full h-14 text-base"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                window.location.href = '/dashboard';
+              }}
             >
-              Get started
+              Dashboard
             </Button>
           </div>
         </div>

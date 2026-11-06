@@ -1,20 +1,21 @@
 "use client";
 
-import { ArrowUpRight } from "lucide-react";
 import { AnimatedWave } from "./animated-wave";
 
 const footerLinks = {
   Product: [
     { name: "Features", href: "#features" },
     { name: "How it works", href: "#how-it-works" },
-    { name: "Infrastructure", href: "#studio" },
+    { name: "Infrastructure", href: "#infrastructure" },
     { name: "Security", href: "#security" },
+    { name: "Pricing", href: "#pricing" },
   ],
   Developers: [
-    { name: "Documentation", href: "https://github.com/SamyaDeb/ChainPeAvax/tree/arc/docs/arc" },
-    { name: "GitHub", href: "https://github.com/SamyaDeb/ChainPeAvax" },
+    { name: "Documentation", href: "/docs" },
+    { name: "GitHub", href: "https://github.com/SamyaDeb/ChainPe" },
     { name: "Live demo", href: "https://chainpe-arc-demo-production.up.railway.app" },
-    { name: "Proof of payments", href: "https://github.com/SamyaDeb/ChainPeAvax/blob/arc/docs/arc/PROOF.md" },
+    { name: "Proof of payments", href: "https://github.com/SamyaDeb/ChainPe/blob/arc/docs/arc/PROOF.md" },
+    { name: "Contract review", href: "https://github.com/SamyaDeb/ChainPe/blob/arc/docs/arc/reviews/chainpe-accounts-review.md" },
   ],
   Ecosystem: [
     { name: "Arc", href: "https://www.arc.io" },
@@ -22,18 +23,7 @@ const footerLinks = {
     { name: "Arc Studio", href: "https://studio.arc.io/app/6872b96e-b3c0-4cdb-abe3-5f17865cdf5a" },
     { name: "Circle Gateway", href: "https://developers.circle.com/gateway" },
   ],
-  Legal: [
-    { name: "Privacy Policy", href: "#" },
-    { name: "Terms of Service", href: "#" },
-    { name: "Contract review", href: "https://github.com/SamyaDeb/ChainPeAvax/blob/arc/docs/arc/reviews/chainpe-accounts-review.md" },
-  ],
 };
-
-const socialLinks = [
-  { name: "X (Twitter)", href: "#" },
-  { name: "GitHub", href: "https://github.com/SamyaDeb/ChainPeAvax" },
-  { name: "Discord", href: "#" },
-];
 
 export function FooterSection() {
   return (
@@ -45,34 +35,18 @@ export function FooterSection() {
       
       <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12">
         {/* Main Footer */}
-        <div className="py-16 lg:py-24">
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-12 lg:gap-8">
+        <div className="py-16 lg:py-20">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-10 lg:gap-8">
             {/* Brand Column */}
             <div className="col-span-2">
               <a href="#" className="inline-flex items-center gap-2 mb-6">
                 <span className="text-2xl font-display font-bold">ChainPe</span>
               </a>
 
-              <p className="text-muted-foreground leading-relaxed mb-8 max-w-xs">
+              <p className="text-muted-foreground leading-relaxed max-w-xs">
                 Payments and reputation for AI agents on Arc. 
                 Monetize any API with sub-cent settlement.
               </p>
-
-              {/* Social Links */}
-              <div className="flex gap-6">
-                {socialLinks.map((link) => (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 group"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {link.name}
-                    <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-                  </a>
-                ))}
-              </div>
             </div>
 
             {/* Link Columns */}
@@ -105,7 +79,7 @@ export function FooterSection() {
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-500" />
-              Smart Contracts Live on Mainnet
+              Smart Contracts Live on Arc Testnet
             </span>
           </div>
         </div>

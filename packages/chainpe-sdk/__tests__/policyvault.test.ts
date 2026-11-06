@@ -25,7 +25,7 @@ describe('PolicyVaultClient', () => {
   it('signs a spend that recovers to the session key with the contract typing', async () => {
     const cp = new PolicyVaultClient({
       privateKey: KEY,
-      network: 'fuji',
+      network: 'arc-testnet',
       vaultAddress: VAULT
     })
     vi.spyOn(cp, 'nonce').mockResolvedValue(3n)
@@ -43,7 +43,7 @@ describe('PolicyVaultClient', () => {
       domain: {
         name: 'ChainPePolicyVault',
         version: '1',
-        chainId: 43113,
+        chainId: 5042002,
         verifyingContract: VAULT
       },
       types: {

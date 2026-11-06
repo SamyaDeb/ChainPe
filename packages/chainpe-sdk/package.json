@@ -1,7 +1,7 @@
 {
-  "name": "@chainpeavax/sdk",
-  "version": "0.2.0",
-  "description": "ChainPe SDK \u2014 add x402 USDC payments + on-chain ERC-8004 reputation to any app in 3 lines, on Avalanche C-Chain.",
+  "name": "@chainpearc/sdk",
+  "version": "0.4.1",
+  "description": "ChainPe SDK: pay x402 APIs in USDC on Arc, find services through Circle Discovery, and rate them with ERC-8004.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -26,9 +26,10 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "viem": "^2.21.0",
-    "x402": "^1.2.0",
-    "x402-fetch": "^1.2.0"
+    "@circle-fin/x402-batching": "^4.0.0",
+    "@x402/evm": "^2.30.0",
+    "@x402/fetch": "^2.30.0",
+    "viem": "^2.57.5"
   },
   "devDependencies": {
     "@types/node": "^22.15.21",
@@ -40,8 +41,8 @@
     "x402",
     "sdk",
     "usdc",
-    "avalanche",
-    "c-chain",
+    "arc",
+    "circle",
     "payments",
     "micropayments",
     "ai-agents",
@@ -52,9 +53,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SamyaDeb/ChainPe"
+    "url": "git+https://github.com/SamyaDeb/ChainPe.git"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.18"
   }
 }

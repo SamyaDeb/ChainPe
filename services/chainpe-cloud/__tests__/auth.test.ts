@@ -191,6 +191,11 @@ describe('sessions', () => {
     expect(res.body.message).toMatch(/ended/i)
   })
 
+  it('lets the dashboard read Retry-After on a cross-origin 429', async () => {
+    const res = await request(h.app).post('/v1/auth/nonce').set('Origin', 'https://app.chainpe.test').send({ address: newAccount().address })
+    expect(res.headers['access-control-expose-headers']).toBe('Retry-After')
+  })
+
   it('sends CORS headers only to the allowed origin, without credentials', async () => {
     const allowed = await request(h.app).get('/health').set('Origin', `https://${DASH_DOMAIN}`)
     expect(allowed.headers['access-control-allow-origin']).toBe(`https://${DASH_DOMAIN}`)

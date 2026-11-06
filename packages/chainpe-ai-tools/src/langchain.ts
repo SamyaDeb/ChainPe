@@ -5,10 +5,10 @@
  * ```ts
  * import { ChatAnthropic } from '@langchain/anthropic'
  * import { createReactAgent } from '@langchain/langgraph/prebuilt'
- * import { createChainPeLangChainTools } from '@chainpe/ai-tools/langchain'
+ * import { createChainPeLangChainTools } from '@chainpearc/ai-tools/langchain'
  *
  * const { chainpeFetchTool, discoverServiceTool } = createChainPeLangChainTools({
- *   privateKey, network: 'fuji', autoFeedback: true
+ *   privateKey, autoFeedback: true
  * })
  *
  * const agent = createReactAgent({
@@ -26,7 +26,9 @@ import {
   runDiscover,
   FETCH_TOOL_DESCRIPTION,
   DISCOVER_TOOL_DESCRIPTION,
-  type ChainPeToolOptions
+  type ChainPeToolOptions,
+  type DiscoverInput,
+  type FetchInput
 } from './core.js'
 
 /**
@@ -38,7 +40,7 @@ export function createChainPeLangChainTools(options: ChainPeToolOptions) {
   const client = getClient(options)
 
   const chainpeFetchTool = tool(
-    async input => JSON.stringify(await runFetch(client, input)),
+    async (input: FetchInput) => JSON.stringify(await runFetch(client, input)),
     {
       name: 'chainpe_fetch',
       description: FETCH_TOOL_DESCRIPTION,
@@ -47,7 +49,7 @@ export function createChainPeLangChainTools(options: ChainPeToolOptions) {
   )
 
   const discoverServiceTool = tool(
-    async input => JSON.stringify(await runDiscover(client, input)),
+    async (input: DiscoverInput) => JSON.stringify(await runDiscover(client, input)),
     {
       name: 'discover_service',
       description: DISCOVER_TOOL_DESCRIPTION,

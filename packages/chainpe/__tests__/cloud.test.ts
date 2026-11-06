@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createSiweMessage } from "viem/siwe";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { serviceKey } from "../src/accounts.js";
-import { assertCloudUrl, clearCloudCredentials, readStoredCredentials, resolveCredentials, saveCloudCredentials } from "../src/cloud/credentials.js";
+import { assertCloudUrl, chooseCloudUrl, clearCloudCredentials, HOSTED_CLOUD_URL, readStoredCredentials, resolveCredentials, saveCloudCredentials } from "../src/cloud/credentials.js";
 import { readDoctorReport, sendHeartbeat } from "../src/cloud/heartbeat.js";
 import { assertMessageIsSafe, loginAndCreateKey } from "../src/cloud/login.js";
 import { startTelemetry } from "../src/cloud/start.js";
@@ -16,6 +16,20 @@ import type { ChainPeConfig, PaymentEvent } from "../src/types.js";
 const SELLER = "0x261f058496D81703c858DDFEd201834F0b5f2e73";
 const CHAIN_ID = 5042002;
 const CLOUD = "https://api.chainpe.test";
+
+describe("chooseCloudUrl", () => {
+  it("prefers the flag, then the environment, then the saved URL", () => {
+    expect(chooseCloudUrl("arc-testnet", "https://flag.test", "https://env.test", "https://saved.test")).toBe("https://flag.test");
+    expect(chooseCloudUrl("arc-testnet", undefined, "https://env.test", "https://saved.test")).toBe("https://env.test");
+    expect(chooseCloudUrl("arc-testnet", undefined, "", "https://saved.test")).toBe("https://saved.test");
+  });
+
+  it("defaults to the hosted API on Arc testnet only", () => {
+    expect(chooseCloudUrl("arc-testnet")).toBe(HOSTED_CLOUD_URL);
+    expect(() => chooseCloudUrl("arc")).toThrow(/only covers Arc testnet/);
+    expect(chooseCloudUrl("arc", "https://own.test")).toBe("https://own.test");
+  });
+});
 
 const payment = (overrides: Partial<PaymentEvent> = {}): PaymentEvent => ({
   id: `chainpe_${"a".repeat(48)}`,

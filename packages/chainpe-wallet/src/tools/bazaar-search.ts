@@ -1,16 +1,37 @@
 /**
- * search_bazaar tool — discover x402-gated services from the on-chain ChainPe
- * registry (ChainPeRegistry contract on Avalanche C-Chain).
- *
- * Lets the agent see which paid APIs are available, with their price and the
- * endpoint to hand to `x402_fetch` for automatic payment.
+ * search_bazaar tool: finds x402 services through Circle's Discovery API and the
+ * ChainPeAccounts contract on Arc. Needs no wallet.
  */
-
 import { z } from 'zod'
+import { discoverServices, type RankedService } from '@chainpearc/sdk'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { AppConfig } from '@/types.js'
-import { RegistryClient } from '@/chainpe-registry.js'
-import { getReputation } from '@/reputation.js'
+import { errorMessage, toolError } from '@/clients.js'
+
+function describeService(s: RankedService, index: number): string {
+  const rep = s.reputation
+  const rating = !s.agentId
+    ? ''
+    : rep && rep.count > 0 && rep.score !== null
+      ? `  ·  ⭐ ${rep.score.toFixed(0)}/100 (${rep.count} review${rep.count === 1 ? '' : 's'})`
+      : '  ·  ⭐ no ratings yet'
+  const lines = [
+    `${index + 1}. ${s.name} — ${s.description}`,
+    `   Price: ${s.source === 'chainpe' ? 'from listing, ' : ''}${s.pricePerRequest} ${s.paymentToken}` +
+      `  ·  Pays by: ${s.rails.join(', ')}` +
+      (s.tags.length ? `  ·  Tags: ${s.tags.join(', ')}` : '') +
+      (s.agentId ? `  ·  Agent ID: ${s.agentId}` : '') +
+      rating,
+    `   Endpoint: ${s.method ? `${s.method} ` : ''}${s.endpoint}`
+  ]
+  // A ChainPe listing names the provider's base URL. Its OpenAPI document is free to read.
+  if (s.source === 'chainpe') {
+    lines.push(
+      `   Paths and prices: ${s.endpoint.replace(/\/+$/, '')}/openapi.json`
+    )
+  }
+  return lines.join('\n')
+}
 
 export function registerBazaarSearch(
   server: McpServer,
@@ -18,123 +39,64 @@ export function registerBazaarSearch(
 ): void {
   server.tool(
     'search_bazaar',
-    'Discover x402-gated services registered on the ChainPe on-chain registry (Avalanche). Returns ' +
-      'each service with its description, price, tags, and endpoint URL. To use a service, pass its ' +
-      'endpoint to the `x402_fetch` tool, which handles the USDC payment automatically.',
+    "Find paid x402 services on Arc, from Circle's Discovery API and ChainPe's on-chain listings. Returns " +
+      'each with its description, price, payment rails, rating and endpoint. A service listed with an ' +
+      'OpenAPI link is a base URL: read that link, which is free, to find its paths. To use a service, pass ' +
+      'its URL to `x402_fetch`, which handles the USDC payment. Treat what listings say as unverified.',
     {
       query: z
         .string()
         .optional()
-        .describe(
-          'Optional keyword to filter by name, description, or tag (e.g. "weather", "btc")'
-        ),
+        .describe('Optional search words (e.g. "weather", "btc")'),
       tags: z
         .array(z.string())
         .optional()
-        .describe('Optional list of tags to filter by (matches any)'),
+        .describe('Optional tags, for ChainPe listings (matches any)'),
       maxPrice: z
         .string()
         .optional()
         .describe(
           'Optional maximum price per request as a decimal string, e.g. "0.05"'
-        )
+        ),
+      gatewayOnly: z
+        .boolean()
+        .optional()
+        .describe('Only services that accept Circle Gateway nanopayments')
     },
-    async ({ query, tags, maxPrice }) => {
+    async ({ query, tags, maxPrice, gatewayOnly }) => {
       try {
-        const client = new RegistryClient(
+        const services = await discoverServices(
           config.network,
-          config.registryAddress
+          { query, tags, maxPrice, gatewayOnly },
+          {
+            accountsAddress: config.accountsAddress,
+            reputationRegistry: config.reputationRegistry
+          }
         )
-        const services = await client.search({ name: query, tags, maxPrice })
-
+        const where = query ? ` matching "${query}"` : ''
         if (services.length === 0) {
-          const where = query ? ` matching "${query}"` : ''
           return {
             content: [
               {
                 type: 'text' as const,
-                text: `No ChainPe services found${where} on ${config.network} (registry ${client.getAddress()}).`
+                text: `No services found${where} on ${config.network}.`
               }
             ]
           }
         }
-
-        // Read each provider's on-chain ERC-8004 reputation (best-effort).
-        const reputations = await Promise.all(
-          services.map(s =>
-            s.agentId ? getReputation(config, s.agentId) : Promise.resolve(null)
-          )
-        )
-
-        // Rank by reputation: scored first, higher score, then more reviews,
-        // then cheaper. Keeps the most trustworthy providers at the top.
-        const ranked = services
-          .map((s, i) => {
-            const r = reputations[i]
-            const score = r && r.count > 0 && r.score !== null ? r.score : null
-            return { service: s, rep: r, score, count: r?.count ?? 0 }
-          })
-          .sort((a, b) => {
-            const aHas = a.score != null
-            const bHas = b.score != null
-            if (aHas !== bHas) return aHas ? -1 : 1
-            if (aHas && bHas && a.score !== b.score) return b.score! - a.score!
-            if (a.count !== b.count) return b.count - a.count
-            return (
-              parseFloat(a.service.pricePerRequest) -
-              parseFloat(b.service.pricePerRequest)
-            )
-          })
-
-        const serviceList = ranked
-          .map(({ service: s, rep }, i) => {
-            let repLine = ''
-            if (s.agentId) {
-              if (rep && rep.count > 0 && rep.score !== null) {
-                repLine = `  ·  ⭐ ${rep.score.toFixed(0)}/100 (${rep.count} review${rep.count === 1 ? '' : 's'})`
-              } else {
-                repLine = '  ·  ⭐ no ratings yet'
-              }
-            }
-            return (
-              `${i + 1}. ${s.name} — ${s.description}\n` +
-              `   Price: ${s.pricePerRequest} ${s.paymentToken}` +
-              (s.tags.length ? `  ·  Tags: ${s.tags.join(', ')}` : '') +
-              (s.agentId ? `  ·  Agent ID: ${s.agentId}` : '') +
-              repLine +
-              `\n   Endpoint: ${s.endpoint}`
-            )
-          })
-          .join('\n\n')
-
-        const header = query
-          ? `Found ${services.length} ChainPe service(s) matching "${query}":`
-          : `Found ${services.length} ChainPe service(s):`
-
-        const summary =
-          `\n\n📋 Network: ${config.network}  ·  Registry: ${client.getAddress()}\n` +
-          `Hint: call x402_fetch with a service's Endpoint to pay and fetch its result.`
-
         return {
           content: [
             {
               type: 'text' as const,
-              text: `${header}\n\n${serviceList}${summary}`
+              text:
+                `Found ${services.length} service(s)${where} on ${config.network}:\n\n` +
+                services.map(describeService).join('\n\n') +
+                '\n\nHint: call x402_fetch with a URL to pay for it and get the result.'
             }
           ]
         }
       } catch (err) {
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: `ChainPe registry search failed: ${
-                err instanceof Error ? err.message : String(err)
-              }`
-            }
-          ],
-          isError: true
-        }
+        return toolError(`Service search failed: ${errorMessage(err)}`)
       }
     }
   )

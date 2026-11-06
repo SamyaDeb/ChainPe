@@ -1,13 +1,17 @@
-export type PaymentNetwork = 'fuji' | 'avalanche'
+import type { ChainPeNetwork, PaymentRail } from '@chainpearc/sdk'
+
+export type PaymentNetwork = ChainPeNetwork
 
 export interface AppConfig {
   privateKey?: string
   network: PaymentNetwork
-  registryAddress?: string
+  /** Payment rails, in order of preference. */
+  rails: PaymentRail[]
+  accountsAddress?: string
   reputationRegistry?: string
   budget: BudgetConfig
   canPay: boolean
-  mode: 'READ_ONLY' | 'AVALANCHE'
+  mode: 'READ_ONLY' | 'ARC'
   reload(): void
 }
 
@@ -19,7 +23,7 @@ export interface BudgetConfig {
 export interface WalletFileConfig {
   privateKey?: string
   network?: string
-  registryAddress?: string
+  accountsAddress?: string
   reputationRegistry?: string
   createdAt?: string
 }

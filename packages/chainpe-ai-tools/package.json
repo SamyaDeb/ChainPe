@@ -1,7 +1,7 @@
 {
-  "name": "@chainpeavax/ai-tools",
-  "version": "0.2.2",
-  "description": "ChainPe agent tools — drop-in x402 pay + discover tools for the Vercel AI SDK and LangChain, on Avalanche C-Chain.",
+  "name": "@chainpearc/ai-tools",
+  "version": "0.4.0",
+  "description": "ChainPe agent tools: drop-in x402 pay and discover tools for the Vercel AI SDK and LangChain, on Arc.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -34,12 +34,13 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@chainpeavax/sdk": "^0.1.0"
+    "@chainpearc/sdk": "^0.4.0",
+    "zod": "^3.25.0 || ^4.0.0"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.3.0",
     "ai": ">=4.0.0",
-    "zod": "^3.23.0"
+    "zod": "^3.25.0 || ^4.0.0"
   },
   "peerDependenciesMeta": {
     "ai": {
@@ -50,13 +51,13 @@
     }
   },
   "devDependencies": {
-    "@langchain/core": "^0.3.0",
+    "@langchain/core": "^1.3.5",
     "@types/node": "^22.15.21",
     "ai": "^6.0.0",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3",
     "vitest": "^3.2.1",
-    "zod": "^3.23.0"
+    "zod": "^4.6.7"
   },
   "keywords": [
     "x402",
@@ -65,16 +66,16 @@
     "langchain",
     "tools",
     "usdc",
-    "avalanche",
+    "arc",
     "payments",
     "chainpe"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SamyaDeb/ChainPe"
+    "url": "git+https://github.com/SamyaDeb/ChainPe.git"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.18"
   }
 }

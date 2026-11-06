@@ -6,12 +6,12 @@
  *   npm install
  *   npm run vercel -- "Find a weather service and tell me the weather in London"
  *
- * The wallet pays in USDC on Avalanche Fuji; the provider's facilitator pays gas.
+ * The wallet pays in USDC on Arc testnet, and Circle settles the payment.
  */
 import 'dotenv/config'
 import { generateText, stepCountIs } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
-import { createChainPeTools } from '@chainpe/ai-tools/vercel'
+import { createChainPeTools } from '@chainpearc/ai-tools/vercel'
 
 const privateKey = process.env.CHAINPE_PRIVATE_KEY
 if (!privateKey) throw new Error('Set CHAINPE_PRIVATE_KEY in .env')
@@ -24,7 +24,7 @@ const prompt =
 
 const tools = createChainPeTools({
   privateKey,
-  network: 'fuji',
+  network: 'arc-testnet',
   autoFeedback: true // build the provider's on-chain reputation after paying
 })
 

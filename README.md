@@ -14,7 +14,8 @@ ChainPe is for **developers** who already run an API, an MCP server or an AI age
 | What | Link |
 |---|---|
 | Demo API (a weather API behind ChainPe) | https://chainpe-arc-demo-production.up.railway.app |
-| Provider dashboard | TODO(dashboard-url) |
+| Docs | https://chainpe.vercel.app/docs |
+| Provider dashboard | https://chainpe.vercel.app/dashboard |
 | Arc Studio workspace (contracts + dashboard) | https://studio.arc.io/app/6872b96e-b3c0-4cdb-abe3-5f17865cdf5a |
 | `ChainPeAccounts` contract (verified source) | [0xD315…B580 on the Arc explorer](https://explorer.testnet.arc.io/address/0xD315322c9D83A6f50A04236A2a242e0259bfB580) |
 | Proof of live payments | [docs/arc/PROOF.md](docs/arc/PROOF.md) |
@@ -45,14 +46,11 @@ Circle settles Gateway payments in batches. ChainPe offers both, and the agent p
 
 ## Try it in 5 minutes
 
-The Arc version is on the `arc` branch and is not on npm yet, so build it from source.
-
 ```sh
-git clone https://github.com/SamyaDeb/ChainPeAvax.git
-cd ChainPeAvax && git checkout arc
-npm install && npm run build:cli
-alias chainpe="node $(pwd)/packages/chainpe/dist/cli.js"
+npm install -g @chainpearc/cli
 ```
+
+The command is `chainpe`. It needs Node.js 22.18 or newer.
 
 **Sell your API (provider):**
 
@@ -61,8 +59,11 @@ chainpe init                          # your API URL, price and payout wallet
 chainpe start --network arc-testnet   # the paying proxy, in front of your API
 chainpe identity                      # an ERC-8004 identity for your service
 chainpe register                      # your provider account on Arc
+chainpe login                         # connects this machine to the dashboard
 chainpe doctor                        # checks you are ready for agents and Circle's marketplace
 ```
+
+Going public and keeping your key safe: [packages/chainpe/README.md](packages/chainpe/README.md#go-public).
 
 **ERC-8004** is a standard on-chain registry for agent identities and ratings.
 
@@ -82,7 +83,7 @@ A step-by-step guide for a first payment: [docs/arc/TRY-IT.md](docs/arc/TRY-IT.m
 
 ChainPe first ran on Avalanche C-Chain mainnet. It had the x402 proxy CLI, an SDK, AI framework tools,
 an MCP wallet for Claude, on-chain reputation, and a hosted facilitator and indexer.
-That version is kept at the tag [`avalanche-june-2026`](https://github.com/SamyaDeb/ChainPeAvax/tree/avalanche-june-2026),
+That version is kept at the tag [`avalanche-june-2026`](https://github.com/SamyaDeb/ChainPe/tree/avalanche-june-2026),
 and its README is in [docs/avalanche/README.md](docs/avalanche/README.md).
 
 Proof from June 17, 2026: a real 0.01 USDC payment ([tx](https://snowtrace.io/tx/0x953923f2b653953b4f8b0d5ea1925361a0c967a8cb9b2a542814b7d564d92006))
@@ -110,7 +111,7 @@ Commits during the hackathon: **79** on the `arc` branch, as of Nov 6, 2026 at 1
 - The CLI, proxy and SDK are free and open source.
 - Every registered developer gets a dashboard. **Free** covers one service and the last 7 days.
 - **Pro** costs 19 USDC per 30 days (1 USDC on testnet), paid on Arc. It adds full history, CSV export and more detail.
-- ChainPe takes **no cut** of payments. Circle only settles to a wallet the seller signs for, so the money goes straight from buyer to seller.
+- **Opt-in usage fee:** 1% of verified revenue, or 0.5% on Pro. The fee contract (`0x09c85EEdeF018274861aae0964f9681C11f91Af4`) is live on Arc testnet, and only a provider who approves an allowance in Billing is charged. Buyers still pay the seller's wallet directly, because Circle only settles to a wallet the seller signs for. The fee will be collected afterwards, in batches, from USDC the seller approves and can revoke. Details: [spec 12](docs/arc/specs/12-usage-fees.md).
 
 More detail: [docs/arc/BUSINESS-MODEL.md](docs/arc/BUSINESS-MODEL.md).
 
@@ -133,7 +134,7 @@ More detail: [docs/arc/BUSINESS-MODEL.md](docs/arc/BUSINESS-MODEL.md).
   If a batch ever failed, the seller would have served for free. The cloud service marks it as failed.
 - **No refunds yet.** If your API fails after a payment, the buyer is still charged. The proxy counts these cases.
 - **Anyone can rate an agent** on ERC-8004. The dashboard shows ratings from real payers first.
-- **Testnet only.** Nothing has run on Arc mainnet yet.
+- **Testnet only.** Nothing has run on Arc mainnet yet, so `chainpe start` refuses it without `--allow-mainnet`.
 - **Not in Circle's marketplace yet.** The listing is prepared. Once submitted, Circle reviews it by hand.
 
 Reviews: [contract](docs/arc/reviews/chainpe-accounts-review.md) and [dashboard](docs/arc/reviews/dashboard-review.md).

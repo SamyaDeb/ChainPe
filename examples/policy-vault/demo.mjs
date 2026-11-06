@@ -10,7 +10,7 @@
  * Run: node demo.mjs   (needs a deployed VAULT_ADDRESS + the three funded keys)
  */
 import 'dotenv/config'
-import { PolicyVaultClient, publicClientFor } from '@chainpe/sdk'
+import { PolicyVaultClient, publicClientFor } from '@chainpearc/sdk'
 import { createWalletClient, http, parseUnits, erc20Abi } from 'viem'
 import { avalanche, avalancheFuji } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'

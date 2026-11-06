@@ -15,7 +15,7 @@ Build order and acceptance criteria: `docs/arc/BUILD-PLAN.md`.
   - nanopayments → Circle Gateway via `@circle-fin/x402-batching`
   - discovery → Circle Discovery API (`https://api.circle.com/v2/x402/discovery/resources`)
   - identity/reputation → Arc's canonical ERC-8004 registries (addresses in `docs/arc/ARCHITECTURE.md`)
-- The CLI (`packages/chainpe`) is Arc-only: `arc` and `arc-testnet`, settled through Circle. Avalanche (`avalanche`, `fuji`) was removed from it because Circle's services don't cover Avalanche. Other packages still target Avalanche until their Arc work lands.
+- The CLI (`packages/chainpe`) is Arc-only: `arc` and `arc-testnet`, settled through Circle. Avalanche (`avalanche`, `fuji`) was removed from it because Circle's services don't cover Avalanche. Every published package (`@chainpearc/cli`, `sdk`, `ai-tools`, `wallet-mcp`, `agent`) is Arc-only. Keep Avalanche out of them.
 - x402 v1 (`x402`, `x402-express`, `x402-fetch` 1.2.0) has **no Arc**. Use x402 v2 (`@x402/core`, `@x402/evm`, `@x402/express`, `@x402/fetch` 2.30.x).
 - Arc gas is USDC. Native USDC = 18 decimals, ERC-20 USDC (`0x3600…0000`) = 6 decimals. Always use the ERC-20 interface for amounts.
 - Never forward a request to the provider backend before settlement is final. On `exact` that is `completed` (not `pending`). On Gateway it is settle `success: true` with a transfer id: funds are locked and the batch lands later (`docs/arc/specs/03a-gateway-design.md`).
@@ -40,11 +40,11 @@ claude mcp add --transport http arc-docs https://docs.arc.io/mcp   # Arc docs se
 
 | Path | What | Arc work |
 |---|---|---|
-| `packages/chainpe` | `@chainpeavax/cli` — provider CLI + x402 proxy | specs 01, 02, 03, 04, 05, 06 |
-| `packages/chainpe-sdk` | `@chainpeavax/sdk` — buyer SDK | spec 09 |
+| `packages/chainpe` | `@chainpearc/cli` — provider CLI (command: `chainpe`) + x402 proxy | specs 01, 02, 03, 04, 05, 06 |
+| `packages/chainpe-sdk` | `@chainpearc/sdk` — buyer SDK | spec 09 |
 | `packages/chainpe-ai-tools` | Vercel AI / LangChain tools | spec 09 |
-| `packages/chainpe-wallet` | `chainpe-wallet-mcp` — Claude MCP wallet | spec 09 |
-| `packages/chainpe-agent` | `@chainpeavax/agent` | spec 09 (network only) |
+| `packages/chainpe-wallet` | `@chainpearc/wallet-mcp` — Claude MCP wallet | spec 09 |
+| `packages/chainpe-agent` | `@chainpearc/agent` | spec 09 (network only) |
 | `services/chainpe-indexer` | becomes `chainpe-cloud` API | spec 08 |
 | `services/chainpe-facilitator` | retired for Arc (Circle replaces it) | not used by the CLI |
 | `contracts/` | Hardhat, Avalanche contracts | Arc contracts built in Arc Studio → `contracts-arc/` |

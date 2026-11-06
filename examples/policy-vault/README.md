@@ -2,7 +2,7 @@
 
 An owner sets **on-chain spending limits**; their agent spends **gaslessly**
 within them; the **chain blocks an overspend**. Built on `PolicyVault`
-(`contracts/contracts/PolicyVault.sol`) + the `@chainpe/sdk` `PolicyVaultClient`
+(`contracts/contracts/PolicyVault.sol`) + the `@chainpearc/sdk` `PolicyVaultClient`
 — a non-4337 approach to gasless agent spending.
 
 ```

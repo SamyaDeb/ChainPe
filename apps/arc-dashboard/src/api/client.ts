@@ -1,6 +1,7 @@
 import type {
   Buyers,
   CreatedKey,
+  Fees,
   Health,
   KeyList,
   Me,
@@ -129,6 +130,7 @@ export interface ChainPeApi {
   health(): Promise<Health>
   wallets(): Promise<Wallets>
   putWallets(wallets: string[]): Promise<Wallets>
+  fees(): Promise<Fees>
   keys(): Promise<KeyList>
   createKey(name?: string): Promise<CreatedKey>
   revokeKey(id: string): Promise<RevokedKey>
@@ -163,6 +165,7 @@ function build(transport: Transport): ChainPeApi {
     health: () => json({ method: 'GET', path: '/v1/me/health' }),
     wallets: () => json({ method: 'GET', path: '/v1/me/wallets' }),
     putWallets: (wallets) => json({ method: 'PUT', path: '/v1/me/wallets', body: { wallets } }),
+    fees: () => json({ method: 'GET', path: '/v1/me/fees' }),
     keys: () => json({ method: 'GET', path: '/v1/keys' }),
     createKey: (name) => json({ method: 'POST', path: '/v1/keys', body: name ? { name } : {} }),
     revokeKey: (id) => json({ method: 'DELETE', path: `/v1/keys/${encodeURIComponent(id)}` }),

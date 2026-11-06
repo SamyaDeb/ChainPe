@@ -30,15 +30,16 @@ Pass `network` and `rails` through; tool descriptions mention USDC on Arc. No ot
 | Tool | Arc behaviour |
 |---|---|
 | `search_bazaar` | Circle Discovery API (spec above) |
-| `x402_fetch`, `pay` | both rails, budget guard |
+| `x402_fetch`, `pay` | both rails, budget guard. `pay` takes a URL and a rail |
 | `check_balance` | USDC + Gateway balance; gas shown as USDC |
 | `transfer_usdc` | ERC-20 `0x3600…0000` |
-| `transfer_avax` | hidden when network is `arc*` |
+| `transfer_avax` | removed: the published packages are Arc-only |
+| `deposit_gateway` | added: moves USDC into Gateway, up to the daily limit |
 | `give_feedback` | Arc ReputationRegistry |
 | `spending_report` | unchanged, labels per network |
 | `request_funding` | on `arc-testnet` returns `https://faucet.circle.com` instructions |
 
-`manifest.json` description: "Pay for x402 APIs in USDC on Arc and Avalanche".
+`manifest.json` describes an Arc wallet only. `NETWORK=arc` also needs `ALLOW_MAINNET=true`.
 
 ## Agent (`packages/chainpe-agent`)
 

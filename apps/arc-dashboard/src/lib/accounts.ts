@@ -17,6 +17,13 @@ export const accountsAbi = [
   },
   {
     type: 'function',
+    name: 'registerProvider',
+    inputs: [{ name: 'agentId', type: 'uint256', internalType: 'uint256' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
     name: 'subscribe',
     inputs: [{ name: 'periods', type: 'uint8', internalType: 'uint8' }],
     outputs: [],

@@ -1,5 +1,7 @@
 # Build plan
 
+**What is left to do now lives in [HACKATHON-PLAN.md](HACKATHON-PLAN.md).**
+
 Build in this order. A real Arc payment must work before anything is polished. Each phase ends with
 an acceptance check; do not start the next phase until it passes (except where marked parallel).
 
@@ -71,16 +73,16 @@ Use a third wallet for that test: the smoke test made the buyer wallet a provide
 
 ## Phase 6 — dashboard in Arc Studio
 
-- [ ] ARC-STUDIO.md run 2, then run 3.
-- [ ] Pull to `apps/arc-dashboard`; deploy (Vercel); keep Studio workspace URL.
+- [x] ARC-STUDIO.md run 2, then run 3.
+- [x] Pull to `apps/arc-dashboard`; deploy (Vercel); keep Studio workspace URL.
 
 **Accept:** connecting the seller wallet shows only its services, revenue (exact + Gateway), buyers, ratings, doctor status; another wallet (a third one, not the buyer, which is also a provider) sees nothing.
 
 ## Phase 7 — buyer side (parallel with 5–6)
 
-- [ ] Spec 09: SDK `network: 'arc' | 'arc-testnet'`, both rails, Circle Discovery in `discover()`.
-- [ ] MCP wallet tools on Arc; `transfer_avax` hidden on Arc; gas shown in USDC.
-- [ ] Spec 10: `giveFeedback` to Arc ReputationRegistry.
+- [x] Spec 09: SDK `network: 'arc' | 'arc-testnet'`, both rails, Circle Discovery in `discover()`.
+- [x] MCP wallet tools on Arc; `transfer_avax` removed; gas shown in USDC.
+- [x] Spec 10: `giveFeedback` to Arc ReputationRegistry (simulated against the live registry; no paid rating yet).
 
 **Accept:** Claude (MCP wallet) finds the demo seller, pays it on both rails, and leaves a rating that the dashboard shows.
 
@@ -90,7 +92,7 @@ Use a third wallet for that test: the smoke test made the buyer wallet a provide
 - [ ] If a production Circle key arrives: deploy `ChainPeAccounts` on mainnet, one real mainnet payment.
 - [ ] `chainpe doctor` → submit Circle "Get listed" form.
 - [ ] SUBMISSION.md checklist, README "Before / During", architecture diagram, video.
-- [ ] Fix site copy: "native AVAX" → USDC; remove placeholder testimonial and "0.99% uptime"; GitHub links → `SamyaDeb/ChainPeAvax`; changelog dates.
+- [ ] Fix site copy: "native AVAX" → USDC; remove placeholder testimonial and "0.99% uptime"; GitHub links → `SamyaDeb/ChainPe`; changelog dates.
 
 ## Commit discipline
 

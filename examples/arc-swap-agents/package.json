@@ -1,0 +1,20 @@
+{
+  "name": "chainpe-arc-swap-agents-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Three paid swap agents on Arc Testnet, ranked by ERC-8004 reputation, that Claude can hire through the ChainPe wallet MCP.",
+  "scripts": {
+    "setup": "node setup.mjs",
+    "up": "node up.mjs",
+    "review": "node review.mjs"
+  },
+  "dependencies": {
+    "@chainpearc/sdk": "file:../../packages/chainpe-sdk",
+    "@circle-fin/adapter-viem-v2": "^1.0.0",
+    "@circle-fin/app-kit": "^1.21.0",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "viem": "^2.21.0"
+  }
+}

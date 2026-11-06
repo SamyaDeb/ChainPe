@@ -324,7 +324,7 @@ Pay-per-request means thousands of tiny USDC payments with an agent waiting on t
 | Cross-L1 | Avalanche ICM / Teleporter — native, no third-party bridges |
 | EVM compatibility | Solidity 0.8, full tooling (Hardhat, Foundry, ethers, viem) |
 
-Full rationale + measured benchmarks: [`docs/WHY-AVALANCHE.md`](docs/WHY-AVALANCHE.md). Reproduce: [`examples/avalanche-bench`](examples/avalanche-bench).
+Full rationale + measured benchmarks: [`docs/WHY-AVALANCHE.md`](WHY-AVALANCHE.md). Reproduce: [`examples/avalanche-bench`](examples/avalanche-bench).
 
 ---
 
@@ -413,9 +413,9 @@ npm run build --prefix apps/dashboard
 
 | Doc | What it covers |
 |---|---|
-| [`docs/WHY-AVALANCHE.md`](docs/WHY-AVALANCHE.md) | Measured finality + fee data, ICM rationale |
-| [`docs/DEPLOYMENTS.md`](docs/DEPLOYMENTS.md) | Full contract addresses, impl addresses, hosted service URLs |
-| [`docs/STRUCTURE.md`](docs/STRUCTURE.md) | Full project structure reference |
+| [`docs/WHY-AVALANCHE.md`](WHY-AVALANCHE.md) | Measured finality + fee data, ICM rationale |
+| [`docs/DEPLOYMENTS.md`](DEPLOYMENTS.md) | Full contract addresses, impl addresses, hosted service URLs |
+| [`docs/STRUCTURE.md`](../STRUCTURE.md) | Full project structure reference |
 | [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | Version history |
 | [`contracts/SECURITY.md`](contracts/SECURITY.md) | Security notes + Slither triage + post-deploy checklist |
 

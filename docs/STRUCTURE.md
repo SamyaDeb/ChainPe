@@ -1,58 +1,40 @@
-# Project Structure
+# Project structure
 
 ```
 chainpe/
-├── contracts/              Smart contracts (Hardhat, Solidity 0.8.28)
-│   ├── contracts/
-│   │   ├── ChainPeRegistry.sol        Service registry (UUPS proxy)
-│   │   ├── PolicyVault.sol            Gasless agent spending vault (UUPS proxy)
-│   │   ├── erc8004/                   ERC-8004 identity + reputation registries
-│   │   ├── icm/                       Avalanche ICM cross-L1 contracts
-│   │   └── mocks/                     Test-only mocks
-│   ├── scripts/                       Deploy + verify scripts
-│   ├── test/                          30 tests, 100% line coverage on registry
-│   └── deployments/                   Deployed addresses per network
-│
 ├── packages/
-│   ├── chainpe/              Provider SDK + CLI (@chainpeavax/cli)
-│   │   └── src/
-│   │       ├── cli.ts                 `chainpe init`, `chainpe start`, `chainpe list`
-│   │       ├── registry.ts            On-chain registration via viem
-│   │       └── proxy/                 x402-express payment proxy + facilitator
-│   │
-│   ├── chainpe-agent/        Consumer agent SDK (@chainpeavax/agent)
-│   │   └── src/
-│   │       ├── agent.ts               Autonomous AI agent (discover → pay → use)
-│   │       ├── registry.ts            On-chain service discovery
-│   │       └── tools/                 AI tool definitions
-│   │
-│   ├── chainpe-sdk/          Shared SDK types + helpers (@chainpeavax/sdk)
-│   ├── chainpe-ai-tools/     LLM tool schemas for MCP / function calling
-│   └── chainpe-wallet/       MCP wallet server (62 tests)
-│       └── scripts/build-mcpb.sh      Builds .mcpb for Claude Desktop
+│   ├── chainpe/              @chainpearc/cli: provider CLI (command: chainpe) and x402 proxy
+│   ├── chainpe-sdk/          @chainpearc/sdk: buyer SDK
+│   ├── chainpe-ai-tools/     @chainpearc/ai-tools: Vercel AI SDK and LangChain tools
+│   ├── chainpe-wallet/       @chainpearc/wallet-mcp: USDC wallet for Claude and other MCP clients
+│   └── chainpe-agent/        @chainpearc/agent: not moved to Arc yet, do not publish
+│
+├── contracts-arc/            ChainPeAccounts and its tests (Foundry, built with Arc Studio)
 │
 ├── services/
-│   ├── chainpe-facilitator/  Non-custodial x402 settlement (Railway-deployable)
-│   └── chainpe-indexer/      Event indexer + REST API (Postgres)
+│   ├── chainpe-cloud/        API behind the provider dashboard
+│   ├── chainpe-indexer/      Legacy indexer for the June contracts
+│   └── chainpe-facilitator/  Legacy facilitator, replaced by Circle
 │
 ├── apps/
-│   ├── dashboard/            Next.js marketplace dashboard
-│   └── landing/              Static landing page
+│   ├── landing/              Main site and docs (chainpe.vercel.app)
+│   ├── arc-dashboard/        Provider dashboard (built with Arc Studio)
+│   └── dashboard/            Older one-page marketing site
 │
 ├── examples/
+│   ├── arc-demo/             The live demo seller on Arc
+│   ├── agent-surfaces/       Vercel AI SDK and LangChain agents that pay on Arc
 │   ├── weather-api/          Zero-dependency weather backend
 │   ├── weather-railway/      Railway-deployable weather backend
-│   ├── proxy-railway/        Railway-deployable x402 proxy
-│   ├── seller-agents/        Multi-agent investment marketplace demo
-│   ├── agent-surfaces/       LangChain + Vercel AI SDK integrations
-│   ├── avalanche-bench/      Live gas + finality benchmarks
-│   └── policy-vault/         PolicyVault gasless spending demo
+│   └── avalanche-bench/, policy-vault/, proxy-railway/, seller-agents/
+│                             Legacy examples for the June contracts
 │
-├── docs/
-│   ├── CHANGELOG.md
-│   ├── DEPLOYMENTS.md        Live contract addresses
-│   ├── STRUCTURE.md          This file
-│   └── WHY-AVALANCHE.md      Technical rationale + benchmarks
+├── contracts/                Legacy Hardhat contracts, deployed in June 2026
+├── e2e/                      Legacy end-to-end harness for the June contracts
 │
-└── e2e/                      End-to-end test harness
+└── docs/
+    ├── arc/                  Plan, specs, reviews and proof for the Arc version
+    ├── avalanche/            June 2026 README, deployed addresses and benchmarks
+    ├── CHANGELOG.md
+    └── STRUCTURE.md          This file
 ```

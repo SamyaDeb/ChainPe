@@ -10,6 +10,7 @@ import type {
   RoutesConfig,
   SettlementFailedResponseBody,
 } from "@x402/core/http";
+import { decodePaymentSignatureHeader } from "@x402/core/http";
 import { GATEWAY_AUTH_VALIDITY_WINDOW_SECONDS, isBatchPayment } from "@circle-fin/x402-batching/server";
 import { getNetwork } from "../chains.js";
 import { parseUsdc } from "../evm.js";
@@ -46,20 +47,72 @@ function toMoney(price: string): string {
   return `$${clean}`;
 }
 
+/** Same pattern rules as x402's own route matcher: `*`, `[id]` and `:id`. */
+function routeRegex(path: string): RegExp {
+  const trailing = path.endsWith("/*");
+  const body = (trailing ? path.slice(0, -2) : path)
+    .replace(/\\/g, "\\\\")
+    .replace(/[$()+.?^{|}]/g, "\\$&")
+    .replace(/\*/g, ".*?")
+    .replace(/\[([^\]]+)\]/g, "[^/]+")
+    .replace(/:([a-zA-Z_][a-zA-Z0-9_]*)/g, "[^/]+");
+  return new RegExp(`^${body}${trailing ? "(?:/.*?)?" : ""}/?$`, "is");
+}
+
+/** True when a request matches one of these routes. */
+export function matchesListedRoute(routes: ChainPeRouteConfig[], method: string, path: string): boolean {
+  return routes.some((route) => {
+    const [verb, pattern] = toRouteKey(route.path).split(/\s+/);
+    if (verb !== "*" && verb.toUpperCase() !== method.toUpperCase() && !(verb.toUpperCase() === "GET" && method === "HEAD")) return false;
+    return routeRegex(pattern).test(path);
+  });
+}
+
 /** Accepts "GET /path" or "/path" (any method). */
 export function toRouteKey(path: string): string {
   return path.includes(" ") ? path : `* ${path}`;
 }
 
+const ROUTE_METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE"]);
+
+/** Reads "GET /weather, POST /v1/search" into routes at one price. A path with no method is GET. Throws on anything else. */
+export function parsePaidRoutes(input: string, price: string): ChainPeRouteConfig[] {
+  const routes = new Map<string, ChainPeRouteConfig>();
+  for (const entry of input.split(",").map((part) => part.trim()).filter(Boolean)) {
+    const parts = entry.split(/\s+/);
+    const [method, path] = parts.length === 1 ? ["GET", parts[0]] : [parts[0].toUpperCase(), parts[1]];
+    if (parts.length > 2 || !ROUTE_METHODS.has(method) || !path.startsWith("/")) {
+      throw new Error(`"${entry}" is not a route. Write it like GET /weather or POST /v1/search.`);
+    }
+    routes.set(`${method} ${path}`, { path: `${method} ${path}`, pricePerRequest: price, paymentToken: "USDC" });
+  }
+  return [...routes.values()];
+}
+
+const GATEWAY_SIGNATURE_HINT =
+  "This option is paid from a Circle Gateway deposit (GatewayWalletBatched), which a plain x402 exact client cannot sign. " +
+  "Use a client that supports Circle Gateway, such as @chainpearc/sdk or @circle-fin/x402-batching, or pick another option in the 402 if there is one.";
+
+/** True when the buyer signed the Gateway option. */
+function paidWithGateway(paymentHeader?: string): boolean {
+  if (!paymentHeader) return false;
+  try {
+    return isBatchPayment(decodePaymentSignatureHeader(paymentHeader).accepted);
+  } catch {
+    return false;
+  }
+}
+
 /** Tells the buyer why a settlement failed, as JSON in the 402 body. */
-const settlementFailedResponseBody: SettlementFailedResponseBody = (_context, failure) => {
+const settlementFailedResponseBody: SettlementFailedResponseBody = (context, failure) => {
   const status = failure.extensions?.["settlement-status"] as { paymentId?: string } | undefined;
+  const gatewaySignature = failure.errorReason === "invalid_signature" && paidWithGateway(context.paymentHeader);
   return {
     contentType: "application/json",
     body: {
       error: "payment_failed",
       reason: failure.errorReason,
-      message: failure.errorMessage,
+      message: gatewaySignature ? GATEWAY_SIGNATURE_HINT : failure.errorMessage,
       ...(status?.paymentId && { paymentId: status.paymentId }),
     },
   };

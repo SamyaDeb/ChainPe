@@ -2,9 +2,10 @@
 import 'dotenv/config'
 import { lt } from 'drizzle-orm'
 import { createApp } from './app.js'
-import { createChainReader, createClient } from './chain.js'
+import { createChainReader, createClient, createFeeChain } from './chain.js'
 import { loadEnv } from './config.js'
 import { createDb, runMigrations } from './db.js'
+import { createFees, type Fees } from './fees.js'
 import { createProviderViews } from './plan.js'
 import { revokedSessions, siweNonces } from './schema.js'
 import { createSessions } from './session.js'
@@ -35,12 +36,31 @@ async function main(): Promise<void> {
   const reconciler = createReconciler({ db, rpc, caip2 })
   const poller = createGatewayPoller({ db, api: createGatewayApi(env.CIRCLE_GATEWAY_URL, caip2) })
 
+  let fees: Fees | undefined
+  if (env.FEES_ADDRESS) {
+    fees = createFees({
+      db,
+      views,
+      chain: createFeeChain(client, { ...env, FEES_ADDRESS: env.FEES_ADDRESS }),
+      config: {
+        contract: env.FEES_ADDRESS,
+        freeBps: env.FEE_BPS_FREE,
+        proBps: env.FEE_BPS_PRO,
+        collectAtAtomic: env.FEE_COLLECT_AT_ATOMIC,
+        collectMinAtomic: env.FEE_COLLECT_MIN_ATOMIC,
+        lockAtAtomic: env.FEE_LOCK_AT_ATOMIC,
+        startAt: env.FEES_START_AT ?? null,
+      },
+    })
+  }
+
   let reconcileLoop: Loop | undefined
   const app = createApp({
     db,
     chain,
     sessions,
     views,
+    fees,
     corsOrigins: env.CORS_ORIGIN,
     chainId: env.CHAIN_ID,
     dashboardDomain: env.SIWE_DOMAIN,
@@ -53,6 +73,10 @@ async function main(): Promise<void> {
   const loops: Loop[] = []
   if (env.WORKERS_ENABLED) {
     reconcileLoop = startLoop('reconciler', 3_000, () => reconciler.run())
+    if (fees) {
+      const feeWorker = fees
+      loops.push(startLoop('fees', 60_000, () => feeWorker.run()))
+    }
     loops.push(
       reconcileLoop,
       startLoop('indexer', 3_000, () => indexer.step(), 1_000),

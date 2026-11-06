@@ -17,6 +17,7 @@ const JSON_FIXTURES: Record<string, () => Promise<{ default: unknown }>> = {
   'buyers-pro': () => import('./fixtures/buyers-pro.json'),
   'error-not-registered': () => import('./fixtures/error-not-registered.json'),
   'error-plan-required': () => import('./fixtures/error-plan-required.json'),
+  'fees-active': () => import('./fixtures/fees-active.json'),
   'health-free': () => import('./fixtures/health-free.json'),
   'health-pro': () => import('./fixtures/health-pro.json'),
   'keys-create': () => import('./fixtures/keys-create.json'),
@@ -107,6 +108,8 @@ export function createMockTransport(getToken: () => string | null): Transport {
         return fixture(`reputation-${plan}`)
       case 'GET /v1/me/health':
         return fixture(`health-${plan}`)
+      case 'GET /v1/me/fees':
+        return fixture('fees-active')
       case 'GET /v1/me/wallets':
         return fixture('wallets')
       case 'PUT /v1/me/wallets':

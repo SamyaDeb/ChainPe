@@ -75,7 +75,7 @@ export function useResource<T>(key: string, fetcher: () => Promise<T>, options: 
         if (flags.cancelled) return
         if (handleError(e)) return
         // A plan limit will not change by asking again, so polling stops here.
-        if (isApiError(e) && e.code === 'plan_required') flags.stop = true
+        if (isApiError(e) && (e.code === 'plan_required' || e.code === 'fees_due')) flags.stop = true
         const wait = isApiError(e) && e.retryAfterSec !== null ? e.retryAfterSec * 1000 : RETRY_DELAY_MS
         delay = Math.max(delay, wait)
         setState((s) => ({

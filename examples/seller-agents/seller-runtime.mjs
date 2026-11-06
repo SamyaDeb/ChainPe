@@ -3,12 +3,12 @@
  *
  * Each seller runs its LLM backend (private port) behind a ChainPe x402 proxy
  * (public port) in one process — the same gateway `chainpe start` uses, started
- * programmatically via `@chainpe/cli` so two sellers can run side by side with
+ * programmatically via `@chainpearc/cli` so two sellers can run side by side with
  * independent configs. The proxy advertises the seller's ERC-8004 `agentId` on
  * the 402 (3b), so buyers can leave reputation without scanning the registry.
  */
 import 'dotenv/config'
-import { startProxyServer } from '@chainpe/cli'
+import { startProxyServer } from '@chainpearc/cli'
 
 export function requireEnv(name) {
   const v = process.env[name]

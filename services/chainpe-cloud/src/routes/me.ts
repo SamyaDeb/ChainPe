@@ -7,6 +7,7 @@ import { Router, type Request } from 'express'
 import { getAddress } from 'viem'
 import { z } from 'zod'
 import type { Db } from '../db.js'
+import type { Fees } from '../fees.js'
 import type { Plan, ProviderViews } from '../plan.js'
 import { feedback, gatewayTransfers, heartbeats, myWallets, onchainTransfers, paymentEvents, services } from '../schema.js'
 import type { Sessions } from '../session.js'
@@ -49,13 +50,30 @@ export interface MeOptions {
   db: Db
   views: ProviderViews
   sessions: Sessions
+  fees?: Fees
   readLimit: import('express').RequestHandler
   now?: () => number
 }
 
-export function meRoutes({ db, views, sessions, readLimit, now = Date.now }: MeOptions): Router {
+export function meRoutes({ db, views, sessions, fees, readLimit, now = Date.now }: MeOptions): Router {
   const router = Router()
   router.use('/me', sessions.requireSession, readLimit)
+
+  // Past the limit, the data stops. /me and /me/fees stay open so the provider can see why and pay. Spec 12.
+  router.use('/me', (req, _res, next) => {
+    if (!fees || req.path === '/' || req.path === '/fees') {
+      next()
+      return
+    }
+    fees.isLocked(req.provider!).then(
+      (locked) => next(locked ? new HttpError(403, 'fees_due', 'Unpaid ChainPe fees have reached the limit. Approve USDC in Billing to continue.') : undefined),
+      next
+    )
+  })
+
+  router.get('/me/fees', async (req, res) => {
+    res.json(fees ? await fees.summary(req.provider!) : DISABLED_FEES)
+  })
 
   const planOf = async (req: Request): Promise<Plan> => (await views.get(req.provider!)).plan
 
@@ -427,6 +445,21 @@ export function meRoutes({ db, views, sessions, readLimit, now = Date.now }: MeO
   })
 
   return router
+}
+
+const DISABLED_FEES = {
+  enabled: false,
+  contract: null,
+  status: 'not_enrolled',
+  enrolledAt: null,
+  rateBps: 0,
+  rates: { freeBps: 0, proBps: 0 },
+  owedAtomic: '0',
+  collectedAtomic: '0',
+  allowanceAtomic: null,
+  lockAtAtomic: '0',
+  locked: false,
+  batches: [],
 }
 
 /** What counts as revenue, in one place. Needs aliases e (events). */

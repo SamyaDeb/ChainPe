@@ -1,37 +1,77 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, Loader2, Wallet } from 'lucide-react'
+import { useConnectModal } from '@rainbow-me/rainbowkit'
+import { ArrowRight, Loader2, QrCode, Wallet } from 'lucide-react'
+import { useAccount } from 'wagmi'
 import { useAuth, type AuthIssue, type MockScenario, type SignInStep } from '@/auth/AuthContext'
+import { useRegisterProvider } from '@/auth/useRegisterProvider'
 import { AnimatedSphere } from '@/components/AnimatedSphere'
 import { MockBanner } from '@/components/MockBanner'
 import { StudioMark } from '@/components/StudioMark'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { AddressView, TxLink } from '@/components/ui/Address'
 import { Eyebrow } from '@/components/ui/Card'
 import { CommandBlock } from '@/components/ui/Copy'
 import { Button } from '@/components/ui/forms'
 import { CharIn, prefersReducedMotion } from '@/components/ui/Motion'
 import { useNow } from '@/hooks/useNow'
+import { disconnectAll, QR_ENABLED } from '@/lib/wagmi'
+import { FAUCET_URL } from '@/lib/wallet'
 
-export const REGISTER_COMMAND = 'npx @chainpeavax/cli register --network arc-testnet'
+export const REGISTER_COMMAND = 'npx @chainpearc/cli register --network arc-testnet'
 
 const WORDS = ['paid', 'rated', 'listed', 'verified']
 const WORD_MS = 2500
 
 const STEP_TEXT: Record<SignInStep, string> = {
   idle: '',
-  connecting: 'Waiting for your wallet to share an account.',
   nonce: 'Requesting a sign-in message.',
-  signing: 'Review the message below and sign it in your wallet. This does not move funds or cost gas.',
+  signing: 'Review the message below and sign it in your wallet. On a phone wallet, open the app to approve. This does not move funds or cost gas.',
   verifying: 'Checking your signature.',
 }
 
 const panelCls = 'rise relative w-full border border-ink bg-bg p-6 lg:p-10'
 
-export function RegisterFirst({ onBack }: { onBack: () => void }) {
+export function RegisterFirst({ onBack, onRegistered }: { onBack: () => void; onRegistered: () => void }) {
+  const { mock } = useAuth()
+  const { state, register } = useRegisterProvider()
+  const working = state.kind === 'working'
   return (
     <div className={panelCls}>
       <h2 className="font-display text-4xl tracking-tight text-ink lg:text-5xl">Register first</h2>
-      <p className="mt-3 text-muted">This wallet has no ChainPe provider account yet. Register it from your terminal, then sign in again.</p>
-      <div className="mt-6">
+      <p className="mt-3 text-muted">This wallet has no ChainPe provider account yet. Creating one is free apart from a small USDC gas fee on Arc testnet.</p>
+      {mock ? null : state.kind === 'done' ? (
+        <>
+          <p role="status" className="mt-6 text-sm text-ok">Your provider account is on Arc.</p>
+          <TxLink hash={state.hash} label="Registration transaction" />
+          <Button variant="primary" className="mt-4 w-full" onClick={onRegistered}>
+            Sign in
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button variant="primary" className="mt-6 w-full" disabled={working} onClick={() => void register()}>
+            {working ? <Loader2 size={16} className="animate-spin" aria-hidden /> : <Wallet size={16} aria-hidden />}
+            {working ? 'Confirm in your wallet' : 'Register this wallet'}
+          </Button>
+          {state.kind === 'working' && state.hash ? <TxLink hash={state.hash} label="Registration transaction" /> : null}
+          {state.kind === 'no_gas' ? (
+            <p role="alert" className="mt-3 text-sm text-bad">
+              This wallet has no USDC for gas. Get test USDC from{' '}
+              <a className="underline" href={FAUCET_URL} target="_blank" rel="noreferrer">
+                the Circle faucet
+              </a>
+              , then try again.
+            </p>
+          ) : null}
+          {state.kind === 'error' ? (
+            <p role="alert" className="mt-3 break-words text-sm text-bad">
+              {state.message}
+            </p>
+          ) : null}
+        </>
+      )}
+      <p className="mt-6 text-sm text-muted">To list a service, run this from your terminal with the same wallet:</p>
+      <div className="mt-2">
         <CommandBlock command={REGISTER_COMMAND} />
       </div>
       <Button className="mt-6" onClick={onBack}>
@@ -73,6 +113,8 @@ function RotatingWord() {
 export function SignIn() {
   const auth = useAuth()
   const { issue, step, pendingMessage, mock } = auth
+  const wallet = useAccount()
+  const { openConnectModal } = useConnectModal()
   const busy = step !== 'idle'
   const now = useNow(1000)
   const waiting = issue?.kind === 'rate_limited' && issue.retryAt !== undefined && issue.retryAt > now
@@ -80,12 +122,20 @@ export function SignIn() {
   if (issue?.kind === 'not_registered') {
     return (
       <Shell>
-        <RegisterFirst onBack={auth.dismissIssue} />
+        <RegisterFirst
+          onBack={auth.dismissIssue}
+          onRegistered={() => {
+            auth.dismissIssue()
+            void auth.signInWithWallet()
+          }}
+        />
       </Shell>
     )
   }
 
-  const label = issue?.kind === 'invalid_siwe' ? 'Get a new message and retry' : issue?.kind === 'chain_unavailable' ? 'Retry' : 'Connect wallet and sign in'
+  const label = issue?.kind === 'invalid_siwe' ? 'Get a new message and retry' : issue?.kind === 'chain_unavailable' ? 'Retry' : 'Sign in'
+  const connected = wallet.status === 'connected'
+  const connecting = wallet.status === 'connecting' || wallet.status === 'reconnecting'
 
   return (
     <Shell>
@@ -110,10 +160,38 @@ export function SignIn() {
             ))}
           </div>
         ) : (
-          <Button variant="primary" className="mt-6 w-full" disabled={busy || waiting} onClick={() => void auth.signInWithWallet()}>
-            {busy ? <Loader2 size={16} className="animate-spin" aria-hidden /> : <Wallet size={16} aria-hidden />}
-            {busy ? 'Working' : label}
-          </Button>
+          <>
+            {connected ? (
+              <>
+                {/* A second tap on purpose: a phone browser only opens the wallet app from a user gesture. */}
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border border-ink/10 px-3 py-2 text-sm">
+                  <span className="text-muted">Connected</span>
+                  <AddressView address={wallet.address} />
+                </div>
+                <Button variant="primary" className="mt-3 w-full" disabled={busy || waiting} onClick={() => void auth.signInWithWallet()}>
+                  {busy ? <Loader2 size={16} className="animate-spin" aria-hidden /> : <Wallet size={16} aria-hidden />}
+                  {busy ? 'Working' : label}
+                </Button>
+                <Button variant="ghost" className="mt-2 w-full" disabled={busy} onClick={() => void disconnectAll()}>
+                  Use a different wallet
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="primary" className="mt-6 w-full" disabled={connecting || waiting} onClick={() => openConnectModal?.()}>
+                  {connecting ? <Loader2 size={16} className="animate-spin" aria-hidden /> : <Wallet size={16} aria-hidden />}
+                  {connecting ? 'Connecting' : 'Connect wallet'}
+                </Button>
+                {QR_ENABLED ? (
+                  <p className="mt-3 flex items-center gap-2 text-sm text-muted">
+                    <QrCode size={16} aria-hidden /> MetaMask, Rainbow, or scan a QR code with a phone wallet.
+                  </p>
+                ) : (
+                  <p className="mt-3 text-sm text-muted">Browser wallets only. QR sign-in is not configured for this build.</p>
+                )}
+              </>
+            )}
+          </>
         )}
 
         {busy ? (

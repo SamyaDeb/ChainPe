@@ -14,7 +14,7 @@ import ora from "ora";
 
 import type { ChainPeConfig, ChainPeNetwork } from "./types.js";
 import { isValidAddress, getUsdcBalance, formatUsdc } from "./evm.js";
-import { getNetwork, parseNetwork } from "./chains.js";
+import { assertMainnetAllowed, getNetwork, parseNetwork } from "./chains.js";
 import {
   ALL_RAILS,
   assertExactSupported,
@@ -26,14 +26,16 @@ import {
   startProxyServer,
   resolveSellerKey,
 } from "./proxy/index.js";
+import { parsePaidRoutes } from "./proxy/routeConfig.js";
 import { setLogLevel } from "./logger.js";
 import { configPath, loadConfig, saveConfig } from "./config.js";
-import { documentPaths } from "./doctor/documents.js";
+import { documentPaths, writeMissingDocuments } from "./doctor/documents.js";
 import { runDoctorCommand } from "./commands/doctor.js";
 import { runLoginCommand, runLogoutCommand } from "./commands/cloud.js";
 import { startTelemetry } from "./cloud/start.js";
 import { VERSION } from "./version.js";
-import { gatewayClient, runFetchCommand, runDiscoverCommand, runDepositCommand } from "./commands/consume.js";
+import { gatewayClient, runFetchCommand, runDepositCommand } from "./commands/consume.js";
+import { runDiscoverCommand } from "./commands/discover.js";
 import { runBalanceCommand, runWithdrawCommand } from "./commands/seller.js";
 import {
   runDeregisterCommand,
@@ -98,6 +100,15 @@ function validatePrice(value: string | undefined): string | undefined {
   return undefined;
 }
 
+function validateRoutes(value: string | undefined): string | undefined {
+  try {
+    parsePaidRoutes(value ?? "", "1");
+    return undefined;
+  } catch (error) {
+    return (error as Error).message;
+  }
+}
+
 function validatePort(value: string | undefined): string | undefined {
   if (!value) return "Port is required";
   const port = parseInt(value, 10);
@@ -133,11 +144,13 @@ async function runInit(): Promise<void> {
   const targetUrl = await prompt(p.text({ message: "Your API URL (the backend ChainPe will proxy)", placeholder: "http://localhost:3000", validate: validateUrl }));
   const publicUrl = await prompt(p.text({ message: "Public HTTPS URL of this proxy, published on-chain. Never your backend. Leave empty if not deployed yet", placeholder: "https://api.example.com" }));
   const serviceName = await prompt(p.text({ message: "Service name (for registry listing)", placeholder: "My AI Agent API", validate: (v) => (!v || v.length < 3 ? "Name must be at least 3 characters" : undefined) }));
-  const serviceDescription = await prompt(p.text({ message: "Service description", placeholder: "AI-powered research assistant", validate: (v) => (!v || v.length < 10 ? "Description must be at least 10 characters" : undefined) }));
+  const serviceDescription = await prompt(p.text({ message: "Service description, saying what a buyer gets. Aim for 160+ characters for Circle's marketplace", placeholder: "AI-powered research assistant", validate: (v) => (!v || v.length < 10 ? "Description must be at least 10 characters" : undefined) }));
   const tags = await prompt(p.text({ message: "Tags (comma-separated, for discovery)", placeholder: "ai, research, documents" }));
 
   printSection("Pricing");
   const pricePerRequest = await prompt(p.text({ message: "Price per request (USDC)", placeholder: "0.01", validate: validatePrice }));
+  console.log(chalk.gray("\n  Every path costs this price. Name your main paths so agents and Circle's marketplace can see them.\n"));
+  const paidRoutes = await prompt(p.text({ message: "Paths to list, comma-separated. Leave empty to add them later", placeholder: "GET /weather, POST /v1/search", validate: validateRoutes }));
 
   printSection("Network & Wallet");
   const network = (await prompt(
@@ -145,7 +158,7 @@ async function runInit(): Promise<void> {
       message: "Arc network",
       options: [
         { value: "arc-testnet", label: "Arc Testnet", hint: "recommended for testing" },
-        { value: "arc", label: "Arc (mainnet)" },
+        { value: "arc", label: "Arc (mainnet)", hint: "real USDC, not tested yet, start needs --allow-mainnet" },
       ],
     })
   )) as ChainPeNetwork;
@@ -164,10 +177,13 @@ async function runInit(): Promise<void> {
   printSection("Server Configuration");
   const proxyPort = await prompt(p.text({ message: "Proxy port", placeholder: "4402", initialValue: "4402", validate: validatePort }));
 
+  const routes = parsePaidRoutes((paidRoutes as string | undefined) ?? "", pricePerRequest as string);
   const config: ChainPeConfig = {
+    ...(routes.length > 0 ? { routes } : {}),
     serviceName: serviceName as string,
     serviceDescription: serviceDescription as string,
-    tags: (tags as string).split(",").map((t) => t.trim()).filter(Boolean),
+    // An optional prompt left empty answers undefined.
+    tags: ((tags as string | undefined) ?? "").split(",").map((t) => t.trim()).filter(Boolean),
     targetUrl: targetUrl as string,
     ...(publicUrl ? { publicUrl: publicUrl as string } : {}),
     pricePerRequest: pricePerRequest as string,
@@ -209,6 +225,7 @@ async function runStart(options: {
   facilitatorUrl?: string;
   rails?: string;
   telemetry?: boolean;
+  allowMainnet?: boolean;
 }): Promise<void> {
   printBanner();
   const config = await loadConfig();
@@ -223,6 +240,7 @@ async function runStart(options: {
 
   try {
     config.network = resolveNetwork(options.network, config);
+    assertMainnetAllowed(config.network, options.allowMainnet);
     const info = getNetwork(config.network);
     const rails = options.rails ? parseRails(options.rails) : (config.rails ?? ALL_RAILS);
     config.rails = rails;
@@ -245,6 +263,8 @@ async function runStart(options: {
     console.log();
 
     const documents = documentPaths(configPath());
+    const generated = await writeMissingDocuments(config, documents);
+    if (generated.length > 0) console.log(chalk.gray(`    Documents:   wrote ${generated.join(", ")} (run \`chainpe doctor --pay\` for response fields)`));
     const telemetry = await startTelemetry({
       enabled: options.telemetry !== false,
       config,
@@ -253,7 +273,9 @@ async function runStart(options: {
       doctorFile: documents.doctor,
       gatewayClient: rails.includes("gateway") ? () => gatewayClient(info.name, resolveSellerKey(config.walletAddress)) : undefined,
     });
-    console.log(chalk.gray(`    Telemetry:   ${telemetry ? chalk.green(telemetry.cloudUrl) : "off"}\n`));
+    console.log(chalk.gray(`    Telemetry:   ${telemetry ? chalk.green(telemetry.cloudUrl) : "off"}`));
+    if (!telemetry && options.telemetry !== false) console.log(chalk.gray(`                 Run ${chalk.cyan("chainpe login")} to see your payments in the dashboard.`));
+    console.log();
 
     await startProxyServer({ config, facilitator, gateway: gateway?.terms, documents, onPayment: telemetry?.onPayment });
     console.log(chalk.gray("  Press Ctrl+C to stop\n"));
@@ -381,11 +403,12 @@ program
   .option("--facilitator-url <url>", "Override the Circle facilitator URL (advanced)")
   .option("--rails <rails>", "Payment rails to accept: exact,gateway (default: config, then both)")
   .option("--no-telemetry", "Send nothing to chainpe-cloud")
+  .option("--allow-mainnet", "Start on Arc mainnet, which takes real USDC and is not tested yet")
   .action(runStart);
 program
   .command("login")
   .description("Sign in to chainpe-cloud with the seller key and save an ingest key")
-  .option("--cloud-url <url>", "chainpe-cloud URL (default: $CHAINPE_CLOUD_URL, then the saved one)")
+  .option("--cloud-url <url>", "chainpe-cloud URL (default: $CHAINPE_CLOUD_URL, then the saved one, then ChainPe's hosted API on arc-testnet)")
   .option("-n, --network <network>", "arc | arc-testnet (default: $CHAINPE_NETWORK, then config)")
   .action(runLoginCommand);
 program
@@ -491,6 +514,13 @@ program
     await runWithdrawCommand(amount, walletAddress, network, { all: options.all, chain: options.chain });
   });
 
-program.command("discover").description("Discover services (not available on Arc yet)").action(runDiscoverCommand);
+program
+  .command("discover [query]")
+  .description("Find paid services through Circle's Discovery API and ChainPeAccounts")
+  .option("-n, --network <network>", NETWORK_FLAG)
+  .option("--max <usdc>", "Highest price per request")
+  .option("--limit <count>", "Most results to show (default: 20)")
+  .option("--json", "Print JSON")
+  .action(runDiscoverCommand);
 
 program.parse();

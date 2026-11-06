@@ -3,6 +3,7 @@
 Every live artefact from the ChainPe port to Arc, oldest first. Times are IST, taken from the block timestamp where
 there is a transaction. Chain: Arc testnet (`eip155:5042002`).
 
+ChainPeFees is deployed and its source verified: [0x09c85EEdeF018274861aae0964f9681C11f91Af4](https://explorer.testnet.arc.io/address/0x09c85EEdeF018274861aae0964f9681C11f91Af4).
 ChainPeAccounts source is verified on the explorer: [0xD315322c9D83A6f50A04236A2a242e0259bfB580](https://explorer.testnet.arc.io/address/0xD315322c9D83A6f50A04236A2a242e0259bfB580). Arc Studio workspace: https://studio.arc.io/app/6872b96e-b3c0-4cdb-abe3-5f17865cdf5a.
 
 | Date (IST) | What | Tx / transfer id | Explorer |
@@ -34,6 +35,17 @@ ChainPeAccounts source is verified on the explorer: [0xD315322c9D83A6f50A04236A2
 | 2026-11-06 09:50 | Phase 5 acceptance, Gateway rail ($0.001 `/weather`): `verified` from Circle's record | `c23db8d9-0cc7-4fdc-987b-ab472216bae3` | Gateway transfer id, settled in the batch below |
 | 2026-11-06 09:53 | Gateway batch settling those three transfers | `0x6f784cdbda4bb0defc4ca0561317d85cf1bd388b89d33f7e6bc9ed79a8d844de` | [view](https://explorer.testnet.arc.io/tx/0x6f784cdbda4bb0defc4ca0561317d85cf1bd388b89d33f7e6bc9ed79a8d844de) |
 | 2026-11-06 10:09 | Seller `deactivateService(demo-weather)`: retires the smoke-test listing | `0x314ebb1ea687bd8e237ba31813dd9878b06c2858c5313b099c707376e4dd3c08` | [view](https://explorer.testnet.arc.io/tx/0x314ebb1ea687bd8e237ba31813dd9878b06c2858c5313b099c707376e4dd3c08) |
+| 2026-11-06 15:21 | Paid call from the published `@chainpearc/sdk`, exact rail ($0.01 `/forecast`) | `0x2f24ab988616a7896c1db437acad9aaccdd9632264c9053f673b5a6318baebd5` | [view](https://explorer.testnet.arc.io/tx/0x2f24ab988616a7896c1db437acad9aaccdd9632264c9053f673b5a6318baebd5) |
+| 2026-11-06 15:21 | Buyer deposit of 0.5 USDC into Gateway, from the SDK | `0xddb1b778fac7b48cf74812e938a7a1d76a0494c2a9885df584260c6108e63c4e` | [view](https://explorer.testnet.arc.io/tx/0xddb1b778fac7b48cf74812e938a7a1d76a0494c2a9885df584260c6108e63c4e) |
+| 2026-11-06 15:21 | Paid call from the published SDK, Gateway rail ($0.001 `/weather`) | `a9f5e43d-bf28-4ebe-ac85-09590a06cef3` | Gateway transfer id |
+| 2026-11-06 15:22 | Paid call from the published `@chainpearc/wallet-mcp` over MCP, exact rail | `0xb589aed937c2afbfe21ee6ab1c798db281772706917ba6f0b3a72f20ed830691` | [view](https://explorer.testnet.arc.io/tx/0xb589aed937c2afbfe21ee6ab1c798db281772706917ba6f0b3a72f20ed830691) |
+| 2026-11-06 15:22 | Rating 90 for agent 897796 from the MCP wallet's `give_feedback` | `0x377c25d1eb138d73a9a7b12c115cdb74356f9fb6e8a0c86972a5fa71d9e34c37` | [view](https://explorer.testnet.arc.io/tx/0x377c25d1eb138d73a9a7b12c115cdb74356f9fb6e8a0c86972a5fa71d9e34c37) |
+| 2026-11-06 15:25 | A new provider wallet's proxy, from the published CLI, paid by `chainpe fetch` | `0x096114d624add229bad1a99b680222fcf6eb7070ff292df92569ba1bcc1bb52d` | [view](https://explorer.testnet.arc.io/tx/0x096114d624add229bad1a99b680222fcf6eb7070ff292df92569ba1bcc1bb52d) |
+| 2026-11-06 15:35 | ChainPeFees deployed through Arc Studio run 8: `0x09c85EEdeF018274861aae0964f9681C11f91Af4` | `0x18c84b59c59d5bb16c7327062b179359e67b461ccc2c41d2e6f33f7eece35b78` | [view](https://explorer.testnet.arc.io/tx/0x18c84b59c59d5bb16c7327062b179359e67b461ccc2c41d2e6f33f7eece35b78) |
+| 2026-11-06 17:16 | A new provider on public HTTPS (temporary Railway service, published CLI 3.1.1): ERC-8004 identity, agentId 897801 | `0x37e964f33fe5d32bf30139290d03ad7bcfdc2ce36c242ea6c57de4a1686cfd8f` | [view](https://explorer.testnet.arc.io/tx/0x37e964f33fe5d32bf30139290d03ad7bcfdc2ce36c242ea6c57de4a1686cfd8f) |
+| 2026-11-06 17:17 | That provider registers, logs in to chainpe-cloud, and a buyer pays it 3 times ($0.05 each); chainpe-cloud shows 3 of 3 verified, $0.15 revenue | `0x0e9fe9a00f80c45da3929b3edbe5179c1fa39c68448ed25196c551f8993029ef` | [view](https://explorer.testnet.arc.io/tx/0x0e9fe9a00f80c45da3929b3edbe5179c1fa39c68448ed25196c551f8993029ef) |
+| 2026-11-06 17:18 | The provider opts in to the usage fee: approve to ChainPeFees | `0x217ae9afdf62071c32648cf22fbdee354ad0bd3c09d12403e5242f705cce3068` | [view](https://explorer.testnet.arc.io/tx/0x217ae9afdf62071c32648cf22fbdee354ad0bd3c09d12403e5242f705cce3068) |
+| 2026-11-06 17:33 | chainpe-cloud collects the 1% fee (0.0015 USDC on $0.15 of verified revenue) through ChainPeFees | `0x88b1f5fa54f97ab0cf8324eb9db793b71ab23e9a91bc06a83977188378aafbb5` | [view](https://explorer.testnet.arc.io/tx/0x88b1f5fa54f97ab0cf8324eb9db793b71ab23e9a91bc06a83977188378aafbb5) |
 
 ## Live services
 

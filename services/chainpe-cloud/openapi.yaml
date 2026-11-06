@@ -213,6 +213,18 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Me' }
         '401': { $ref: '#/components/responses/Error' }
+  /v1/me/fees:
+    get:
+      tags: [me]
+      summary: The usage fee for the signed-in provider. Stays open when the dashboard is locked.
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: Fee status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Fees' }
+        '401': { $ref: '#/components/responses/Error' }
   /v1/me/services:
     get:
       tags: [me]
@@ -583,6 +595,42 @@ components:
         plan: { type: string, enum: [free, pro] }
         paidUntil: { type: [string, 'null'], format: date-time }
         createdAt: { type: [string, 'null'], format: date-time }
+    Fees:
+      type: object
+      additionalProperties: false
+      required: [enabled, contract, status, enrolledAt, rateBps, rates, owedAtomic, collectedAtomic, allowanceAtomic, lockAtAtomic, locked, batches]
+      properties:
+        enabled: { type: boolean, description: False when this service charges no fee. }
+        contract: { type: [string, 'null'], description: The spender a provider approves. }
+        status: { type: string, enum: [not_enrolled, active], description: "`active` once the provider is being charged." }
+        enrolledAt: { type: [string, 'null'], format: date-time }
+        rateBps: { type: integer, description: The rate for the provider's current plan. 100 bps is 1%. }
+        rates:
+          type: object
+          additionalProperties: false
+          required: [freeBps, proBps]
+          properties:
+            freeBps: { type: integer }
+            proBps: { type: integer }
+        owedAtomic: { type: string, description: Fees recorded and not yet collected. }
+        collectedAtomic: { type: string }
+        allowanceAtomic: { type: [string, 'null'], description: Null when Arc could not be read. }
+        lockAtAtomic: { type: string }
+        locked: { type: boolean }
+        batches:
+          type: array
+          maxItems: 20
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, revenueAtomic, feeAtomic, status, txHash, createdAt]
+            properties:
+              id: { type: string }
+              revenueAtomic: { type: string }
+              feeAtomic: { type: string }
+              status: { type: string, enum: [pending, collected, failed] }
+              txHash: { type: [string, 'null'] }
+              createdAt: { type: string, format: date-time }
     Services:
       type: object
       additionalProperties: false

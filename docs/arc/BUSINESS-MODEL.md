@@ -1,15 +1,21 @@
 # Business model — registration + personalised dashboard
 
-ChainPe makes money from the **developers who register**, not from their payments.
-The CLI, proxy and SDK stay free and open source; registered providers get a personalised
-dashboard, and the deeper analytics sit behind a paid Pro plan.
+ChainPe makes money from the **developers who register**: a usage fee on verified revenue, and a paid Pro plan.
+The CLI, proxy and SDK stay free and open source.
 
-## Why not a cut of payments
+## The usage fee
 
-Circle's Facilitator Service requires a signature from the seller's own `payTo` key on every
-settle call (`Facilitator-Seller-Proof`). Payments go straight from buyer to the developer's
-wallet; ChainPe never touches the money. That is a selling point ("non-custodial, no take rate"),
-and it rules out a percentage fee.
+**Status: opt-in on Arc testnet.** `ChainPeFees` is deployed at `0x09c85EEdeF018274861aae0964f9681C11f91Af4`. Only a provider who approves an allowance in Billing is charged.
+
+ChainPe charges **1% of verified revenue, or 0.5% on Pro**, to providers who opt in. Rules and limits: [spec 12](specs/12-usage-fees.md).
+
+Circle's Facilitator Service requires a signature from the seller's own `payTo` key on every settle call
+(`Facilitator-Seller-Proof`), and the buyer signs one transfer to one address. So payments still go straight from
+buyer to the developer's wallet, and the fee cannot be taken at that moment. It is collected afterwards, in batches,
+from a USDC allowance the developer approves and can revoke. ChainPe never holds the developer's money.
+
+The proxy is open source, so a developer can fork it or turn telemetry off and pay nothing. They give up verified
+revenue and the dashboard. The fee is the price of those, and cannot be enforced on-chain.
 
 ## Who registers and what they get
 
@@ -20,6 +26,7 @@ their buyers, their revenue.
 | | Free | Pro |
 |---|---|---|
 | Price | 0 | **19 USDC / 30 days** on mainnet (default, owner to confirm), paid on Arc. Testnet: 1 USDC, because the faucet gives 20 USDC per 2 hours |
+| Usage fee | 1% of verified revenue | 0.5% of verified revenue |
 | Services | 1 | up to 10 |
 | Revenue + calls | last 7 days | full history |
 | Breakdown | total only | by route, by rail (exact / Gateway), by buyer wallet |
@@ -52,5 +59,5 @@ How the plan is enforced:
 
 ## How to pitch it
 
-"Developers keep 100% of what agents pay them. They pay us for the dashboard that tells them who
-is paying, what is breaking, and how to get found — billed in USDC on Arc."
+"Agents pay developers directly, in USDC on Arc. We take 1% of the revenue we can verify, and show developers who is
+paying, what is breaking, and how to get found."

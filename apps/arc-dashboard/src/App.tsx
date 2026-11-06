@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { AuthProvider, useAuth } from '@/auth/AuthContext'
+import { WalletProviders } from '@/auth/WalletProviders'
 import { AppShell } from '@/components/AppShell'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/forms'
@@ -101,9 +102,11 @@ export default function App() {
   }
   return (
     <Boundary>
-      <AuthProvider>
-        <Gate />
-      </AuthProvider>
+      <WalletProviders>
+        <AuthProvider>
+          <Gate />
+        </AuthProvider>
+      </WalletProviders>
     </Boundary>
   )
 }

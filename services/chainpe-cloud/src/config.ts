@@ -22,6 +22,15 @@ const schema = z.object({
   CORS_ORIGIN: list,
   SIWE_DOMAIN: z.string().min(1),
   SIWE_CLI_DOMAIN: z.string().min(1),
+  // Usage fee, spec 12. Without FEES_ADDRESS the service charges nothing. Without the key it records fees but collects none.
+  FEES_ADDRESS: address.optional(),
+  FEE_COLLECTOR_PRIVATE_KEY: z.string().regex(/^0x[0-9a-fA-F]{64}$/, 'must be a 32-byte hex key').optional(),
+  FEES_START_AT: z.coerce.date().optional(),
+  FEE_BPS_FREE: z.coerce.number().int().min(0).max(500).default(100),
+  FEE_BPS_PRO: z.coerce.number().int().min(0).max(500).default(50),
+  FEE_COLLECT_AT_ATOMIC: z.coerce.bigint().default(1_000_000n),
+  FEE_COLLECT_MIN_ATOMIC: z.coerce.bigint().default(50_000n),
+  FEE_LOCK_AT_ATOMIC: z.coerce.bigint().default(5_000_000n),
   WORKERS_ENABLED: z
     .enum(['true', 'false'])
     .default('true')

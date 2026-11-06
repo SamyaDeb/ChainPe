@@ -12,11 +12,11 @@ describe('summaryToScore', () => {
 describe('getReputation guards', () => {
   it('returns null for unlinked agents (id 0 / empty)', async () => {
     const reg = '0x89476DfEf9c72a668fa5E86f154B73EDB053aFe4' as const
-    expect(await getReputation('fuji', reg, '0')).toBeNull()
-    expect(await getReputation('fuji', reg, '')).toBeNull()
+    expect(await getReputation('arc-testnet', reg, '0')).toBeNull()
+    expect(await getReputation('arc-testnet', reg, '')).toBeNull()
   })
 
   it('returns null when no reputation registry is configured', async () => {
-    expect(await getReputation('fuji', undefined, '5')).toBeNull()
+    expect(await getReputation('arc-testnet', undefined, '5')).toBeNull()
   })
 })
