@@ -45,7 +45,7 @@ function Body({ fees, reload }: { fees: Fees; reload: () => void }) {
     <Card>
       <SectionTitle>Usage fee</SectionTitle>
       <p className="max-w-prose text-sm text-muted">
-        ChainPe charges {percent(fees.rates.freeBps)} of verified revenue on Free and {percent(fees.rates.proBps)} on Pro. Buyers still pay your wallet directly. Fees are collected in batches from the USDC you approve here, and never from anything else. Self-pay is not charged.
+        {fees.contract ? 'ChainPe charges' : 'Nothing is charged today. ChainPe plans to charge'} {percent(fees.rates.freeBps)} of verified revenue on Free and {percent(fees.rates.proBps)} on Pro. Buyers still pay your wallet directly. Fees are collected in batches from the USDC you approve here, and never from anything else. Self-pay is not charged.
       </p>
       <dl className="mt-4 grid grid-cols-2 items-baseline gap-x-4 gap-y-2 text-sm sm:max-w-md">
         <dt className="text-muted">Your rate</dt>
