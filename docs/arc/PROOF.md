@@ -33,6 +33,7 @@ ChainPeAccounts source is verified on the explorer: [0xD315322c9D83A6f50A04236A2
 | 2026-11-06 09:50 | Phase 5 acceptance, exact rail ($0.01 `/forecast`): `verified` from the Transfer log | `0x90404e6ba982d895cc3655d6d44561e36fc34b40b8e59d5d69b7d6774244224a` | [view](https://explorer.testnet.arc.io/tx/0x90404e6ba982d895cc3655d6d44561e36fc34b40b8e59d5d69b7d6774244224a) |
 | 2026-11-06 09:50 | Phase 5 acceptance, Gateway rail ($0.001 `/weather`): `verified` from Circle's record | `c23db8d9-0cc7-4fdc-987b-ab472216bae3` | Gateway transfer id, settled in the batch below |
 | 2026-11-06 09:53 | Gateway batch settling those three transfers | `0x6f784cdbda4bb0defc4ca0561317d85cf1bd388b89d33f7e6bc9ed79a8d844de` | [view](https://explorer.testnet.arc.io/tx/0x6f784cdbda4bb0defc4ca0561317d85cf1bd388b89d33f7e6bc9ed79a8d844de) |
+| 2026-11-06 10:09 | Seller `deactivateService(demo-weather)`: retires the smoke-test listing | `0x314ebb1ea687bd8e237ba31813dd9878b06c2858c5313b099c707376e4dd3c08` | [view](https://explorer.testnet.arc.io/tx/0x314ebb1ea687bd8e237ba31813dd9878b06c2858c5313b099c707376e4dd3c08) |
 
 ## Live services
 
