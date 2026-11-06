@@ -1,6 +1,6 @@
 {
   "name": "@chainpearc/wallet-mcp",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "ChainPe Wallet: an MCP server that lets Claude find, pay for and rate x402 services in USDC on Arc.",
   "type": "module",
   "bin": {
@@ -25,7 +25,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@chainpearc/sdk": "^0.3.0",
+    "@chainpearc/sdk": "^0.4.0",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "viem": "^2.57.5",
     "zod": "^4.6.7"

@@ -2,6 +2,21 @@
 
 All notable changes to ChainPe are documented here.
 
+## [3.1.0] — 2026-11-06 (Arc)
+
+Packages: `@chainpearc/cli` 3.1.0, `@chainpearc/sdk` 0.4.0, `@chainpearc/ai-tools` 0.4.0, `@chainpearc/wallet-mcp` 0.4.0, and `@chainpearc/agent` 3.1.0, its first release on Arc.
+
+### Added
+- The proxy can sell an MCP server: connecting and listing tools are free, and each `tools/call` is priced per tool.
+- `@chainpearc/agent` runs on Arc, built on the SDK, with per-call and per-task spending limits.
+- The MCP wallet saves today's spending, so a restart no longer resets the daily limit.
+
+### Changed
+- With routes listed, a path outside them answers 404 and costs nothing. `chargeUnlistedPaths: true` keeps the old behaviour.
+- Search drops Circle listings that share no word with the query.
+- A Gateway-only payment signed by a plain x402 client now explains why it failed.
+- zod 4 in the wallet and AI tools, which removes a memory advisory.
+
 ## [3.0.0] — 2026-11-06 (Arc, ETHGlobal Mumbai)
 
 Built during ETHGlobal Mumbai. Details and proof: [`docs/arc/`](arc/README.md) and [`docs/arc/PROOF.md`](arc/PROOF.md).

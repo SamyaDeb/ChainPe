@@ -33,7 +33,7 @@ import { discoverServices } from "@chainpearc/sdk";
 import { ChainPeAgent } from "./agent.js";
 import { isKeychainAvailable, hasPrivateKey, getCredentialInfo } from "./keychain.js";
 
-const VERSION = "3.0.0";
+const VERSION = "3.1.0";
 
 const agentGradient = gradient(["#E84142", "#FF6B6B", "#FFD93D"]);
 

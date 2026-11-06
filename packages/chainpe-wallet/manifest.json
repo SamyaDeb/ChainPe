@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "chainpe-wallet",
   "display_name": "ChainPe: Arc Wallet for AI Agents",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "icon": "chainpe-logo.png",
   "description": "A USDC wallet for Claude on Arc. Find paid x402 services, pay for them per call within your limits, and rate them. No API keys, no accounts.",
   "long_description": "Give Claude a USDC wallet on Arc, wired into Circle's Discovery API and ChainPe's on-chain listings:\n\n- **search_bazaar**: find paid x402 services, with prices and ratings\n- **x402_fetch**: call a service, paying automatically within your limits\n- **pay**: call a service on a chosen payment rail\n- **check_balance**: see USDC and the Circle Gateway deposit\n- **deposit_gateway**: fund Circle Gateway, for payments with no gas\n- **transfer_usdc**: send USDC to an address\n- **spending_report**: see what was spent against your limits\n- **request_funding**: ask for USDC, with the testnet faucet link\n- **give_feedback**: rate a provider on-chain (ERC-8004)\n\nRuns on Arc testnet by default. Use a wallet made for this, with only what you are willing to spend.",

@@ -18,7 +18,7 @@ import { registerGiveFeedback } from '@/tools/give-feedback.js'
 export function createMcpServer(config: AppConfig): McpServer {
   const server = new McpServer({
     name: 'chainpe-wallet',
-    version: '0.3.0'
+    version: '0.4.0'
   })
 
   const spending = new SpendingTracker(config.budget, spendingFile(config))

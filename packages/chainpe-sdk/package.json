@@ -1,6 +1,6 @@
 {
   "name": "@chainpearc/sdk",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "ChainPe SDK: pay x402 APIs in USDC on Arc, find services through Circle Discovery, and rate them with ERC-8004.",
   "type": "module",
   "main": "./dist/index.js",

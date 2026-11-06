@@ -1,6 +1,6 @@
 {
   "name": "@chainpearc/agent",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "ChainPe Agent: an AI agent that finds, pays for and uses x402 services in USDC on Arc.",
   "type": "module",
   "bin": {
@@ -58,7 +58,7 @@
     "@ai-sdk/google": "^2.0.62",
     "@ai-sdk/openai": "^2.0.100",
     "@ai-sdk/openai-compatible": "^2.0.35",
-    "@chainpearc/sdk": "^0.3.0",
+    "@chainpearc/sdk": "^0.4.0",
     "@clack/prompts": "^0.9.1",
     "ai": "^6.0.116",
     "chalk": "^5.4.1",
