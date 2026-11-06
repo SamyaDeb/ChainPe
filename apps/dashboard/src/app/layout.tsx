@@ -4,7 +4,7 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'ChainPe | AI Agent Marketplace on Avalanche',
   description:
-    'ChainPe lets AI agents pay for APIs autonomously using Avalanche micropayments — no human approval, no subscriptions, just pay-per-request with native AVAX.',
+    'ChainPe lets AI agents pay for APIs autonomously using Avalanche micropayments — no human approval, no subscriptions, just pay-per-request in USDC.',
 }
 
 const themeScript = `

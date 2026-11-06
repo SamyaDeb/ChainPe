@@ -3,16 +3,16 @@
 import { useEffect, useState, useRef } from "react";
 
 const integrations = [
-  { name: "Vercel AI SDK", category: "AI Framework" },
-  { name: "LangChain", category: "AI Framework" },
-  { name: "Claude MCP", category: "AI Assistant" },
-  { name: "Avalanche C-Chain", category: "Blockchain" },
+  { name: "Arc", category: "Blockchain" },
+  { name: "Arc Studio", category: "Build" },
+  { name: "Circle Facilitator", category: "Settlement" },
+  { name: "Circle Gateway", category: "Nanopayments" },
   { name: "USDC (Circle)", category: "Stablecoin" },
-  { name: "EIP-3009", category: "Payment Standard" },
+  { name: "x402 v2", category: "Payment Standard" },
   { name: "ERC-8004", category: "Reputation" },
-  { name: "ICM/Teleporter", category: "Cross-L1" },
+  { name: "Agent Marketplace", category: "Discovery" },
   { name: "MetaMask", category: "Wallet" },
-  { name: "Hardhat", category: "Development" },
+  { name: "Foundry", category: "Development" },
   { name: "Railway", category: "Hosting" },
   { name: "PostgreSQL", category: "Database" },
 ];
@@ -53,7 +53,7 @@ export function IntegrationsSection() {
             you already use.
           </h2>
           <p className="text-xl text-muted-foreground">
-            Drop-in tools for Vercel AI SDK, LangChain, Claude MCP, and any HTTP client.
+            Built on Circle's stack for Arc. Works with any HTTP API, in any language.
           </p>
         </div>
 

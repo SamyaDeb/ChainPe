@@ -64,7 +64,7 @@ export function Navigation() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <a href="/docs" className={`text-foreground/70 hover:text-foreground transition-all duration-500 ${isScrolled ? "text-xs" : "text-sm"}`}>
+            <a href="https://github.com/SamyaDeb/ChainPeAvax/tree/arc/docs/arc" className={`text-foreground/70 hover:text-foreground transition-all duration-500 ${isScrolled ? "text-xs" : "text-sm"}`}>
               Docs
             </a>
             <Button
@@ -133,7 +133,7 @@ export function Navigation() {
               className="flex-1 rounded-full h-14 text-base"
               onClick={() => {
                 setIsMobileMenuOpen(false);
-                window.location.href = '/docs';
+                window.location.href = 'https://github.com/SamyaDeb/ChainPeAvax/tree/arc/docs/arc';
               }}
             >
               Docs

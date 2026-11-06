@@ -46,28 +46,28 @@ function AnimatedCounter({ end, suffix = "", prefix = "" }: { end: number; suffi
 
 const metrics = [
   { 
-    value: 44, 
+    value: 101, 
     suffix: "", 
     prefix: "",
-    label: "Contract tests passing",
+    label: "Contract tests (Foundry)",
   },
   { 
-    value: 99, 
-    suffix: ".99%", 
-    prefix: "",
-    label: "Uptime on mainnet",
-  },
-  { 
-    value: 3, 
+    value: 233, 
     suffix: "", 
     prefix: "",
-    label: "Lines to integrate payments",
+    label: "CLI and proxy tests",
   },
   { 
-    value: 8, 
+    value: 135, 
     suffix: "", 
     prefix: "",
-    label: "Surfaces powered by one core",
+    label: "Cloud API tests",
+  },
+  { 
+    value: 1, 
+    suffix: "", 
+    prefix: "",
+    label: "Command to start selling",
   },
 ];
 
@@ -101,7 +101,7 @@ export function MetricsSection() {
           <div>
             <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground mb-6">
               <span className="w-8 h-px bg-foreground/30" />
-              Live metrics
+              By the numbers
             </span>
             <h2
               className={`text-4xl lg:text-6xl font-display tracking-tight transition-all duration-700 ${
@@ -116,7 +116,7 @@ export function MetricsSection() {
           <div className="flex items-center gap-4 font-mono text-sm text-muted-foreground">
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              Live on Mainnet
+              Live on Arc testnet
             </span>
             <span className="text-foreground/30">|</span>
             <span suppressHydrationWarning>{time.toLocaleTimeString()}</span>

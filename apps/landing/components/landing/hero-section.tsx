@@ -64,7 +64,7 @@ export function HeroSection() {
         >
           <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground">
             <span className="w-8 h-px bg-foreground/30" />
-            x402 payment infrastructure for Avalanche
+            x402 payments for AI agents, on Arc
           </span>
         </div>
         
@@ -108,8 +108,8 @@ export function HeroSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            Pay any API in USDC, rate any agent on‑chain, 
-            settle on Avalanche in ~1–2 seconds. All in 3 lines of code.
+            Turn any API into a paid service for AI agents. 
+            One command. USDC on Arc. Settled by Circle.
           </p>
           
           {/* CTAs */}
@@ -129,7 +129,7 @@ export function HeroSection() {
               size="lg" 
               variant="outline" 
               className="h-14 px-8 text-base rounded-full border-foreground/20 hover:bg-foreground/5"
-              onClick={() => window.location.href = '/docs'}
+              onClick={() => window.location.href = 'https://github.com/SamyaDeb/ChainPeAvax/tree/arc/docs/arc'}
             >
               Read the docs
             </Button>
@@ -148,10 +148,10 @@ export function HeroSection() {
           {[...Array(2)].map((_, i) => (
             <div key={i} className="flex gap-16">
               {[
-                { value: "~1–2s", label: "settlement finality", company: "AVALANCHE" },
-                { value: "$0.0003", label: "cost per transaction", company: "C-CHAIN" },
-                { value: "44", label: "contract tests passing", company: "HARDHAT" },
-                { value: "3 lines", label: "to integrate payments", company: "SDK" },
+                { value: "<1s", label: "finality on Arc", company: "ARC" },
+                { value: "2", label: "payment options", company: "X402 + GATEWAY" },
+                { value: "101", label: "contract tests passing", company: "FOUNDRY" },
+                { value: "1 command", label: "to start selling", company: "CLI" },
               ].map((stat) => (
                 <div key={`${stat.company}-${i}`} className="flex items-baseline gap-4">
                   <span className="text-4xl lg:text-5xl font-display">{stat.value}</span>

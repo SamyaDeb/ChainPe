@@ -11,27 +11,27 @@ const footerLinks = {
     { name: "Security", href: "#security" },
   ],
   Developers: [
-    { name: "Documentation", href: "https://chainpe.xyz/docs" },
-    { name: "GitHub", href: "https://github.com/SamyaDeb/ChainPe" },
-    { name: "SDK Packages", href: "https://www.npmjs.com/org/chainpeavax" },
-    { name: "Mainnet", href: "#" },
+    { name: "Documentation", href: "https://github.com/SamyaDeb/ChainPeAvax/tree/arc/docs/arc" },
+    { name: "GitHub", href: "https://github.com/SamyaDeb/ChainPeAvax" },
+    { name: "Live demo", href: "https://chainpe-arc-demo-production.up.railway.app" },
+    { name: "Proof of payments", href: "https://github.com/SamyaDeb/ChainPeAvax/blob/arc/docs/arc/PROOF.md" },
   ],
   Ecosystem: [
-    { name: "Avalanche C-Chain", href: "#" },
-    { name: "Circle USDC", href: "#" },
-    { name: "Teleporter", href: "#" },
-    { name: "Vercel AI SDK", href: "#" },
+    { name: "Arc", href: "https://www.arc.io" },
+    { name: "Circle USDC", href: "https://www.circle.com/usdc" },
+    { name: "Arc Studio", href: "https://studio.arc.io/app/6872b96e-b3c0-4cdb-abe3-5f17865cdf5a" },
+    { name: "Circle Gateway", href: "https://developers.circle.com/gateway" },
   ],
   Legal: [
     { name: "Privacy Policy", href: "#" },
     { name: "Terms of Service", href: "#" },
-    { name: "Smart Contract Audit", href: "#security" },
+    { name: "Contract review", href: "https://github.com/SamyaDeb/ChainPeAvax/blob/arc/docs/arc/reviews/chainpe-accounts-review.md" },
   ],
 };
 
 const socialLinks = [
   { name: "X (Twitter)", href: "#" },
-  { name: "GitHub", href: "https://github.com/SamyaDeb/ChainPe" },
+  { name: "GitHub", href: "https://github.com/SamyaDeb/ChainPeAvax" },
   { name: "Discord", href: "#" },
 ];
 
@@ -54,7 +54,7 @@ export function FooterSection() {
               </a>
 
               <p className="text-muted-foreground leading-relaxed mb-8 max-w-xs">
-                Payment and reputation infrastructure for the Avalanche agent economy. 
+                Payments and reputation for AI agents on Arc. 
                 Monetize any API with sub-cent settlement.
               </p>
 
@@ -99,7 +99,7 @@ export function FooterSection() {
         {/* Bottom Bar */}
         <div className="py-8 border-t border-foreground/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            2025 ChainPe. Built for the Avalanche ecosystem.
+            2026 ChainPe. Built on Arc.
           </p>
 
           <div className="flex items-center gap-4 text-sm text-muted-foreground">

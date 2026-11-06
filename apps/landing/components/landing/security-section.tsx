@@ -7,26 +7,26 @@ const securityFeatures = [
   {
     icon: Shield,
     title: "Non-custodial Settlement",
-    description: "The facilitator never holds funds. Payers sign EIP-3009 authorizations; the facilitator submits and pays gas.",
+    description: "Buyers pay your wallet directly. Circle's facilitator settles the signed USDC payment and pays the gas. ChainPe never holds funds.",
   },
   {
     icon: Lock,
-    title: "On-chain Spending Caps",
-    description: "PolicyVault enforces maxPerCall, dailyCap, totalBudget, and expiry limits on-chain. Overspends revert.",
+    title: "Paid Before Served",
+    description: "The proxy settles every payment before it calls your API. Pending or failed payments never reach your backend.",
   },
   {
     icon: Eye,
     title: "Self-feedback Resistant",
-    description: "ERC-8004 blocks self-rating on-chain. Reputation only accrues from real counterparties.",
+    description: "ERC-8004 on Arc blocks self-rating. Your dashboard separates ratings from wallets that actually paid you.",
   },
   {
     icon: FileCheck,
-    title: "36 Audit Findings Fixed",
-    description: "Full security audit completed — 3 Critical, 12 High, 11 Medium, 10 Low. All resolved and verified.",
+    title: "Reviewed Contract",
+    description: "ChainPeAccounts was reviewed before launch: no High findings, one Medium found and fixed, 101 Foundry tests, source verified on the Arc explorer.",
   },
 ];
 
-const certifications = ["EIP-3009", "ERC-8004", "EIP-712", "UUPS", "OpenZeppelin"];
+const certifications = ["x402 v2", "EIP-3009", "ERC-8004", "EIP-712", "OpenZeppelin"];
 
 export function SecuritySection() {
   const [isVisible, setIsVisible] = useState(false);
@@ -64,7 +64,7 @@ export function SecuritySection() {
               non-negotiable.
             </h2>
             <p className="text-xl text-muted-foreground leading-relaxed mb-12">
-              Non-custodial by design. On-chain spending caps. Self-feedback-resistant reputation. 
+              Non-custodial by design. Settled before your API runs. Reviewed contracts. 
               Every layer is built for trustless agent interactions.
             </p>
 

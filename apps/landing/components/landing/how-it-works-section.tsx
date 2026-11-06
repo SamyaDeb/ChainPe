@@ -6,33 +6,29 @@ const steps = [
   {
     number: "I",
     title: "Wrap your API",
-    description: "Monetize any HTTP endpoint with one command. The proxy returns 402 Payment Required with a USDC price tag.",
-    code: `import { ChainPe } from '@chainpeavax/sdk'
+    description: "Put the ChainPe proxy in front of any HTTP API. It answers unpaid requests with 402 Payment Required and a USDC price.",
+    code: `chainpe init
+chainpe start --network arc-testnet
 
-const cp = new ChainPe({
-  privateKey: process.env.KEY!,
-  network: 'mainnet'
-})`,
+# unpaid request -> 402 Payment Required`,
   },
   {
     number: "II",
-    title: "Agent pays & uses",
-    description: "cp.fetch is a drop-in fetch — on 402 it signs a USDC payment (EIP-3009), retries, and returns the response.",
-    code: `const res = await cp.fetch(
-  'https://api.example.com/paid'
-)
-// auto-pays 402 in USDC
-const data = await res.json()`,
+    title: "Agent pays, API answers",
+    description: "The agent signs a USDC payment. Circle settles it on Arc, and only then does the proxy call your API.",
+    code: `chainpe fetch \\
+  "https://chainpe-arc-demo-production.up.railway.app/forecast?city=Tokyo" \\
+  --rail exact --max 0.02
+
+# 200 OK + Arc explorer link`,
   },
   {
     number: "III",
-    title: "Discover & rate",
-    description: "Agents discover ⭐-ranked services from the on-chain registry and rate them after each call. Reputation is portable.",
-    code: `const services = await cp.discover()
-// returns ⭐-ranked services
-
-await cp.giveFeedback(agentId, 5)
-// ERC-8004 reputation updated`,
+    title: "Get found, get rated",
+    description: "Give your service an ERC-8004 identity, register it, and check it is ready for Circle's Agent Marketplace.",
+    code: `chainpe identity   # ERC-8004 on Arc
+chainpe register   # provider account
+chainpe doctor     # ready for Circle`,
   },
 ];
 
@@ -147,7 +143,7 @@ export function HowItWorksSection() {
                   <div className="w-3 h-3 rounded-full bg-background/20" />
                   <div className="w-3 h-3 rounded-full bg-background/20" />
                 </div>
-                <span className="text-xs font-mono text-background/40">chainpe.ts</span>
+                <span className="text-xs font-mono text-background/40">terminal</span>
               </div>
 
               {/* Code content */}
@@ -183,7 +179,7 @@ export function HowItWorksSection() {
               {/* Status */}
               <div className="px-6 py-4 border-t border-background/10 flex items-center gap-3">
                 <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-xs font-mono text-background/40">Ready — Avalanche Mainnet</span>
+                <span className="text-xs font-mono text-background/40">Ready — Arc testnet</span>
               </div>
             </div>
           </div>

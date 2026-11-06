@@ -26,8 +26,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'ChainPe — Pay any API, rate any agent, all on Avalanche',
-  description: 'x402 payment + reputation infrastructure for the Avalanche agent economy. Monetize any HTTP API in USDC with one command. AI agents discover, pay for, and rate services autonomously.',
+  title: 'ChainPe — Turn any API into a paid service for AI agents on Arc',
+  description: 'Put a USDC price on any HTTP API with one command. AI agents pay over x402 on Arc, Circle settles the payment, and providers see verified revenue in their own dashboard.',
 }
 
 export default function RootLayout({

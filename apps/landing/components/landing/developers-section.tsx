@@ -6,34 +6,24 @@ import { Copy, Check } from "lucide-react";
 const codeExamples = [
   {
     label: "Install",
-    code: `npm install @chainpeavax/sdk
-
-# or
-yarn add @chainpeavax/sdk
-pnpm add @chainpeavax/sdk`,
+    code: `git clone https://github.com/SamyaDeb/ChainPeAvax
+cd ChainPeAvax && git checkout arc
+npm install && npm run build:cli`,
   },
   {
-    label: "Pay",
-    code: `import { ChainPe } from '@chainpeavax/sdk'
-
-const cp = new ChainPe({
-  privateKey: process.env.KEY!,
-  network: 'mainnet'
-})
-
-const res = await cp.fetch(url)
-const data = await res.json()`,
+    label: "Sell",
+    code: `chainpe init
+chainpe start --network arc-testnet
+chainpe identity
+chainpe register
+chainpe doctor`,
   },
   {
-    label: "Discover",
-    code: `// Find services ranked by reputation
-const services = await cp.discover()
-
-// Rate after using
-await cp.giveFeedback(agentId, 5)
-
-// Check balance
-const bal = await cp.balance()`,
+    label: "Buy",
+    code: `# pay a live API on Arc testnet
+chainpe fetch \\
+  "https://chainpe-arc-demo-production.up.railway.app/weather?city=London" \\
+  --rail gateway --max 0.02`,
   },
 ];
 
@@ -43,16 +33,16 @@ const features = [
     description: "Full type safety with auto-generated types."
   },
   { 
-    title: "Drop-in fetch", 
-    description: "cp.fetch works like native fetch with auto-pay."
+    title: "Paid fetch", 
+    description: "chainpe fetch pays any 402 in USDC, never above your --max."
   },
   { 
-    title: "AI framework tools", 
-    description: "Vercel AI SDK + LangChain integrations."
+    title: "Two payment options", 
+    description: "Normal x402 payments and Circle Gateway nanopayments."
   },
   { 
-    title: "Published on npm", 
-    description: "@chainpeavax/sdk, ai-tools, cli."
+    title: "Open source", 
+    description: "MIT licensed. The Arc version lives on the arc branch."
   },
 ];
 
@@ -129,8 +119,8 @@ export function DevelopersSection() {
               <span className="text-muted-foreground">By a dev.</span>
             </h2>
             <p className="text-xl text-muted-foreground mb-12 leading-relaxed">
-              A thoughtfully designed SDK that gets out of your way. 
-              Three lines to payments. Published on npm. Works with any HTTP client.
+              A small CLI that gets out of your way. 
+              One command to start selling. Works with any HTTP API, in any language.
             </p>
             
             {/* Features */}
@@ -221,11 +211,11 @@ export function DevelopersSection() {
             
             {/* Links */}
             <div className="mt-6 flex items-center gap-6 text-sm">
-              <a href="https://chainpe.xyz/docs" className="text-foreground hover:underline underline-offset-4">
+              <a href="https://github.com/SamyaDeb/ChainPeAvax/tree/arc/docs/arc" className="text-foreground hover:underline underline-offset-4">
                 Read the docs
               </a>
               <span className="text-foreground/20">|</span>
-              <a href="https://github.com/SamyaDeb/ChainPe" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
+              <a href="https://github.com/SamyaDeb/ChainPeAvax" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
                 View on GitHub
               </a>
               <span className="text-foreground/20">|</span>
