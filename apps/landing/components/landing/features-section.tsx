@@ -1,28 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { CONTAINER, SECTION, SectionHeader } from "./section-layout";
 
 const features = [
   {
-    number: "01",
     title: "x402 Payment Protocol",
     description: "Any HTTP endpoint answers 402 Payment Required with a USDC price. The buyer signs a payment, and Circle's facilitator settles it on Arc before your API runs.",
     visual: "deploy",
   },
   {
-    number: "02",
     title: "On-chain Reputation (ERC-8004)",
     description: "Each service gets an identity on Arc's ERC-8004 registry. Payers rate it after a call, and your dashboard shows ratings from real payers first.",
     visual: "ai",
   },
   {
-    number: "03",
     title: "Gateway Nanopayments",
     description: "Buyers can pay from a Circle Gateway balance, with no gas and prices below one cent. Circle settles these payments in batches on Arc.",
     visual: "collab",
   },
   {
-    number: "04",
     title: "Your Own Dashboard",
     description: "Register once and sign in with your wallet. See your revenue, buyers and ratings, each checked against Arc and Circle's own records.",
     visual: "security",
@@ -245,103 +241,22 @@ function AnimatedVisual({ type }: { type: string }) {
   }
 }
 
-function FeatureCard({ feature, index }: { feature: typeof features[0]; index: number }) {
-  const [isVisible, setIsVisible] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setIsVisible(true);
-      },
-      { threshold: 0.2 }
-    );
-
-    if (cardRef.current) observer.observe(cardRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div
-      ref={cardRef}
-      className={`group relative transition-all duration-700 ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
-      }`}
-      style={{ transitionDelay: `${index * 100}ms` }}
-    >
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 py-12 lg:py-20 border-b border-foreground/10">
-        {/* Number */}
-        <div className="shrink-0">
-          <span className="font-mono text-sm text-muted-foreground">{feature.number}</span>
-        </div>
-        
-        {/* Content */}
-        <div className="flex-1 grid lg:grid-cols-2 gap-8 items-center">
-          <div>
-            <h3 className="text-3xl lg:text-4xl font-display mb-4 group-hover:translate-x-2 transition-transform duration-500">
-              {feature.title}
-            </h3>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              {feature.description}
-            </p>
-          </div>
-          
-          {/* Visual */}
-          <div className="flex justify-center lg:justify-end">
-            <div className="w-48 h-40 text-foreground">
-              <AnimatedVisual type={feature.visual} />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function FeaturesSection() {
-  const [isVisible, setIsVisible] = useState(false);
-  const sectionRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setIsVisible(true);
-      },
-      { threshold: 0.1 }
-    );
-
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
-
   return (
-    <section
-      id="features"
-      ref={sectionRef}
-      className="relative py-24 lg:py-32"
-    >
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
-        {/* Header */}
-        <div className="mb-16 lg:mb-24">
-          <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground mb-6">
-            <span className="w-8 h-px bg-foreground/30" />
-            Capabilities
-          </span>
-          <h2
-            className={`text-4xl lg:text-6xl font-display tracking-tight transition-all duration-700 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-            }`}
-          >
-            One core, many surfaces.
-            <br />
-            <span className="text-muted-foreground">All on Arc.</span>
-          </h2>
-        </div>
+    <section id="features" className={SECTION}>
+      <div className={CONTAINER}>
+        <SectionHeader eyebrow="Capabilities" title="One core, many surfaces." muted="All on Arc." />
 
-        {/* Features List */}
-        <div>
-          {features.map((feature, index) => (
-            <FeatureCard key={feature.number} feature={feature} index={index} />
+        {/* Four equal boxes: each row is as tall as its tallest box */}
+        <div className="grid md:grid-cols-2 gap-px bg-foreground/10 border border-foreground/10">
+          {features.map((feature) => (
+            <div key={feature.title} className="bg-background p-8 lg:p-12 flex flex-col">
+              <div className="w-40 h-32 -ml-4 mb-8 text-foreground">
+                <AnimatedVisual type={feature.visual} />
+              </div>
+              <h3 className="text-2xl lg:text-3xl font-display mb-4">{feature.title}</h3>
+              <p className="text-lg text-muted-foreground leading-relaxed max-w-xl">{feature.description}</p>
+            </div>
           ))}
         </div>
       </div>

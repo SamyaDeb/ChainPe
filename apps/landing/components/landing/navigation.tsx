@@ -39,8 +39,8 @@ export function Navigation() {
         }`}
       >
         <div 
-          className={`flex items-center justify-between transition-all duration-500 px-6 lg:px-8 ${
-            isScrolled ? "h-14" : "h-20"
+          className={`flex items-center justify-between transition-all duration-500 ${
+            isScrolled ? "h-14 px-6 lg:px-8" : "h-20 px-6 lg:px-12"
           }`}
         >
           {/* Logo */}
