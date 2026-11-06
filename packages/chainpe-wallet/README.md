@@ -10,7 +10,9 @@ It is a [Model Context Protocol](https://modelcontextprotocol.io) server. Claude
 
 1. Make a new wallet just for this. Never use one that holds real money.
 2. Get free test USDC at https://faucet.circle.com (pick Arc Testnet). On Arc, this USDC also pays for gas.
-3. Add the server to Claude Desktop's config, or to any MCP client:
+3. **Claude Desktop, one click:** download `chainpe-wallet-0.4.1.mcpb` from the [releases page](https://github.com/SamyaDeb/ChainPe/releases), double-click it, and fill in the key and limits. Leave the address fields blank.
+
+   **Or by hand,** in Claude Desktop's config or any MCP client:
 
 ```json
 {
