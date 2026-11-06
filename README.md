@@ -14,6 +14,7 @@ ChainPe is for **developers** who already run an API, an MCP server or an AI age
 | What | Link |
 |---|---|
 | Demo API (a weather API behind ChainPe) | https://chainpe-arc-demo-production.up.railway.app |
+| Docs | https://chainpe.vercel.app/docs |
 | Provider dashboard | https://chainpe.vercel.app/dashboard |
 | Arc Studio workspace (contracts + dashboard) | https://studio.arc.io/app/6872b96e-b3c0-4cdb-abe3-5f17865cdf5a |
 | `ChainPeAccounts` contract (verified source) | [0xD315…B580 on the Arc explorer](https://explorer.testnet.arc.io/address/0xD315322c9D83A6f50A04236A2a242e0259bfB580) |

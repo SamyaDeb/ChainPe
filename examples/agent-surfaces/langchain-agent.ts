@@ -25,7 +25,7 @@ const prompt =
 
 const { chainpeFetchTool, discoverServiceTool } = createChainPeLangChainTools({
   privateKey,
-  network: 'fuji',
+  network: 'arc-testnet',
   autoFeedback: true
 })
 

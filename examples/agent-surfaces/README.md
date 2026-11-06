@@ -1,16 +1,14 @@
-# ChainPe — multi-surface agent examples
+# ChainPe: the same tools in different agent frameworks
 
-The **same** ChainPe discover + paid-fetch tools, driving two different agent
-frameworks plus the CLI. This is the "it's infrastructure, not a Claude-only
-app" proof: one payment + reputation core, many surfaces.
+The same ChainPe discover and paid-fetch tools, used from two agent frameworks and the CLI.
 
 | Surface | Entry | Tools |
 |---|---|---|
 | Vercel AI SDK | `vercel-agent.ts` | `@chainpearc/ai-tools/vercel` |
 | LangChain (ReAct) | `langchain-agent.ts` | `@chainpearc/ai-tools/langchain` |
-| CLI (curl-level) | `chainpe fetch <url>` | `@chainpearc/cli` → `@chainpearc/sdk` |
+| CLI | `chainpe fetch <url>` | `@chainpearc/cli` |
 
-All three settle USDC on Avalanche C-Chain through the same `@chainpearc/sdk` core.
+All three pay in USDC on Arc testnet, and Circle settles each payment.
 
 ## Setup
 
@@ -22,7 +20,7 @@ npm install              # links the local @chainpearc/* packages (build them fi
 > Build the workspace packages once from the repo root so the `file:` links
 > resolve: `npm install && npm run build`.
 
-The paying wallet needs a little USDC on Avalanche C-Chain (available on major CEXes or bridges, e.g. [Stargate](https://stargate.finance)). Gas is paid by the provider's facilitator.
+The paying wallet needs test USDC. Get it at https://faucet.circle.com (pick Arc Testnet). On Arc, gas is also paid in USDC.
 
 ## Run
 
@@ -30,14 +28,13 @@ The paying wallet needs a little USDC on Avalanche C-Chain (available on major C
 # Vercel AI SDK agent
 npm run vercel -- "Discover a service on ChainPe and call it"
 
-# LangChain agent (same tools, same result)
+# LangChain agent (same tools)
 npm run langchain -- "Discover a service on ChainPe and call it"
 
-# CLI — no LLM needed
-chainpe discover                              # browse, ranked by ⭐ reputation
-chainpe fetch https://your-service/endpoint   # auto-pays the 402 in USDC
+# CLI, no LLM needed
+chainpe discover weather
+chainpe fetch "https://chainpe-arc-demo-production.up.railway.app/forecast?city=Mumbai" \
+  --network arc-testnet --rail exact --max 0.02
 ```
 
-To have something live to pay, run one of the sibling example APIs behind a
-ChainPe proxy (`../weather-api.mjs` → `chainpe init/start/register`), or a seller
-agent from `examples/seller-agents/` (Phase 3).
+The live demo API above is the service in `examples/arc-demo`.

@@ -2,7 +2,7 @@
   "name": "chainpe-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "ChainPe \u2014 x402 payment + ERC-8004 reputation infrastructure for the Avalanche agent economy",
+  "description": "ChainPe \u2014 x402 payment + ERC-8004 reputation infrastructure for AI agents on Arc",
   "type": "module",
   "workspaces": [
     "packages/*"
@@ -40,7 +40,7 @@
   },
   "keywords": [
     "x402",
-    "avalanche",
+    "arc",
     "ai-agents",
     "agent-economy",
     "micropayments",
