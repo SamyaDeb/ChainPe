@@ -14,7 +14,7 @@ ChainPe is for **developers** who already run an API, an MCP server or an AI age
 | What | Link |
 |---|---|
 | Demo API (a weather API behind ChainPe) | https://chainpe-arc-demo-production.up.railway.app |
-| Provider dashboard | TODO(dashboard-url) |
+| Provider dashboard | https://chainpe.vercel.app/dashboard |
 | Arc Studio workspace (contracts + dashboard) | https://studio.arc.io/app/6872b96e-b3c0-4cdb-abe3-5f17865cdf5a |
 | `ChainPeAccounts` contract (verified source) | [0xD315…B580 on the Arc explorer](https://explorer.testnet.arc.io/address/0xD315322c9D83A6f50A04236A2a242e0259bfB580) |
 | Proof of live payments | [docs/arc/PROOF.md](docs/arc/PROOF.md) |
@@ -110,7 +110,7 @@ Commits during the hackathon: **79** on the `arc` branch, as of Nov 6, 2026 at 1
 - The CLI, proxy and SDK are free and open source.
 - Every registered developer gets a dashboard. **Free** covers one service and the last 7 days.
 - **Pro** costs 19 USDC per 30 days (1 USDC on testnet), paid on Arc. It adds full history, CSV export and more detail.
-- ChainPe charges a **usage fee of 1%** of verified revenue, or 0.5% on Pro. Buyers still pay the seller's wallet directly, because Circle only settles to a wallet the seller signs for. The fee is collected afterwards, in batches, from USDC the seller approves and can revoke. Details: [spec 12](docs/arc/specs/12-usage-fees.md).
+- **Planned, not live yet:** a usage fee of 1% of verified revenue, or 0.5% on Pro. The fee contract is not deployed, so nothing is charged today. Buyers still pay the seller's wallet directly, because Circle only settles to a wallet the seller signs for. The fee will be collected afterwards, in batches, from USDC the seller approves and can revoke. Details: [spec 12](docs/arc/specs/12-usage-fees.md).
 
 More detail: [docs/arc/BUSINESS-MODEL.md](docs/arc/BUSINESS-MODEL.md).
 
@@ -133,7 +133,7 @@ More detail: [docs/arc/BUSINESS-MODEL.md](docs/arc/BUSINESS-MODEL.md).
   If a batch ever failed, the seller would have served for free. The cloud service marks it as failed.
 - **No refunds yet.** If your API fails after a payment, the buyer is still charged. The proxy counts these cases.
 - **Anyone can rate an agent** on ERC-8004. The dashboard shows ratings from real payers first.
-- **Testnet only.** Nothing has run on Arc mainnet yet.
+- **Testnet only.** Nothing has run on Arc mainnet yet, so `chainpe start` refuses it without `--allow-mainnet`.
 - **Not in Circle's marketplace yet.** The listing is prepared. Once submitted, Circle reviews it by hand.
 
 Reviews: [contract](docs/arc/reviews/chainpe-accounts-review.md) and [dashboard](docs/arc/reviews/dashboard-review.md).

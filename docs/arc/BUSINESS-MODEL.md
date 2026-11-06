@@ -5,7 +5,9 @@ The CLI, proxy and SDK stay free and open source.
 
 ## The usage fee
 
-ChainPe charges **1% of verified revenue, or 0.5% on Pro**. Rules and limits: [spec 12](specs/12-usage-fees.md).
+**Status: planned, not live.** The `ChainPeFees` contract is not deployed, so nothing is charged today.
+
+ChainPe will charge **1% of verified revenue, or 0.5% on Pro**. Rules and limits: [spec 12](specs/12-usage-fees.md).
 
 Circle's Facilitator Service requires a signature from the seller's own `payTo` key on every settle call
 (`Facilitator-Seller-Proof`), and the buyer signs one transfer to one address. So payments still go straight from

@@ -27,7 +27,7 @@ const plans = [
     features: [
       "Up to 10 services",
       "Full history and CSV export",
-      "0.5% usage fee on verified revenue, not 1%",
+      "Lower planned usage fee: 0.5%, not 1%",
       "Every rating, with the payer-only average",
       "Listing health history",
     ],
@@ -63,12 +63,12 @@ export function PricingSection() {
             Pricing
           </span>
           <h2 className="font-display text-5xl md:text-6xl lg:text-7xl tracking-tight text-foreground mb-6">
-            Keep 99% of
+            Agents pay
             <br />
-            <span className="text-stroke">what agents pay.</span>
+            <span className="text-stroke">your wallet.</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl">
-            Buyers pay your wallet directly. ChainPe takes 1% of verified revenue, or 0.5% on Pro (1 USDC per 30 days on testnet), collected from USDC you approve. You can revoke it at any time.
+            Buyers pay your wallet directly, and ChainPe charges no usage fee today. A fee is planned: 1% of verified revenue, or 0.5% on Pro, collected only from USDC you approve. Pro costs 1 USDC per 30 days on testnet.
           </p>
         </div>
 

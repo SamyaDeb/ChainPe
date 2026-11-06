@@ -1,5 +1,7 @@
 # Spec 12: usage fee on verified calls
 
+**Status: the service code is built, but `ChainPeFees` is not deployed, so nothing is charged yet** ([plan](../HACKATHON-PLAN.md), H7).
+
 ChainPe takes a percentage of the verified revenue of each provider who opts in. This replaces "no cut of payments".
 
 ## Why the fee is not taken at the moment of payment
