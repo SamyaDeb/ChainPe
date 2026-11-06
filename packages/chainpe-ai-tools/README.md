@@ -1,19 +1,19 @@
 # @chainpearc/ai-tools
 
-[![npm](https://img.shields.io/npm/v/@chainpearc/ai-tools.svg)](https://www.npmjs.com/package/chainpe-ai-tools)
+[![npm](https://img.shields.io/npm/v/@chainpearc/ai-tools.svg)](https://www.npmjs.com/package/@chainpearc/ai-tools)
 
-> **This package still targets Avalanche.** Arc support is planned. For Arc today, use the [`@chainpearc/cli`](https://www.npmjs.com/package/@chainpearc/cli) CLI.
+> **Use Arc testnet for now.** It is the default. ChainPe has not been tested with real USDC on Arc mainnet.
 
 **Drop-in ChainPe tools for AI agents** — let any Vercel AI SDK or LangChain agent
 **discover, pay for, and rate** HTTP APIs and other agents per request in USDC on
-Avalanche C-Chain. Thin adapters over [`@chainpearc/sdk`](../chainpe-sdk).
+Arc. Thin adapters over [`@chainpearc/sdk`](../chainpe-sdk).
 
 Two tools per framework:
 
 - **`chainpeFetch` / `chainpe_fetch`** — call a URL; if it returns `402 Payment
-  Required`, pay it automatically in USDC (EIP-3009) and return the result.
-- **`discoverService` / `discover_service`** — browse the on-chain marketplace,
-  ranked by ERC-8004 reputation.
+  Required`, pay it automatically in USDC and return the result.
+- **`discoverService` / `discover_service`** — search Circle's Discovery API and
+  ChainPe's on-chain listings, ranked by ERC-8004 reputation.
 
 ```bash
 npm install @chainpearc/ai-tools @chainpearc/sdk
@@ -29,7 +29,6 @@ import { createChainPeTools } from '@chainpearc/ai-tools/vercel'
 
 const tools = createChainPeTools({
   privateKey: process.env.PRIVATE_KEY!,
-  network: 'avalanche',
   autoFeedback: true // leave on-chain reputation after each paid call
 })
 
@@ -50,7 +49,6 @@ import { createChainPeLangChainTools } from '@chainpearc/ai-tools/langchain'
 
 const { chainpeFetchTool, discoverServiceTool } = createChainPeLangChainTools({
   privateKey: process.env.PRIVATE_KEY!,
-  network: 'avalanche',
   autoFeedback: true
 })
 
@@ -64,12 +62,12 @@ const agent = createReactAgent({
 
 `createChainPeTools(options)` / `createChainPeLangChainTools(options)` take the same
 options as [`new ChainPe(...)`](../chainpe-sdk#api) — `privateKey`, `network`,
-`registryAddress?`, `reputationRegistry?`, `maxPerCall?`, `autoFeedback?` — or a
+`rails?`, `accountsAddress?`, `reputationRegistry?`, `maxPerCall?`, `autoFeedback?` — or a
 pre-built client via `{ client }`:
 
 ```ts
 import { ChainPe } from '@chainpearc/sdk'
-const client = new ChainPe({ privateKey, network: 'avalanche' })
+const client = new ChainPe({ privateKey })
 const tools = createChainPeTools({ client })
 ```
 
@@ -81,7 +79,7 @@ same logic into any tool-calling runtime:
 ```ts
 import { fetchInputSchema, runFetch, getClient } from '@chainpearc/ai-tools'
 
-const client = getClient({ privateKey, network: 'avalanche' })
+const client = getClient({ privateKey })
 const result = await runFetch(client, { url: 'https://api.example.com/paid' })
 ```
 

@@ -80,9 +80,9 @@ Use a third wallet for that test: the smoke test made the buyer wallet a provide
 
 ## Phase 7 — buyer side (parallel with 5–6)
 
-- [ ] Spec 09: SDK `network: 'arc' | 'arc-testnet'`, both rails, Circle Discovery in `discover()`.
-- [ ] MCP wallet tools on Arc; `transfer_avax` hidden on Arc; gas shown in USDC.
-- [ ] Spec 10: `giveFeedback` to Arc ReputationRegistry.
+- [x] Spec 09: SDK `network: 'arc' | 'arc-testnet'`, both rails, Circle Discovery in `discover()`.
+- [x] MCP wallet tools on Arc; `transfer_avax` removed; gas shown in USDC.
+- [x] Spec 10: `giveFeedback` to Arc ReputationRegistry (simulated against the live registry; no paid rating yet).
 
 **Accept:** Claude (MCP wallet) finds the demo seller, pays it on both rails, and leaves a rating that the dashboard shows.
 

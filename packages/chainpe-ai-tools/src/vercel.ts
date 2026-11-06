@@ -7,7 +7,7 @@
  * import { anthropic } from '@ai-sdk/anthropic'
  * import { createChainPeTools } from '@chainpearc/ai-tools/vercel'
  *
- * const tools = createChainPeTools({ privateKey, network: 'fuji', autoFeedback: true })
+ * const tools = createChainPeTools({ privateKey, autoFeedback: true })
  *
  * const { text } = await generateText({
  *   model: anthropic('claude-opus-4-8'),

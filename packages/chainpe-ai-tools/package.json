@@ -1,7 +1,7 @@
 {
   "name": "@chainpearc/ai-tools",
   "version": "0.3.0",
-  "description": "ChainPe agent tools — drop-in x402 pay + discover tools for the Vercel AI SDK and LangChain, on Avalanche C-Chain.",
+  "description": "ChainPe agent tools: drop-in x402 pay and discover tools for the Vercel AI SDK and LangChain, on Arc.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -65,7 +65,7 @@
     "langchain",
     "tools",
     "usdc",
-    "avalanche",
+    "arc",
     "payments",
     "chainpe"
   ],
@@ -75,6 +75,6 @@
     "url": "git+https://github.com/SamyaDeb/ChainPe.git"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.18"
   }
 }

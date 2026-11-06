@@ -8,7 +8,7 @@
  * import { createChainPeLangChainTools } from '@chainpearc/ai-tools/langchain'
  *
  * const { chainpeFetchTool, discoverServiceTool } = createChainPeLangChainTools({
- *   privateKey, network: 'fuji', autoFeedback: true
+ *   privateKey, autoFeedback: true
  * })
  *
  * const agent = createReactAgent({

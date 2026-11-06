@@ -67,7 +67,9 @@ export interface FetchResult {
     amount: string
     recipient: string
     network: string
+    rail: string
     txHash?: string
+    transferId?: string
   }
   /** Present when ERC-8004 feedback was posted (autoFeedback). */
   reputation?: { agentId: string; score: number; txHash: string }
@@ -91,11 +93,11 @@ export interface DiscoverResultItem {
 
 export const FETCH_TOOL_DESCRIPTION =
   'Fetch a URL, automatically paying any x402 "402 Payment Required" response in ' +
-  'USDC on Avalanche (EIP-3009). Use this to call paid HTTP APIs or hire paid AI ' +
+  'USDC on Arc. Use this to call paid HTTP APIs or hire paid AI ' +
   'agents. Returns the response body plus payment + reputation details.'
 
 export const DISCOVER_TOOL_DESCRIPTION =
-  'Discover services and AI agents registered on the ChainPe on-chain marketplace, ' +
+  "Discover paid services and AI agents through Circle's Discovery API and ChainPe's on-chain listings, " +
   'ranked by ERC-8004 reputation (best first). Returns each service\'s endpoint, ' +
   'price, and reputation so you can pick one before paying.'
 
@@ -119,7 +121,9 @@ export async function runFetch(
           amount: res.payment.amount,
           recipient: res.payment.recipient,
           network: res.payment.network,
-          txHash: res.payment.txHash
+          rail: res.payment.rail,
+          txHash: res.payment.txHash,
+          transferId: res.payment.transferId
         }
       : undefined,
     reputation: res.reputation

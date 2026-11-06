@@ -12,7 +12,16 @@ Built during ETHGlobal Mumbai. Details and proof: [`docs/arc/`](arc/README.md) a
 - Moved from x402 v1 to x402 v2.
 - Payments settle through Circle's Facilitator Service, before the provider's API is called.
 
+- `@chainpearc/sdk`, `@chainpearc/ai-tools` and `@chainpearc/wallet-mcp` moved to Arc and x402 v2. Avalanche was removed from them.
+- The MCP wallet's `pay` tool now pays a URL on a chosen rail, instead of returning a bare signed payment. It no longer rates a provider on every call: Claude rates with `give_feedback` when it chooses to. `transfer_avax` is gone.
+
+### Fixed
+- `chainpe init` no longer crashes at the last step when Tags is left empty.
+
 ### Added
+- `chainpe discover`, the SDK's `discover()` and the wallet's `search_bazaar` search Circle's Discovery API and `ChainPeAccounts`.
+- The wallet's `deposit_gateway` tool, and the SDK's `depositGateway()`, for paying with no gas.
+- `chainpe login` defaults to the hosted API on Arc testnet. `chainpe init` asks which paths to list. `chainpe start` refuses Arc mainnet without `--allow-mainnet`.
 - Circle Gateway nanopayments as a second payment option, plus `chainpe deposit`, `balance` and `withdraw`.
 - `ChainPeAccounts` contract on Arc testnet for provider accounts and the Pro plan, built and deployed with Arc Studio.
 - `chainpe identity`, `register`, `deregister`, `list`, `plan`, `upgrade` and `doctor`.

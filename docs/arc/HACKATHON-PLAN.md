@@ -28,6 +28,8 @@ refuses Arc mainnet without the flag.
 
 ## H2: Provider onboarding
 
+**Status:** code done. Publishing and the funded end-to-end check are open.
+
 A developer can go from install to a working setup without help.
 
 - Make `chainpe login` use the production cloud URL by default.
@@ -41,6 +43,8 @@ dashboard.
 
 ## H3: Buyer SDK on Arc (spec 09)
 
+**Status:** code done and checked against live services with an empty wallet. A funded run and publishing are open.
+
 Agents can pay on Arc through ChainPe's own code.
 
 - Add `arc` and `arc-testnet` to `@chainpearc/sdk`, default to testnet, and remove Avalanche from the package and its metadata.
@@ -53,6 +57,8 @@ Agents can pay on Arc through ChainPe's own code.
 **Done when:** a short script finds the demo API, pays it both ways and leaves a rating on testnet.
 
 ## H4: Claude pays through the MCP wallet (the main demo)
+
+**Status:** code done and checked over real stdio with an empty wallet. A funded run in Claude and publishing are open.
 
 Claude finds a service, pays for it and rates it.
 
@@ -93,7 +99,7 @@ Evidence from real use, not just our own wallets.
 
 1. **MCP monetization:** free `initialize` and `tools/list`, per-tool prices, a streaming test, and a way to serve stdio servers over HTTP.
 2. **`ChainPeFees`:** build it in Arc Studio, deploy it to testnet, and turn the fee on.
-3. **Remaining packages:** move `@chainpearc/ai-tools` and `@chainpearc/agent` to Arc, remove Avalanche from them, publish them, and deprecate their old names.
+3. **Remaining packages:** move `@chainpearc/agent` to Arc and remove Avalanche from it. `@chainpearc/ai-tools` is done. Publish both, and deprecate their old names.
 
 ## H8: Mainnet, after the hackathon
 
