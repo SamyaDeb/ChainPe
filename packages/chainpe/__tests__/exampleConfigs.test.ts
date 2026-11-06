@@ -12,6 +12,8 @@ function configFiles(dir: string): string[] {
     if (entry.name === "node_modules") return [];
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) return configFiles(full);
+    // A doctor report is gitignored local output, and it quotes the public service key.
+    if (entry.name.endsWith(".doctor.json")) return [];
     return /config.*\.json$/i.test(entry.name) ? [full] : [];
   });
 }
