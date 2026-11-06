@@ -1,5 +1,12 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "redirects": [
+    {
+      "source": "/((?!dashboard(?:/|$)).*)",
+      "destination": "https://chainpe.vercel.app/dashboard",
+      "permanent": false
+    }
+  ],
+  "rewrites": [{ "source": "/dashboard/:path*", "destination": "/dashboard/index.html" }],
   "headers": [
     {
       "source": "/(.*)",

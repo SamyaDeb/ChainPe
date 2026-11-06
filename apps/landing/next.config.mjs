@@ -8,6 +8,14 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // The provider dashboard is its own app (apps/arc-dashboard), served here at /dashboard.
+  async rewrites() {
+    const dashboard = 'https://chainpe-dashboard-one.vercel.app/dashboard'
+    return [
+      { source: '/dashboard', destination: dashboard },
+      { source: '/dashboard/:path*', destination: `${dashboard}/:path*` },
+    ]
+  },
   async redirects() {
     return [
       {

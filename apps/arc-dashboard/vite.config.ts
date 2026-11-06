@@ -39,7 +39,11 @@ function cspPlugin(apiUrl: string): Plugin {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
+  // Empty or "/" serves at the root. "/dashboard/" serves under that prefix.
+  const rawBase = (env.VITE_BASE_PATH ?? '').trim()
+  const base = rawBase === '' || rawBase === '/' ? '/' : `/${rawBase.replace(/^\/+|\/+$/g, '')}/`
   return {
+    base,
     plugins: [react(), cspPlugin(env.VITE_CHAINPE_CLOUD_URL ?? '')],
     resolve: {
       alias: {
@@ -48,6 +52,7 @@ export default defineConfig(({ mode }) => {
       dedupe: ['react', 'react-dom'],
     },
     build: {
+      ...(base === '/dashboard/' ? { outDir: 'dist/dashboard' } : {}),
       // The CSP has font-src 'self', so a font inlined as a data: URL would be blocked.
       assetsInlineLimit: 0,
       rollupOptions: {
