@@ -3,11 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "ChainPe marketplace dashboard \u2014 browse x402 services + ERC-8004 reputation on Avalanche, and register from the browser.",
+  "description": "ChainPe marketing page: AI agents pay for APIs in USDC on Arc.",
   "scripts": {
     "dev": "next dev",
-    "build:docs": "[ -d ../../website ] && (cd ../../website && npm run build && rm -rf ../apps/dashboard/public/docs && cp -r build ../apps/dashboard/public/docs) || true",
-    "build": "npm run build:docs && next build",
+    "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "next lint"
