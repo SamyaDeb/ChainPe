@@ -42,7 +42,7 @@ Prize: "Arc Studio Continuity Track: Bring Your Project to Arc" (ETHGlobal Mumba
 "AI agents want to pay for APIs, but most APIs only take API keys and monthly plans.
 ChainPe puts a price on any API with one command. Agents pay per call in USDC on Arc, and Circle settles each payment before the API answers.
 Every developer gets a dashboard that shows revenue checked against Arc and Circle's records.
-The tool is free, the Pro dashboard is paid in USDC, and we take no cut of payments.
+The tool is free. We charge 1% of verified revenue, or 0.5% on the Pro dashboard, collected from USDC the developer approves.
 ChainPe ran on Avalanche in June. This weekend we rebuilt it on Arc with Arc Studio."
 
 ## Likely judge questions
@@ -51,6 +51,6 @@ ChainPe ran on Avalanche in June. This weekend we rebuilt it on Arc with Arc Stu
 |---|---|
 | Who is the user? | Developers who sell API calls, MCP tools or agents. Not shops. |
 | Why not just follow Circle's seller guide? | No code changes, any language, both payment options, listing checks, ratings and a dashboard. |
-| How do you make money? | The Pro dashboard, paid in USDC on Arc. No cut of payments. |
+| How do you make money? | A usage fee of 1% of verified revenue, 0.5% on the Pro dashboard, which is paid in USDC on Arc. Buyers still pay the developer's wallet directly. |
 | What did you build this weekend? | The README "During" table, the Studio log, and 79 commits after the June tag. |
 | What about shops and merchants? | Card networks will bring agent shoppers to shops. Agents already pay developers per call in USDC. |

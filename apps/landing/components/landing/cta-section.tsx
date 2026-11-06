@@ -57,7 +57,7 @@ export function CtaSection() {
                 </h2>
 
                 <p className="text-xl text-muted-foreground mb-12 leading-relaxed max-w-xl">
-                  Put a price on your API today. One command, USDC on Arc, and no cut taken.
+                  Put a price on your API today. One command, USDC on Arc, and a 1% fee on verified revenue.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-start gap-4">

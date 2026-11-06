@@ -110,7 +110,7 @@ Commits during the hackathon: **79** on the `arc` branch, as of Nov 6, 2026 at 1
 - The CLI, proxy and SDK are free and open source.
 - Every registered developer gets a dashboard. **Free** covers one service and the last 7 days.
 - **Pro** costs 19 USDC per 30 days (1 USDC on testnet), paid on Arc. It adds full history, CSV export and more detail.
-- ChainPe takes **no cut** of payments. Circle only settles to a wallet the seller signs for, so the money goes straight from buyer to seller.
+- ChainPe charges a **usage fee of 1%** of verified revenue, or 0.5% on Pro. Buyers still pay the seller's wallet directly, because Circle only settles to a wallet the seller signs for. The fee is collected afterwards, in batches, from USDC the seller approves and can revoke. Details: [spec 12](docs/arc/specs/12-usage-fees.md).
 
 More detail: [docs/arc/BUSINESS-MODEL.md](docs/arc/BUSINESS-MODEL.md).
 

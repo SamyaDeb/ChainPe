@@ -88,7 +88,7 @@ the customer we design for.
 - Running our own facilitator or indexer for Arc (Circle replaces them).
 - ChainPe-owned ERC-8004 contracts on Arc.
 - Avalanche ICM/Teleporter cross-L1 contracts.
-- Taking a percentage of developers' payments (not possible with Circle's seller-signed facilitator, and not wanted).
+- Taking a percentage at the moment of payment (not possible with Circle's seller-signed facilitator). ChainPe collects its usage fee afterwards: see `specs/12-usage-fees.md`.
 - Merchant checkout, refunds, invoices.
 
 ## 6. User flows
