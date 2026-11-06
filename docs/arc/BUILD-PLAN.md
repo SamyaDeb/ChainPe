@@ -67,13 +67,14 @@ an acceptance check; do not start the next phase until it passes (except where m
 - [ ] Deploy (Railway) with Postgres; set `CHAINPE_CLOUD_URL`.
 
 **Accept:** a paid call appears in `GET /v1/me/payments` within 5 s; a wallet that is not the provider gets 403.
+Use a third wallet for that test: the smoke test made the buyer wallet a provider too.
 
 ## Phase 6 — dashboard in Arc Studio
 
 - [ ] ARC-STUDIO.md run 2, then run 3.
 - [ ] Pull to `apps/arc-dashboard`; deploy (Vercel); keep Studio workspace URL.
 
-**Accept:** connecting the seller wallet shows only its services, revenue (exact + Gateway), buyers, ratings, doctor status; another wallet sees nothing.
+**Accept:** connecting the seller wallet shows only its services, revenue (exact + Gateway), buyers, ratings, doctor status; another wallet (a third one, not the buyer, which is also a provider) sees nothing.
 
 ## Phase 7 — buyer side (parallel with 5–6)
 
