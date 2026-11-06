@@ -16,9 +16,8 @@ export function AnimatedSphere() {
     const ctx = canvas?.getContext('2d')
     if (!canvas || !ctx) return
 
-    let time = 0
-    let frame = 0
-    let visible = true
+    const raf = { id: 0 }
+    const view = { visible: true, time: 0 }
     const reduced = prefersReducedMotion()
 
     const resize = () => {
@@ -43,13 +42,13 @@ export function AnimatedSphere() {
       const points: Array<{ x: number; y: number; z: number; char: string }> = []
       for (let phi = 0; phi < Math.PI * 2; phi += 0.15) {
         for (let theta = 0; theta < Math.PI; theta += 0.15) {
-          const x = Math.sin(theta) * Math.cos(phi + time * 0.5)
-          const y = Math.sin(theta) * Math.sin(phi + time * 0.5)
+          const x = Math.sin(theta) * Math.cos(phi + view.time * 0.5)
+          const y = Math.sin(theta) * Math.sin(phi + view.time * 0.5)
           const z = Math.cos(theta)
-          const rotY = time * 0.3
+          const rotY = view.time * 0.3
           const newX = x * Math.cos(rotY) - z * Math.sin(rotY)
           const newZ = x * Math.sin(rotY) + z * Math.cos(rotY)
-          const rotX = time * 0.2
+          const rotX = view.time * 0.2
           const newY = y * Math.cos(rotX) - newZ * Math.sin(rotX)
           const finalZ = y * Math.sin(rotX) + newZ * Math.cos(rotX)
           const depth = (finalZ + 1) / 2
@@ -71,8 +70,8 @@ export function AnimatedSphere() {
 
     const loop = () => {
       draw()
-      time += 0.02
-      if (visible) frame = requestAnimationFrame(loop)
+      view.time += 0.02
+      if (view.visible) raf.id = requestAnimationFrame(loop)
     }
 
     const redrawOnResize = () => {
@@ -90,16 +89,16 @@ export function AnimatedSphere() {
 
     const observer = new IntersectionObserver(([entry]) => {
       const nowVisible = entry?.isIntersecting ?? true
-      if (nowVisible && !visible) frame = requestAnimationFrame(loop)
-      visible = nowVisible
+      if (nowVisible && !view.visible) raf.id = requestAnimationFrame(loop)
+      view.visible = nowVisible
     })
     observer.observe(canvas)
-    frame = requestAnimationFrame(loop)
+    raf.id = requestAnimationFrame(loop)
 
     return () => {
       window.removeEventListener('resize', redrawOnResize)
       observer.disconnect()
-      cancelAnimationFrame(frame)
+      cancelAnimationFrame(raf.id)
     }
   }, [])
 

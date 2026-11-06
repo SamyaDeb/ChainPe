@@ -2,15 +2,15 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import clsx from 'clsx'
 
 export const inputCls =
-  'h-11 w-full rounded-md border border-edge bg-surface px-3 text-sm text-ink placeholder:text-muted sm:h-10'
+  'h-12 w-full rounded border border-ink/20 bg-transparent px-3 text-sm text-ink transition-colors duration-300 placeholder:text-muted hover:border-ink/40 focus:border-ink'
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost'
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-accent text-accent-fg hover:opacity-90 disabled:opacity-50',
-  secondary: 'border border-edge bg-surface text-ink hover:bg-subtle disabled:opacity-50',
-  danger: 'bg-bad text-accent-fg hover:opacity-90 disabled:opacity-50',
-  ghost: 'text-ink hover:bg-subtle disabled:opacity-50',
+  primary: 'bg-accent text-accent-fg hover:bg-accent/90',
+  secondary: 'border border-ink/20 text-ink hover:border-ink hover:bg-ink/5',
+  danger: 'bg-bad text-accent-fg hover:bg-bad/90',
+  ghost: 'text-ink hover:bg-ink/5',
 }
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -22,7 +22,7 @@ export function Button({ variant = 'secondary', className, type = 'button', ...r
     <button
       type={type}
       className={clsx(
-        'inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium disabled:cursor-not-allowed sm:min-h-10',
+        'inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-medium transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-50',
         variants[variant],
         className,
       )}
@@ -33,7 +33,7 @@ export function Button({ variant = 'secondary', className, type = 'button', ...r
 
 export function Field({ label, htmlFor, hint, children }: { label: string; htmlFor: string; hint?: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-2">
       <label htmlFor={htmlFor} className="text-sm font-medium text-ink">
         {label}
       </label>
@@ -49,7 +49,7 @@ interface Option<V extends string> {
   locked?: boolean
 }
 
-/** A group of toggle buttons drawn as a segmented control. It wraps instead of scrolling. */
+/** A group of toggle buttons drawn as pills. It wraps instead of scrolling. */
 export function Segmented<V extends string>({
   label,
   value,
@@ -62,7 +62,7 @@ export function Segmented<V extends string>({
   onChange: (v: V) => void
 }) {
   return (
-    <div role="group" aria-label={label} className="inline-flex max-w-full flex-wrap gap-1 rounded-md border border-edge bg-surface p-1">
+    <div role="group" aria-label={label} className="flex max-w-full flex-wrap gap-2">
       {options.map((o) => {
         const active = o.value === value
         return (
@@ -72,12 +72,12 @@ export function Segmented<V extends string>({
             aria-pressed={active}
             onClick={() => onChange(o.value)}
             className={clsx(
-              'min-h-9 shrink-0 rounded px-3 text-sm font-medium',
-              active ? 'bg-accent text-accent-fg' : 'text-ink hover:bg-subtle',
+              'min-h-10 shrink-0 rounded-full border px-4 text-sm transition-colors duration-300',
+              active ? 'border-accent bg-accent text-accent-fg' : 'border-ink/20 bg-bg text-ink hover:border-ink',
             )}
           >
             {o.label}
-            {o.locked ? <span className="ml-1 text-xs">(Pro)</span> : null}
+            {o.locked ? <span className="ml-1 font-mono text-xs">(Pro)</span> : null}
           </button>
         )
       })}

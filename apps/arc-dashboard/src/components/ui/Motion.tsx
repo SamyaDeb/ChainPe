@@ -26,17 +26,14 @@ export function CharIn({ text, className }: { text: string; className?: string }
 function useCountUp(target: bigint): bigint {
   const [shown, setShown] = useState(0n)
   const shownRef = useRef(0n)
+  const reduced = prefersReducedMotion()
 
   useEffect(() => {
-    if (prefersReducedMotion()) {
-      shownRef.current = target
-      setShown(target)
-      return
-    }
+    if (reduced) return
     const from = shownRef.current
     if (from === target) return
     const startedAt = performance.now()
-    let frame = 0
+    const raf = { id: 0 }
     const tick = (time: number) => {
       const progress = Math.min((time - startedAt) / COUNT_MS, 1)
       const eased = 1 - Math.pow(1 - progress, 3)
@@ -44,13 +41,13 @@ function useCountUp(target: bigint): bigint {
       const next = from + ((target - from) * step) / BigInt(PROGRESS_STEPS)
       shownRef.current = next
       setShown(next)
-      if (progress < 1) frame = requestAnimationFrame(tick)
+      if (progress < 1) raf.id = requestAnimationFrame(tick)
     }
-    frame = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frame)
-  }, [target])
+    raf.id = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf.id)
+  }, [target, reduced])
 
-  return shown
+  return reduced ? target : shown
 }
 
 function Counted({ target, format }: { target: bigint; format: (v: bigint) => string }) {

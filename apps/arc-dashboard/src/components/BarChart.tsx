@@ -10,7 +10,7 @@ const PLOT = 144
 export function BarChart({ bars, unit }: { bars: Bar[]; unit: 'hour' | 'day' }) {
   const peak = bars.reduce((m, b) => (b.revenue > m ? b.revenue : m), 0n)
   const slot = WIDTH / bars.length
-  const barWidth = Math.max(1, slot * 0.8)
+  const barWidth = Math.max(1, slot * 0.72)
   const fmt = unit === 'hour' ? formatHour : formatDay
   const first = bars[0]
   const last = bars[bars.length - 1]
@@ -20,10 +20,10 @@ export function BarChart({ bars, unit }: { bars: Bar[]; unit: 'hour' | 'day' }) 
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         role="img"
         aria-label={`Verified revenue per ${unit}, ${bars.length} periods, highest ${formatUsdc(peak)}`}
-        className="h-40 w-full"
+        className="line-reveal h-56 w-full lg:h-72"
         preserveAspectRatio="none"
       >
-        <line x1="0" x2={WIDTH} y1={HEIGHT - 0.5} y2={HEIGHT - 0.5} className="stroke-line" strokeWidth="1" />
+        <line x1="0" x2={WIDTH} y1={HEIGHT - 0.5} y2={HEIGHT - 0.5} className="stroke-ink/20" strokeWidth="1" />
         {bars.map((b, i) => {
           const h = b.revenue > 0n ? Math.max(2, scaleToPixels(b.revenue, peak, PLOT)) : 0
           return (
@@ -33,15 +33,14 @@ export function BarChart({ bars, unit }: { bars: Bar[]; unit: 'hour' | 'day' }) 
               y={HEIGHT - 1 - h}
               width={barWidth}
               height={h}
-              rx="1"
-              className="fill-accent"
+              className="fill-ink transition-colors duration-300 hover:fill-ink/60"
             >
               <title>{`${fmt(b.t)}: ${formatUsdc(b.revenue)} verified, ${b.calls} ${b.calls === 1 ? 'call' : 'calls'}`}</title>
             </rect>
           )
         })}
       </svg>
-      <figcaption className="mt-1 flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs text-muted">
+      <figcaption className="mt-3 flex flex-wrap justify-between gap-x-4 gap-y-1 font-mono text-xs text-muted">
         <span>{first ? fmt(first.t) : ''}</span>
         <span>Peak {formatUsdc(peak)} per {unit}</span>
         <span>{last ? fmt(last.t) : ''}</span>
