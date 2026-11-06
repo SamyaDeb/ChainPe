@@ -114,7 +114,7 @@
                       "humidity": 78,
                       "windSpeed": 5.2
                     },
-                    "timestamp": "2026-11-06T03:03:19.260Z",
+                    "timestamp": "2026-11-06T04:19:58.896Z",
                     "source": "ChainPe Weather (sample data)"
                   }
                 }
@@ -213,34 +213,34 @@
                   "success": true,
                   "data": {
                     "location": {
-                      "city": "Tokyo",
-                      "country": "JP"
+                      "city": "London",
+                      "country": "GB"
                     },
                     "forecast": [
                       {
                         "date": "2026-11-07",
-                        "temperatureC": 19,
-                        "description": "Light rain"
+                        "temperatureC": 9,
+                        "description": "Partly cloudy"
                       },
                       {
                         "date": "2026-11-08",
-                        "temperatureC": 22,
-                        "description": "Light rain"
+                        "temperatureC": 12,
+                        "description": "Partly cloudy"
                       },
                       {
                         "date": "2026-11-09",
-                        "temperatureC": 25,
-                        "description": "Light rain"
+                        "temperatureC": 15,
+                        "description": "Partly cloudy"
                       },
                       {
                         "date": "2026-11-10",
-                        "temperatureC": 21,
-                        "description": "Light rain"
+                        "temperatureC": 11,
+                        "description": "Partly cloudy"
                       },
                       {
                         "date": "2026-11-11",
-                        "temperatureC": 24,
-                        "description": "Light rain"
+                        "temperatureC": 14,
+                        "description": "Partly cloudy"
                       }
                     ]
                   }
