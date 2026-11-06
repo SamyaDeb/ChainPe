@@ -2,6 +2,13 @@
 
 All notable changes to ChainPe are documented here.
 
+## [3.1.2] — 2026-11-06 (Arc)
+
+`@chainpearc/cli` 3.1.2.
+
+### Fixed
+- `chainpe start` writes `/.well-known/x402`, `/openapi.json` and the discovery document when they are missing, so a hosted proxy serves them without a local `chainpe doctor` run. It never overwrites them.
+
 ## [3.1.1] — 2026-11-06 (Arc)
 
 `@chainpearc/cli` 3.1.1, `@chainpearc/sdk` 0.4.1 and `@chainpearc/wallet-mcp` 0.4.1.

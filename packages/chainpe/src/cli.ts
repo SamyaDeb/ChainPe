@@ -29,7 +29,7 @@ import {
 import { parsePaidRoutes } from "./proxy/routeConfig.js";
 import { setLogLevel } from "./logger.js";
 import { configPath, loadConfig, saveConfig } from "./config.js";
-import { documentPaths } from "./doctor/documents.js";
+import { documentPaths, writeMissingDocuments } from "./doctor/documents.js";
 import { runDoctorCommand } from "./commands/doctor.js";
 import { runLoginCommand, runLogoutCommand } from "./commands/cloud.js";
 import { startTelemetry } from "./cloud/start.js";
@@ -263,6 +263,8 @@ async function runStart(options: {
     console.log();
 
     const documents = documentPaths(configPath());
+    const generated = await writeMissingDocuments(config, documents);
+    if (generated.length > 0) console.log(chalk.gray(`    Documents:   wrote ${generated.join(", ")} (run \`chainpe doctor --pay\` for response fields)`));
     const telemetry = await startTelemetry({
       enabled: options.telemetry !== false,
       config,

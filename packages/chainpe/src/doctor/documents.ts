@@ -200,3 +200,36 @@ export function generateDocuments(config: ChainPeConfig, network: ChainPeNetwork
     discovery: buildDiscovery(config, network, publicUrl, routes, samples),
   };
 }
+
+/**
+ * Writes the discovery documents a hosted proxy serves, when they are missing, so a
+ * deployed proxy answers /.well-known/x402 and /openapi.json without a local doctor
+ * run. Never overwrites: an edited or doctor-written document stays. Returns what it wrote.
+ */
+export async function writeMissingDocuments(config: ChainPeConfig, paths: DocumentPaths): Promise<string[]> {
+  if (!config.publicUrl || !(config.routes?.length)) return [];
+  const { readFile, writeFile, access } = await import("fs/promises");
+  const exists = (file: string) => access(file).then(() => true, () => false);
+  let samples: Samples = {};
+  try {
+    samples = JSON.parse(await readFile(paths.samples, "utf-8")) as Samples;
+  } catch {
+    /* No samples yet: the documents list the routes without response fields. */
+  }
+  const docs = generateDocuments(config, config.network, config.publicUrl.replace(/\/+$/, ""), samples);
+  const written: string[] = [];
+  for (const [file, content, name] of [
+    [paths.x402, docs.x402, "/.well-known/x402"],
+    [paths.openapi, docs.openapi, "/openapi.json"],
+    [paths.discovery, docs.discovery, "discovery"],
+  ] as const) {
+    if (await exists(file)) continue;
+    try {
+      await writeFile(file, JSON.stringify(content, null, 2));
+      written.push(name);
+    } catch {
+      /* A read-only config folder: the proxy answers 404 for that document, as before. */
+    }
+  }
+  return written;
+}
