@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { ContractFunctionRevertedError, encodeAbiParameters, encodeErrorResult, encodeEventTopics, keccak256, type Abi, type Address, type Hex, type PublicClient, type WalletClient } from "viem";
+import { BaseError, ContractFunctionRevertedError, encodeAbiParameters, encodeErrorResult, encodeEventTopics, keccak256, type Abi, type Address, type Hex, type PublicClient, type WalletClient } from "viem";
 import { chainPeAccountsAbi } from "../src/abi/ChainPeAccounts.js";
 import { AccountsReader, accountsAddress, serviceKey } from "../src/accounts.js";
 import { getNetwork } from "../src/chains.js";
@@ -117,6 +117,16 @@ describe("deployment check", () => {
     const { usdc, identityRegistry } = getNetwork("arc-testnet");
     await expect(reader(usdc, identityRegistry).assertDeployment("arc-testnet")).resolves.toBeUndefined();
     await expect(reader(OTHER, identityRegistry).assertDeployment("arc-testnet")).rejects.toThrow(/CHAINPE_ACCOUNTS_ADDRESS/);
+  });
+});
+
+describe("deployment check failures", () => {
+  it("calls a contract that reverts the wrong contract, but an outage an outage", async () => {
+    const reverting = new AccountsReader({ read: async () => { throw revert(chainPeAccountsAbi, "ZeroPrice", []); } }, OTHER);
+    await expect(reverting.assertDeployment("arc-testnet")).rejects.toThrow(/CHAINPE_ACCOUNTS_ADDRESS/);
+    const wrapped = new BaseError("HTTP request failed.", { cause: new Error("connect ECONNREFUSED") });
+    const down = new AccountsReader({ read: async () => { throw wrapped; } }, OTHER);
+    await expect(down.assertDeployment("arc-testnet")).rejects.toBe(wrapped);
   });
 });
 

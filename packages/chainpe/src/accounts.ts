@@ -2,7 +2,7 @@
  * Client for the ChainPeAccounts contract on Arc: provider accounts, service
  * listings and Pro plans.
  */
-import { encodeAbiParameters, getAddress, keccak256, type Address, type Hex } from "viem";
+import { BaseError, ContractFunctionRevertedError, ContractFunctionZeroDataError, encodeAbiParameters, getAddress, keccak256, type Address, type Hex } from "viem";
 import { chainPeAccountsAbi } from "./abi/ChainPeAccounts.js";
 import { getNetwork, type ChainPeNetwork } from "./chains.js";
 import { revertName, type ChainReader, type ChainWriter, type ContractCall, type SentTx } from "./onchain.js";
@@ -76,10 +76,17 @@ export class AccountsReader {
   /** CHAINPE_ACCOUNTS_ADDRESS can point anywhere, so check it is ours before trusting or paying it. */
   async assertDeployment(network: ChainPeNetwork): Promise<void> {
     const info = getNetwork(network);
-    const [usdc, identityRegistry] = await Promise.all([this.read<Address>("usdc"), this.read<Address>("identityRegistry")]);
-    if (getAddress(usdc) !== getAddress(info.usdc) || getAddress(identityRegistry) !== getAddress(info.identityRegistry)) {
-      throw new Error(`Contract ${this.address} is not a ChainPeAccounts deployment for ${network}. Check CHAINPE_ACCOUNTS_ADDRESS.`);
+    const wrong = new Error(`Contract ${this.address} is not a ChainPeAccounts deployment for ${network}. Check CHAINPE_ACCOUNTS_ADDRESS.`);
+    let usdc: Address;
+    let identityRegistry: Address;
+    try {
+      [usdc, identityRegistry] = await Promise.all([this.read<Address>("usdc"), this.read<Address>("identityRegistry")]);
+    } catch (err) {
+      // The contract answered, and not as ChainPeAccounts would. Anything else is an outage, not a wrong address.
+      if (err instanceof BaseError && err.walk((e) => e instanceof ContractFunctionRevertedError || e instanceof ContractFunctionZeroDataError)) throw wrong;
+      throw err;
     }
+    if (getAddress(usdc) !== getAddress(info.usdc) || getAddress(identityRegistry) !== getAddress(info.identityRegistry)) throw wrong;
   }
 
   async provider(address: string): Promise<ProviderAccount> {
