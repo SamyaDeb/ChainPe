@@ -1,12 +1,11 @@
-Review pass on this project (ChainPe on Arc).
+Polish pass on the ChainPe provider dashboard. Dashboard only: do NOT touch contracts/, abi/, foundry.toml or remappings.txt. No contract build, audit or deploy
+in this run; the contract is live and frozen for this phase. Do not change API calls, auth, session, money, explorer or billing logic, and do not add dependencies. Quick preset.
 
-1. Contracts: review contracts/ChainPeAccounts.sol (and contracts/PolicyVault.sol if present) for
-   access control, reentrancy, integer and decimals mistakes (USDC ERC-20 has 6 decimals on Arc; native
-   is 18), zero-address handling (Arc reverts sends to address(0)), event completeness, and gas. List
-   findings by severity, fix anything High or Medium, add a regression test for each fix, and re-run all
-   Foundry tests. Do not redeploy unless a fix changes behaviour; if it does, redeploy to Arc testnet and
-   report the new address.
-2. Dashboard: check every screen with mock data (VITE_USE_MOCK=true) at 375px and 1280px wide, light and
-   dark. Fix layout overflow, unreadable contrast, missing empty/loading/error states, and any place an
-   amount is not formatted per the rules in context/docs/arc/specs/07-provider-dashboard.md.
-3. Report: a short list of what you changed and what remains.
+1. Mobile navigation: at 375 px the bottom tabs scroll sideways and hide Billing and Settings. Replace with five bottom items: Overview, Payments, Services, Reputation, More. More opens a simple
+   panel listing Buyers, Listing health, Billing and Settings. It is keyboard reachable, closes on Escape and on navigation, has aria-expanded, and shows the active state when one of its pages is current.
+   No inline style attributes (the production CSP forbids them).
+2. Check every screen with mock data (VITE_USE_MOCK=true), as Pro, Free and Unregistered, at 375 px and 1280 px, light and dark. Fix layout overflow, clipped text, unreadable contrast (AA), and misaligned
+   cards or tables. Copy "None. Run `chainpe identity`" in Services shows literal backticks: render the command in a code element.
+3. Check that loading, error and empty states exist on every screen and read well. Check keyboard order and visible focus through the sign-in page, the nav and Billing.
+4. Check amounts follow context/docs/arc/specs/07-provider-dashboard.md: 6 dp under $0.01, otherwise 2 dp. The exact formatter stays for price per period, total to pay and the not-enough-USDC message.
+5. Finish with typecheck, the money tests and a production build passing. Report a short list of what you changed and what remains.
