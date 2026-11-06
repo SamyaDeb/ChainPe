@@ -64,7 +64,7 @@ export function assertUsdcAmount(amount: string): void {
   }
 }
 
-function resolveKey(explicit?: string): Hex {
+export function resolveKey(explicit?: string): Hex {
   const key = explicit ?? process.env.CHAINPE_PRIVATE_KEY;
   if (!key) {
     throw new Error(
@@ -84,6 +84,19 @@ function parseHeaders(headers?: string[]): Record<string, string> | undefined {
     out[h.slice(0, idx).trim()] = h.slice(idx + 1).trim();
   }
   return out;
+}
+
+/** A fetch that answers a 402 by paying it, capped at `max` USDC per payment. */
+export async function createPayingFetch(network: ChainPeNetwork, key: Hex, rail: RailChoice, max: string): Promise<typeof fetch> {
+  const gatewayAvailable = rail === "auto" ? await availableDeposit(network, key) : 0n;
+  const account = privateKeyToAccount(key);
+  const client = new CompositeEvmScheme(new BatchEvmScheme(account), new ExactEvmScheme(account));
+  return wrapFetchWithPaymentFromConfig(fetch, {
+    schemes: [{ network: getNetwork(network).caip2, client: client as unknown as ExactEvmScheme }],
+    // Runs before policies, so before anything is signed.
+    spendControls: spendControlsFor(network, max),
+    policies: [railPolicy(rail, gatewayAvailable)],
+  });
 }
 
 export interface FetchCommandOptions {
@@ -112,14 +125,7 @@ export async function runFetchCommand(url: string, opts: FetchCommandOptions): P
     }
     spinner?.start();
 
-    const gatewayAvailable = rail === "auto" ? await availableDeposit(network, key) : 0n;
-    const client = new CompositeEvmScheme(new BatchEvmScheme(account), new ExactEvmScheme(account));
-    const payingFetch = wrapFetchWithPaymentFromConfig(fetch, {
-      schemes: [{ network: getNetwork(network).caip2, client: client as unknown as ExactEvmScheme }],
-      // Runs before policies, so before anything is signed.
-      spendControls: spendControlsFor(network, opts.max ?? DEFAULT_MAX_USDC),
-      policies: [railPolicy(rail, gatewayAvailable)],
-    });
+    const payingFetch = await createPayingFetch(network, key, rail, opts.max ?? DEFAULT_MAX_USDC);
 
     const res = await payingFetch(url, { method, headers: parseHeaders(opts.header), body: opts.data });
     const body = await res.text();
