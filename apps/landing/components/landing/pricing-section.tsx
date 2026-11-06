@@ -16,6 +16,7 @@ const plans = [
       "MIT licensed",
     ],
     cta: "View GitHub",
+    href: "https://github.com/SamyaDeb/ChainPeAvax",
     popular: false,
   },
   {
@@ -31,6 +32,7 @@ const plans = [
       "Listing health history",
     ],
     cta: "Upgrade in the dashboard",
+    href: "/dashboard/billing",
     popular: true,
   },
   {
@@ -46,6 +48,7 @@ const plans = [
       "Average rating",
     ],
     cta: "Register a provider",
+    href: "/dashboard",
     popular: false,
   },
 ];
@@ -114,7 +117,8 @@ export function PricingSection() {
               </ul>
 
               {/* CTA */}
-              <button
+              <a
+                href={plan.href}
                 className={`w-full py-4 flex items-center justify-center gap-2 text-sm font-medium transition-all group ${
                   plan.popular
                     ? "bg-foreground text-primary-foreground hover:bg-foreground/90"
@@ -123,7 +127,7 @@ export function PricingSection() {
               >
                 {plan.cta}
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </button>
+              </a>
             </div>
           ))}
         </div>
