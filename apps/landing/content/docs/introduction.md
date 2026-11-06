@@ -1,104 +1,39 @@
 ---
-id: introduction
 title: Introduction
-description: ChainPe — decentralized x402 API marketplace on Avalanche
-sidebar_position: 1
-slug: /
+description: Turn any API into a paid service for AI agents on Arc, in one command.
 ---
 
-# ChainPe
+AI agents want to pay for APIs, but most APIs only take API keys and monthly plans. ChainPe puts a price on any HTTP API. Agents pay per call in USDC on Arc, and Circle settles each payment.
 
-**ChainPe is payment + reputation infrastructure for the Avalanche agent economy.**
+ChainPe is for **developers** who already run an API, an MCP server or an AI agent. Your API's code doesn't change.
 
-Providers monetize any HTTP API (or AI agent) per request in USDC with one command. AI agents discover, pay for, and rate those services autonomously. A non-custodial facilitator settles on **Avalanche C-Chain** in ~1–2 seconds, and every paid call builds portable on-chain **ERC-8004 reputation**.
+## How it works
 
-## The core insight
+1. **An agent calls your API.** ChainPe answers with `402 Payment Required` and a price in USDC.
+2. **The agent pays.** It signs a USDC payment from its wallet. It never needs an API key or an account.
+3. **Circle settles the payment on Arc.** Arc is Circle's blockchain, where fees are paid in USDC.
+4. **Your API answers.** ChainPe calls your API only after the payment is settled.
 
-You build an AI agent and it needs to call a paid API. What do you do today? You hardcode an API key. You prepay a subscription. You pray it doesn't leak.
+## What's included
 
-There is no way for the agent to pay per call autonomously — and no way for it to know which provider to trust. The missing layer is **payment + reputation rails built for machines**: pay-per-request, settled in under a second, with portable on-chain trust, and cheap enough that a $0.01 call is not eaten by fees.
-
-ChainPe is that layer, on Avalanche.
-
-## Payments in three lines
-
-```ts
-import { ChainPe } from '@chainpearc/sdk'
-
-const cp = new ChainPe({ privateKey: process.env.PRIVATE_KEY!, network: 'avalanche' })
-const res = await cp.fetch('https://api.example.com/paid')  // auto-pays a 402 in USDC
-const data = await res.json()
-```
-
-`cp.fetch` is a drop-in `fetch` replacement. On a `402 Payment Required` response it signs a USDC payment (EIP-3009), retries, and returns the successful response. The agent never needs AVAX — the non-custodial facilitator pays gas.
-
-## Key components
-
-| Component | Description |
+| Part | What it does |
 |---|---|
-| **ChainPeRegistry** | On-chain registry of x402-gated services. Providers register; agents discover. Keyed by `keccak256(developer, name)`. |
-| **ERC-8004 Reputation** | Portable agent identity + reputation. Every paid call can build score; self-feedback is blocked on-chain. |
-| **PolicyVault** | Programmable, gasless spending policy. Owners set per-call caps, daily limits, and allowlists. The chain enforces every constraint. |
-| **x402 Proxy** | The `chainpe` package starts a payment-gated reverse proxy in front of any backend. No code changes to the backend. |
-| **Facilitator** | Non-custodial x402 `verify`/`settle` service that submits payer-signed USDC transfers and pays Avalanche gas. |
-| **Indexer** | Watches on-chain events → Postgres → O(1) REST discovery and reputation API. |
-| **Dashboard** | Next.js marketplace to browse reputation-ranked services and register via MetaMask. |
+| [`chainpe` CLI and proxy](/docs/developers/cli) | Puts a price in front of your API and takes payments |
+| [SDK](/docs/developers/sdk) | Lets an app or agent find, pay for and rate APIs |
+| [AI tools](/docs/developers/ai-tools) | The same abilities as Vercel AI SDK and LangChain tools |
+| [MCP wallet](/docs/developers/mcp-wallet) | Gives Claude a USDC wallet with spending limits |
+| [Provider dashboard](/docs/developers/dashboard) | Shows your verified revenue, buyers and ratings |
+| [`ChainPeAccounts`](/docs/reference/chainpe-accounts) | Provider accounts, service listings and the Pro plan, on Arc |
 
-## ChainPe vs traditional approaches
+## Where to start
 
-| Feature | API Keys / Stripe | ChainPe |
-|---|---|---|
-| Agent can sign up autonomously | No — requires a human | Yes |
-| Pay per single call | No — subscriptions only | Yes |
-| Provider knows counterparty | No — anonymous | Yes — on-chain identity (ERC-8004) |
-| Trust is portable across apps | No — locked to one platform | Yes — cross-app, cross-chain |
-| Agent spending capped on-chain | No | Yes — PolicyVault |
-| Agent needs native gas token | — | No — facilitator covers AVAX gas |
-| Settlement time | Varies (card fraud windows) | ~1–2 seconds, deterministic finality |
-| Settlement cost | 2–3% card fee | Sub-cent on Avalanche |
+- **Try a payment:** [pay a live API in 5 minutes](/docs/getting-started/quickstart).
+- **Sell your API:** [put a price on it](/docs/getting-started/sell-your-api).
 
-## Who ChainPe is for
+## Status
 
-### Merchants (API sellers / providers)
+Everything runs on **Arc testnet** today. Nothing has run on Arc mainnet yet, so `chainpe start` refuses it without `--allow-mainnet`.
 
-You have an API, an LLM agent, or any HTTP service that produces value. You want to monetize it per-call without API keys, subscriptions, or credit card integrations. You run `chainpe init && chainpe start && chainpe register` and the x402 proxy gates each request. You receive USDC directly to your wallet — no intermediary holds funds.
+The packages are not on npm yet, so build them from source. The [quickstart](/docs/getting-started/quickstart) shows how.
 
-### AI Agent Builders (buyers)
-
-You build autonomous agents that call external services. You want those agents to pay for what they use, without hardwired API keys that can leak, and with a way to discover trustworthy services ranked by real on-chain reputation. You install `@chainpearc/sdk` or `@chainpearc/ai-tools` and your agent gains the ability to discover, pay, and rate services in the same loop.
-
-### End Users / Operators
-
-You deploy an agent on behalf of users and want fine-grained control over how much it can spend. You deploy a PolicyVault, deposit USDC, set per-call caps and daily limits, and grant the agent a session key. If the agent tries to exceed a limit, the Avalanche chain rejects the transaction outright — not a backend check, the chain.
-
-## Infrastructure, not a single app
-
-ChainPe is infrastructure. Claude/MCP is just one client. The same payment + reputation core powers:
-
-| Surface | Package | Description |
-|---|---|---|
-| SDK | `@chainpearc/sdk` | Payments + reputation in 3 lines for any Node/TS project |
-| Agent tools | `@chainpearc/ai-tools` | Vercel AI SDK + LangChain tool adapters |
-| CLI | `chainpe` | Provider proxy + consumer `fetch`/`discover` commands |
-| Claude wallet | `@chainpearc/wallet-mcp` | MCP extension — Claude gets an Avalanche x402 wallet |
-| Agent SDK | `@chainpearc/agent` | Standalone LLM agent loop that discovers and pays |
-| Dashboard | `apps/dashboard` | Next.js marketplace UI |
-| Facilitator | `services/chainpe-facilitator` | Non-custodial x402 verify/settle (Railway-deployed) |
-| Indexer | `services/chainpe-indexer` | Events → Postgres → O(1) REST API |
-
-## Live on Avalanche C-Chain
-
-> **ChainPeRegistry:** [`0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E`](https://snowtrace.io/address/0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E#code) (verified, mainnet)
->
-> **Marketplace:** [chainpe-dashboard-production.up.railway.app](https://chainpe-dashboard-production.up.railway.app)
->
-> **Indexer API:** [chainpe-indexer-production.up.railway.app/services](https://chainpe-indexer-production.up.railway.app/services)
->
-> **Facilitator:** [chainpe-facilitator-production.up.railway.app/health](https://chainpe-facilitator-production.up.railway.app/health)
-
-## Next steps
-
-- [Quickstart](./getting-started/quickstart.md) — make your first paid API call in minutes
-- [Concepts](./concepts/overview.md) — understand x402, ERC-8004, PolicyVault, and ICM
-- [SDK Reference](./sdk-reference/chainpe-sdk.md) — full API documentation
-- [Smart Contracts](./smart-contracts/overview.md) — contract addresses and ABI reference
+ChainPe is not listed in Circle's Agent Marketplace yet. The listing is prepared, and Circle reviews each one by hand.

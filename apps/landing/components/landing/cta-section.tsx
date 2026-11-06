@@ -62,7 +62,7 @@ export function CtaSection() {
 
                 <div className="flex flex-col sm:flex-row items-start gap-4">
                   <a
-                    href="https://github.com/SamyaDeb/ChainPe/tree/arc/docs/arc"
+                    href="/docs"
                     className="inline-flex items-center justify-center bg-foreground hover:bg-foreground/90 text-background px-8 h-14 text-base font-medium rounded-md transition-colors group"
                   >
                     Read the docs

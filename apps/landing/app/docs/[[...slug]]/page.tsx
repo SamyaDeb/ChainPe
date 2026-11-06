@@ -12,12 +12,6 @@ export default async function Page(props: { params: Promise<{ slug?: string[] }>
 
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
-      <div role="note" className="rounded-lg border p-4 text-sm">
-        <strong>These pages describe the June 2026 Avalanche version of ChainPe.</strong> ChainPe now runs on Arc, and
-        these docs have not been rewritten yet. For the current version, see the{' '}
-        <a className="underline underline-offset-4" href="https://github.com/SamyaDeb/ChainPe#readme">README</a> and the{' '}
-        <a className="underline underline-offset-4" href="https://github.com/SamyaDeb/ChainPe/blob/arc/docs/arc/TRY-IT.md">5-minute guide</a>.
-      </div>
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>

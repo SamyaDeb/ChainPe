@@ -1,114 +1,33 @@
 ---
-id: ai-tools
-title: AI Framework Tools
-sidebar_position: 3
+title: AI tools
+description: Let a Vercel AI SDK or LangChain agent find and pay for APIs.
 ---
 
-# AI Framework Tools
+`@chainpearc/ai-tools` gives an agent two tools, built on the [SDK](/docs/developers/sdk). It isn't on npm yet. From the repo root, run `npm run build:sdk && npm run build:ai-tools`.
 
-`@chainpearc/ai-tools` wraps the ChainPe SDK as framework-native tool objects for Vercel AI SDK and LangChain. Drop them into your agent's tool set and it can discover and pay for APIs autonomously.
-
-## Installation
-
-```bash
-npm install @chainpearc/ai-tools
-```
-
-## Available tools
-
-Both adapters expose two tools:
-
-| Tool | SDK name | Description |
+| Vercel AI SDK | LangChain | What it does |
 |---|---|---|
-| `chainpeFetch` / `chainpe_fetch` | Vercel / LangChain | Fetch a URL, auto-paying any 402 in USDC. Returns parsed response + payment info. |
-| `discoverService` / `discover_service` | Vercel / LangChain | Search and rank the ChainPe registry by ERC-8004 reputation. |
+| `chainpeFetch` | `chainpe_fetch` | Calls a URL. If it returns 402, pays in USDC and returns the result |
+| `discoverService` | `discover_service` | Searches Circle's Discovery API and ChainPe's on-chain listings, ranked by rating |
 
 ## Vercel AI SDK
 
 ```ts
-import { generateText } from 'ai'
+import { generateText, stepCountIs } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { createChainPeTools } from '@chainpearc/ai-tools/vercel'
 
 const tools = createChainPeTools({
-  privateKey: process.env.CHAINPE_PRIVATE_KEY!,
-  network: 'avalanche',
-  maxPerCall: '0.10',
-  autoFeedback: true  // post ERC-8004 rating after each paid call
+  privateKey: process.env.PRIVATE_KEY!,
+  autoFeedback: true // rate the provider after each paid call
 })
 
 const { text } = await generateText({
   model: anthropic('claude-opus-4-8'),
   tools,
-  prompt: 'Find a summarizer service and summarize: "Avalanche is a fast blockchain"',
-  maxSteps: 5
+  stopWhen: stepCountIs(8),
+  prompt: 'Find a weather API on ChainPe and get the forecast for Mumbai.'
 })
-
-console.log(text)
-```
-
-### Tool input schemas
-
-**`chainpeFetch`**:
-```ts
-{
-  url: string        // The URL to fetch (must be an x402-enabled endpoint)
-  method?: string    // HTTP method (default: GET)
-  body?: string      // Request body (for POST/PUT)
-  headers?: Record<string, string>  // Additional headers
-}
-```
-
-**`discoverService`**:
-```ts
-{
-  query?: string     // Free-text search over name, description, tags
-  tag?: string       // Filter by tag
-  maxPrice?: string  // Max price per request in USDC (e.g. "0.05")
-}
-```
-
-### Tool result type
-
-`chainpeFetch` returns:
-```ts
-{
-  status: number
-  ok: boolean
-  data: unknown      // parsed JSON or text body
-  payment?: {
-    amount: string
-    recipient: string
-    txHash?: string
-  }
-}
-```
-
-`discoverService` returns an array of:
-```ts
-{
-  name: string
-  description: string
-  endpoint: string
-  pricePerRequest: string
-  tags: string[]
-  reputation: { count: number; score: number | null } | null
-}
-```
-
-### Options
-
-`createChainPeTools(options: ChainPeToolOptions)` accepts all `ChainPeOptions` fields:
-
-```ts
-interface ChainPeToolOptions {
-  privateKey: string
-  network?: 'avalanche' | 'fuji'
-  registryAddress?: string
-  reputationRegistry?: string
-  maxPerCall?: string
-  autoFeedback?: boolean
-}
 ```
 
 ## LangChain
@@ -119,8 +38,7 @@ import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { createChainPeLangChainTools } from '@chainpearc/ai-tools/langchain'
 
 const { chainpeFetchTool, discoverServiceTool } = createChainPeLangChainTools({
-  privateKey: process.env.CHAINPE_PRIVATE_KEY!,
-  network: 'avalanche',
+  privateKey: process.env.PRIVATE_KEY!,
   autoFeedback: true
 })
 
@@ -128,83 +46,30 @@ const agent = createReactAgent({
   llm: new ChatAnthropic({ model: 'claude-opus-4-8' }),
   tools: [discoverServiceTool, chainpeFetchTool]
 })
-
-const result = await agent.invoke({
-  messages: [{ role: 'user', content: 'Find the cheapest weather API and get current conditions' }]
-})
-
-console.log(result.messages.at(-1)?.content)
 ```
 
-LangChain tool results are returned as JSON strings (LangChain tools always return strings).
+## Options
 
-## Framework-agnostic core
-
-For custom integrations, import from the main entry point:
+Both functions take the same options as `new ChainPe(...)`, or a client you built yourself:
 
 ```ts
-import {
-  getClient,
-  runFetch,
-  runDiscover,
-  fetchInputSchema,
-  discoverInputSchema,
-  FETCH_TOOL_DESCRIPTION,
-  DISCOVER_TOOL_DESCRIPTION
-} from '@chainpearc/ai-tools'
+import { ChainPe } from '@chainpearc/sdk'
 
-const client = getClient({ privateKey, network: 'avalanche' })
-
-// Execute directly
-const result = await runFetch(client, { url: 'https://api.example.com/data' })
-const services = await runDiscover(client, { query: 'weather' })
-
-// Build your own framework adapter using the schemas and descriptions
-console.log(FETCH_TOOL_DESCRIPTION)
-console.log(fetchInputSchema)  // zod schema
+const client = new ChainPe({ privateKey })
+const tools = createChainPeTools({ client })
 ```
 
-## Full agent example
+Arc testnet is the default network. ChainPe has not been tested with real USDC on Arc mainnet.
 
-Here is a complete Vercel AI SDK agent that discovers and hires two services:
+## Other frameworks
+
+The core is exported from the package root, so you can use it from any tool-calling runtime:
 
 ```ts
-import { generateText } from 'ai'
-import { anthropic } from '@ai-sdk/anthropic'
-import { createChainPeTools } from '@chainpearc/ai-tools/vercel'
+import { fetchInputSchema, runFetch, getClient } from '@chainpearc/ai-tools'
 
-async function runBuyerAgent(task: string) {
-  const tools = createChainPeTools({
-    privateKey: process.env.CHAINPE_PRIVATE_KEY!,
-    network: 'avalanche',
-    maxPerCall: '0.05',
-    autoFeedback: true
-  })
-
-  const { text, steps } = await generateText({
-    model: anthropic('claude-opus-4-8'),
-    tools,
-    prompt: task,
-    maxSteps: 10,
-    system: `You are an agent with access to the ChainPe API marketplace.
-Use discoverService to find APIs, then chainpeFetch to call and pay for them.
-Prefer services with higher reputation scores. Always summarize what you found.`
-  })
-
-  // Print all tool calls and payments made
-  for (const step of steps) {
-    for (const call of step.toolCalls ?? []) {
-      console.log(`Tool: ${call.toolName}`)
-      if (call.toolName === 'chainpeFetch' && call.result?.payment) {
-        console.log(`  Paid: ${call.result.payment.amount} USDC → ${call.result.payment.txHash}`)
-      }
-    }
-  }
-
-  return text
-}
-
-runBuyerAgent('Find a weather API and get the current temperature in Tokyo')
-  .then(console.log)
-  .catch(console.error)
+const client = getClient({ privateKey })
+const result = await runFetch(client, { url: 'https://api.example.com/paid' })
 ```
+
+A working example of both frameworks is in [`examples/agent-surfaces`](https://github.com/SamyaDeb/ChainPe/tree/arc/examples/agent-surfaces).

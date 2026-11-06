@@ -11,7 +11,7 @@ const footerLinks = {
     { name: "Security", href: "#security" },
   ],
   Developers: [
-    { name: "Documentation", href: "https://github.com/SamyaDeb/ChainPe/tree/arc/docs/arc" },
+    { name: "Documentation", href: "/docs" },
     { name: "GitHub", href: "https://github.com/SamyaDeb/ChainPe" },
     { name: "Live demo", href: "https://chainpe-arc-demo-production.up.railway.app" },
     { name: "Proof of payments", href: "https://github.com/SamyaDeb/ChainPe/blob/arc/docs/arc/PROOF.md" },

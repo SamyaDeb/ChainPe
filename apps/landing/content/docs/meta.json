@@ -1,0 +1,16 @@
+{
+  "title": "ChainPe Docs",
+  "pages": [
+    "introduction",
+    "getting-started",
+    "concepts",
+    "developers",
+    "reference",
+    "architecture",
+    "security",
+    "troubleshooting",
+    "faq",
+    "changelog",
+    "contributing"
+  ]
+}
