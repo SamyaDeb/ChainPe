@@ -33,9 +33,11 @@ on 127.0.0.1 only. For payments and swaps without any of that, use `node up.mjs 
 ## The demo
 
 ```sh
-set -a; source ../../.env; set +a
-claude --mcp-config mcp.json --strict-mcp-config
+./demo.sh
 ```
+
+This gives Claude only the wallet tools, in an empty folder. Run from inside the repo, Claude reads this code and learns
+what Drift does, so reputation is no longer what decides.
 
 > Swap 1 USDC to EURC on Arc using the best-rated swap agent. Compare them first and tell me why you picked it.
 
