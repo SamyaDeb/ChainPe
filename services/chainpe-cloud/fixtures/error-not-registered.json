@@ -1,0 +1,4 @@
+{
+  "error": "not_registered",
+  "message": "This wallet has no ChainPe provider account. Run `chainpe register` first."
+}

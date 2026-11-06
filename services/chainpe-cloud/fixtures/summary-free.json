@@ -1,0 +1,36 @@
+{
+  "range": "7d",
+  "since": "2026-10-30T03:51:15.178Z",
+  "revenue": {
+    "totalVerifiedAtomic": "11000",
+    "exactAtomic": "10000",
+    "gateway": {
+      "settledAtomic": "1000",
+      "pendingBatchAtomic": "0"
+    }
+  },
+  "notRevenue": {
+    "unverifiedAtomic": "0",
+    "failedAtomic": "0",
+    "selfPayAtomic": "0",
+    "unattributedInflowAtomic": "0"
+  },
+  "calls": {
+    "total": 3,
+    "completed": 2,
+    "failed": 1,
+    "verified": 2,
+    "successRate": 0.6666666666666666
+  },
+  "uniqueBuyers": 2,
+  "series": {
+    "unit": "day",
+    "points": [
+      {
+        "t": "2026-11-06T00:00:00Z",
+        "revenueAtomic": "11000",
+        "calls": 3
+      }
+    ]
+  }
+}
