@@ -2,6 +2,8 @@
 
 [![npm](https://img.shields.io/npm/v/chainpe-agent.svg)](https://www.npmjs.com/package/chainpe-agent)
 
+> **This package still targets Avalanche.** It was called `@chainpeavax/agent` before this release, and its code is unchanged apart from the name. Arc support is planned. For Arc today, use the [`chainpe`](https://www.npmjs.com/package/chainpe) CLI.
+
 **Pre-built AI Agent with x402 Payment Capabilities on Avalanche**
 
 ChainPe Agent is an AI agent SDK that can discover, pay for, and use monetized API services. Built on the Vercel AI SDK with support for OpenAI and Anthropic.
