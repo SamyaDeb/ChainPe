@@ -1,0 +1,258 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ChainPe Weather Demo",
+    "description": "Current weather and 5-day forecasts for any city, as clean JSON your agent can parse. No API key or signup: pay per call in USDC on Arc over x402, from $0.001 per request.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://chainpe-arc-demo.up.railway.app"
+    }
+  ],
+  "paths": {
+    "/weather": {
+      "get": {
+        "summary": "Current temperature, conditions, humidity and wind for a city",
+        "operationId": "GET_weather",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "description": "City name, for example London",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-x402-price": "0.001",
+        "x-x402-rails": [
+          "gateway"
+        ],
+        "responses": {
+          "200": {
+            "description": "Paid response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "location": {
+                          "type": "object",
+                          "properties": {
+                            "city": {
+                              "type": "string"
+                            },
+                            "country": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "city",
+                            "country"
+                          ]
+                        },
+                        "current": {
+                          "type": "object",
+                          "properties": {
+                            "temperatureC": {
+                              "type": "integer"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "humidity": {
+                              "type": "integer"
+                            },
+                            "windSpeed": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "temperatureC",
+                            "description",
+                            "humidity",
+                            "windSpeed"
+                          ]
+                        },
+                        "timestamp": {
+                          "type": "string"
+                        },
+                        "source": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "location",
+                        "current",
+                        "timestamp",
+                        "source"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "location": {
+                      "city": "London",
+                      "country": "GB"
+                    },
+                    "current": {
+                      "temperatureC": 12,
+                      "description": "Partly cloudy",
+                      "humidity": 78,
+                      "windSpeed": 5.2
+                    },
+                    "timestamp": "2026-11-06T03:03:19.260Z",
+                    "source": "ChainPe Weather (sample data)"
+                  }
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment required. The PAYMENT-REQUIRED header carries the x402 payment options."
+          }
+        }
+      }
+    },
+    "/forecast": {
+      "get": {
+        "summary": "5-day temperature forecast for a city",
+        "operationId": "GET_forecast",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "description": "City name, for example Tokyo",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-x402-price": "0.01",
+        "x-x402-rails": [
+          "exact",
+          "gateway"
+        ],
+        "responses": {
+          "200": {
+            "description": "Paid response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "location": {
+                          "type": "object",
+                          "properties": {
+                            "city": {
+                              "type": "string"
+                            },
+                            "country": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "city",
+                            "country"
+                          ]
+                        },
+                        "forecast": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string"
+                              },
+                              "temperatureC": {
+                                "type": "integer"
+                              },
+                              "description": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "date",
+                              "temperatureC",
+                              "description"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "location",
+                        "forecast"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "location": {
+                      "city": "Tokyo",
+                      "country": "JP"
+                    },
+                    "forecast": [
+                      {
+                        "date": "2026-11-07",
+                        "temperatureC": 19,
+                        "description": "Light rain"
+                      },
+                      {
+                        "date": "2026-11-08",
+                        "temperatureC": 22,
+                        "description": "Light rain"
+                      },
+                      {
+                        "date": "2026-11-09",
+                        "temperatureC": 25,
+                        "description": "Light rain"
+                      },
+                      {
+                        "date": "2026-11-10",
+                        "temperatureC": 21,
+                        "description": "Light rain"
+                      },
+                      {
+                        "date": "2026-11-11",
+                        "temperatureC": 24,
+                        "description": "Light rain"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment required. The PAYMENT-REQUIRED header carries the x402 payment options."
+          }
+        }
+      }
+    }
+  }
+}

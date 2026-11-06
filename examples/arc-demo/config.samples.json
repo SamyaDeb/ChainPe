@@ -1,0 +1,55 @@
+{
+  "GET /weather": {
+    "success": true,
+    "data": {
+      "location": {
+        "city": "London",
+        "country": "GB"
+      },
+      "current": {
+        "temperatureC": 12,
+        "description": "Partly cloudy",
+        "humidity": 78,
+        "windSpeed": 5.2
+      },
+      "timestamp": "2026-11-06T03:03:19.260Z",
+      "source": "ChainPe Weather (sample data)"
+    }
+  },
+  "GET /forecast": {
+    "success": true,
+    "data": {
+      "location": {
+        "city": "Tokyo",
+        "country": "JP"
+      },
+      "forecast": [
+        {
+          "date": "2026-11-07",
+          "temperatureC": 19,
+          "description": "Light rain"
+        },
+        {
+          "date": "2026-11-08",
+          "temperatureC": 22,
+          "description": "Light rain"
+        },
+        {
+          "date": "2026-11-09",
+          "temperatureC": 25,
+          "description": "Light rain"
+        },
+        {
+          "date": "2026-11-10",
+          "temperatureC": 21,
+          "description": "Light rain"
+        },
+        {
+          "date": "2026-11-11",
+          "temperatureC": 24,
+          "description": "Light rain"
+        }
+      ]
+    }
+  }
+}
