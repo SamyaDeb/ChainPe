@@ -268,3 +268,10 @@ All run in one process, disabled with `WORKERS_ENABLED=false`. A rolling deploy 
 - **Tests** use the local Homebrew Postgres, which is real Postgres and already running. Docker's daemon is off on this Mac.
 - **Railway:** a new service, root `services/chainpe-cloud`, Node 22 Dockerfile, plus Postgres.
 - **Variables** as in your F4 list, plus `SIWE_CLI_DOMAIN` (D2) and `CHAIN_ID=5042002`. `SIWE_DOMAIN` cannot be final until the Phase 6 dashboard has a host. F5 uses only the CLI domain.
+
+## 12. Found live, after approval
+
+- **Anyone can rate an agent, unprompted.** Within about 2 minutes of minting, agentId 897796 got an 80 from `0xE8F9…1611`, tagged `AgentPay facilitator patrol`, from a wallet that has never paid it. So
+  the reputation average is not "what paying customers think". This also gave the first real `NewFeedback`, which indexed correctly.
+- **`getService` reverts for an unknown key.** A revert now means "not yours", and only a network failure or a 429 means 503.
+- **A proxy's heartbeat carries no doctor report in a container.** `services.doctor` and `/me/health` use the latest heartbeat that has one.

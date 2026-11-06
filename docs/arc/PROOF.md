@@ -25,3 +25,36 @@ ChainPeAccounts source is verified on the explorer: [0xD315322c9D83A6f50A04236A2
 | 2026-11-06 02:28 | Seller `deactivateService(demo-weather-2)` | `0xd53496281896e1c62c18120824a08fbd99d93394f79b270fd8996eb170db32d6` | [view](https://explorer.testnet.arc.io/tx/0xd53496281896e1c62c18120824a08fbd99d93394f79b270fd8996eb170db32d6) |
 | 2026-11-06 02:28 | Buyer `registerProvider(0)`, second provider | `0xa10c0e2d36a0fb0b6573069c6a62155d6e4f0c57a89e1d4dd700fc3162759341` | [view](https://explorer.testnet.arc.io/tx/0xa10c0e2d36a0fb0b6573069c6a62155d6e4f0c57a89e1d4dd700fc3162759341) |
 | 2026-11-06 02:28 | Buyer `registerService(buyer-demo)` | `0x036c3c10d577c8031c140ffd321fdad4bc1c428316b0ebdf8a8ee4888786bf64` | [view](https://explorer.testnet.arc.io/tx/0x036c3c10d577c8031c140ffd321fdad4bc1c428316b0ebdf8a8ee4888786bf64) |
+| 2026-11-06 09:45 | Demo seller ERC-8004 identity minted: **agentId 897796** | `0xf7003065334a3e4fcd2f24c88b2b36db24b8cd2fdcddfb23095a727eee391a52` | [view](https://explorer.testnet.arc.io/tx/0xf7003065334a3e4fcd2f24c88b2b36db24b8cd2fdcddfb23095a727eee391a52) |
+| 2026-11-06 09:45 | Seller `setAgentId(897796)` on ChainPeAccounts | `0x32697d99566066225b60b051b781b7caca973835ab6169a4ec8394b5981e42b2` | [view](https://explorer.testnet.arc.io/tx/0x32697d99566066225b60b051b781b7caca973835ab6169a4ec8394b5981e42b2) |
+| 2026-11-06 09:45 | Seller `registerService(ChainPe Weather Demo)`, key `0xa0e15a9e…7d00` | `0x795ab53aae135e42258405cede4e8241e23695f3bb1a031d51af8b9e70f4c994` | [view](https://explorer.testnet.arc.io/tx/0x795ab53aae135e42258405cede4e8241e23695f3bb1a031d51af8b9e70f4c994) |
+| 2026-11-06 09:49 | `doctor --pay`, $0.001 `/weather`, Gateway | `849abedb-bf48-4e06-a61e-20cddcc147bf` | Gateway transfer id, settled in the batch below |
+| 2026-11-06 09:49 | `doctor --pay`, $0.01 `/forecast`, Gateway | `4ee3930f-fae3-40ef-a77f-50da87c6f22f` | Gateway transfer id, settled in the batch below |
+| 2026-11-06 09:50 | Phase 5 acceptance, exact rail ($0.01 `/forecast`): `verified` from the Transfer log | `0x90404e6ba982d895cc3655d6d44561e36fc34b40b8e59d5d69b7d6774244224a` | [view](https://explorer.testnet.arc.io/tx/0x90404e6ba982d895cc3655d6d44561e36fc34b40b8e59d5d69b7d6774244224a) |
+| 2026-11-06 09:50 | Phase 5 acceptance, Gateway rail ($0.001 `/weather`): `verified` from Circle's record | `c23db8d9-0cc7-4fdc-987b-ab472216bae3` | Gateway transfer id, settled in the batch below |
+| 2026-11-06 09:53 | Gateway batch settling those three transfers | `0x6f784cdbda4bb0defc4ca0561317d85cf1bd388b89d33f7e6bc9ed79a8d844de` | [view](https://explorer.testnet.arc.io/tx/0x6f784cdbda4bb0defc4ca0561317d85cf1bd388b89d33f7e6bc9ed79a8d844de) |
+
+## Live services
+
+- Demo seller: https://chainpe-arc-demo-production.up.railway.app
+- chainpe-cloud API: https://chainpe-cloud-production.up.railway.app
+
+## `chainpe doctor` (2026-11-06)
+
+`doctor --pay`: 11 of 11, including check 11, real paid calls with 2xx. Plain `doctor` on the final deploy: 10 of 10, `ok` and `allGreen` true. Check 12 is info only: the service is
+not listed by Circle yet.
+
+## Phase 5 acceptance, against the live API (2026-11-06)
+
+| Check | Result |
+|---|---|
+| Exact call visible in `GET /v1/me/payments` | 442 ms |
+| Exact call `verified` from the Transfer log | 3 s. Time shown moved from the proxy's to the block's |
+| Gateway call visible in `GET /v1/me/payments` | 917 ms |
+| Gateway call `verified` from Circle's record, status `received` | 24 s |
+| Gateway batch landed, status `completed`, tx hash on the record | 174 s |
+| Revenue after 4 paid calls | 22000 atomic = 0.022 USDC: exact 0.01, Gateway settled 0.012 |
+| Third wallet `0x641Be3d2064498142542BDA5a7b5a24A0bB52e4d`, unregistered | `403 not_registered` |
+| Buyer's token, every read endpoint | No seller data |
+
+Only the failure path was not seen live: no Gateway transfer has ended `failed`, so that is tested against a stubbed Circle response.

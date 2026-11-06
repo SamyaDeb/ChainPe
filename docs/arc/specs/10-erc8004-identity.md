@@ -10,7 +10,7 @@ portable across every Arc agent.
 | Validation | `0x8004Cc8439f36fd5F9F049D9fF86523Df6dAAB58` | `0x8004Cb1BF31DAf7788923b405b754f57acEB4272` |
 
 **Verified 2026-11-06, Identity only:** the live testnet implementation `0x7274e874…9c02` matches
-`contracts/abis/erc8004/IdentityRegistry.json`, and only adds `isAuthorizedOrOwner`. Compare the Reputation ABI in Phase 7.
+`contracts/abis/erc8004/IdentityRegistry.json`, and only adds `isAuthorizedOrOwner`. **Verified the same day, Reputation:** the live implementation `0x16e0FA7f…dA34` matches `contracts/abis/erc8004/ReputationRegistry.json`, 24 of 24 signatures.
 
 ## `chainpe identity [--agent-id <id>] [--update-uri] [--new]`
 
@@ -32,5 +32,5 @@ An RPC failure stops the command: it must never read as "this wallet has no iden
 
 ## Acceptance
 
-- [ ] `chainpe identity --network arc-testnet` mints and prints an agentId with an explorer link.
+- [x] `chainpe identity --network arc-testnet` mints and prints an agentId with an explorer link.
 - [ ] A buyer rating appears in `chainpe-cloud` `/v1/me/reputation` and the dashboard.

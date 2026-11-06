@@ -78,7 +78,7 @@ Railway: one service + Postgres. Env: `DATABASE_URL`, `SESSION_SECRET`, `ARC_NET
 
 ## Acceptance
 
-- [ ] Sign-in fails for an unregistered address (403 `not_registered`).
-- [ ] Paid call → event visible in `/v1/me/payments` < 5 s; matching on-chain transfer marks it `verified`.
-- [ ] Wallet A's session cannot read wallet B's data (test).
-- [ ] Free plan: `range=30d` → 402-style `plan_required` error; Pro passes.
+- [x] Sign-in fails for an unregistered address (403 `not_registered`).
+- [x] Paid call → event visible in `/v1/me/payments` < 5 s; matching on-chain transfer marks it `verified`.
+- [x] Wallet A's session cannot read wallet B's data (test).
+- [x] Free plan: `range=30d` → `plan_required` (HTTP 403, spec 08a D3); Pro passes.

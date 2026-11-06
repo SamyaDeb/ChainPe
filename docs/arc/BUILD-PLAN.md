@@ -54,17 +54,17 @@ an acceptance check; do not start the next phase until it passes (except where m
 
 ## Phase 4 — register, identity, doctor
 
-- [ ] Spec 10: `chainpe identity` (ERC-8004 register on Arc), reuse in `register`.
-- [ ] Spec 06: `chainpe register` / `deregister` / `list` on `ChainPeAccounts` for `arc*`.
-- [ ] Spec 05: `chainpe doctor`.
+- [x] Spec 10: `chainpe identity` (ERC-8004 register on Arc), reuse in `register`.
+- [x] Spec 06: `chainpe register` / `deregister` / `list` on `ChainPeAccounts` for `arc*`.
+- [x] Spec 05: `chainpe doctor`.
 
 **Accept:** demo seller registered with an agentId; `chainpe doctor` all green; `chainpe list --network arc-testnet` shows it.
 
 ## Phase 5 — chainpe-cloud
 
-- [ ] Spec 08: rename/fork `services/chainpe-indexer` → `services/chainpe-cloud`; auth, ingest, Arc indexer, read API.
-- [ ] `chainpe login` in CLI; proxy telemetry.
-- [ ] Deploy (Railway) with Postgres; set `CHAINPE_CLOUD_URL`.
+- [x] Spec 08: rename/fork `services/chainpe-indexer` → `services/chainpe-cloud`; auth, ingest, Arc indexer, read API.
+- [x] `chainpe login` in CLI; proxy telemetry.
+- [x] Deploy (Railway) with Postgres; set `CHAINPE_CLOUD_URL`.
 
 **Accept:** a paid call appears in `GET /v1/me/payments` within 5 s; a wallet that is not the provider gets 403.
 Use a third wallet for that test: the smoke test made the buyer wallet a provider too.
