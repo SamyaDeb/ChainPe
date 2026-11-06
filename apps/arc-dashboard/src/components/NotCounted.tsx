@@ -13,18 +13,18 @@ export function NotCounted({ notRevenue }: { notRevenue: Summary['notRevenue'] }
   return (
     <Card>
       <SectionTitle>Not counted as revenue</SectionTitle>
-      <dl className="flex flex-col divide-y divide-ink/10">
+      <dl className="flex flex-col divide-y divide-line">
         {rows.map(([label, value, why]) => (
-          <div key={label} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-4">
+          <div key={label} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 py-2">
             <div className="min-w-0">
-              <dt className="text-ink">{label}</dt>
-              <dd className="text-sm text-muted">{why}</dd>
+              <dt className="text-sm font-medium text-ink">{label}</dt>
+              <dd className="text-xs text-muted">{why}</dd>
             </div>
-            <dd className="font-display text-3xl tracking-tight text-ink">{formatUsdc(value)}</dd>
+            <dd className="text-sm font-semibold tabular-nums text-ink">{formatUsdc(value)}</dd>
           </div>
         ))}
       </dl>
-      <div className="mt-4">
+      <div className="mt-3">
         <Note>Verified means money from that payer reached you. It does not prove an independent customer.</Note>
       </div>
     </Card>

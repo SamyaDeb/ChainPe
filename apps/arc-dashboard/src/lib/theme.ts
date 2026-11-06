@@ -5,6 +5,10 @@ export type Theme = 'light' | 'dark'
 const KEY = 'chainpe.theme'
 const listeners = new Set<() => void>()
 
+function systemTheme(): Theme {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
 function stored(): Theme | null {
   try {
     const v = window.localStorage.getItem(KEY)
@@ -14,9 +18,8 @@ function stored(): Theme | null {
   }
 }
 
-/** Light by default, to match the landing page. Dark is a choice the user makes with the toggle. */
 export function currentTheme(): Theme {
-  return stored() ?? 'light'
+  return stored() ?? systemTheme()
 }
 
 export function applyTheme(): void {
@@ -25,8 +28,15 @@ export function applyTheme(): void {
 
 function subscribe(onChange: () => void): () => void {
   listeners.add(onChange)
+  const media = window.matchMedia('(prefers-color-scheme: dark)')
+  const onMedia = () => {
+    applyTheme()
+    onChange()
+  }
+  media.addEventListener('change', onMedia)
   return () => {
     listeners.delete(onChange)
+    media.removeEventListener('change', onMedia)
   }
 }
 
