@@ -63,6 +63,8 @@ export function createApp(options: AppOptions): express.Express {
       origin: options.corsOrigins,
       methods: ['GET', 'POST', 'PUT', 'DELETE'],
       allowedHeaders: ['Authorization', 'Content-Type'],
+      // A browser hides this from a cross-origin page unless told otherwise, and the dashboard's wait uses it.
+      exposedHeaders: ['Retry-After'],
       credentials: false,
       maxAge: 600,
     })
