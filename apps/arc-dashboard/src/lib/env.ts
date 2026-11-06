@@ -26,7 +26,7 @@ export const USDC_ADDRESS: string = (raw.VITE_USDC_ADDRESS ?? '').trim()
  * ChainPeFees: the only spender this dashboard asks anyone to approve. Set here, not read from the API, so a
  * compromised server cannot point an approval somewhere else. Empty turns the fee card's approve button off.
  */
-const DEFAULT_FEES_ADDRESS = ''
+const DEFAULT_FEES_ADDRESS = '0x09c85EEdeF018274861aae0964f9681C11f91Af4'
 export const FEES_ADDRESS: string = (raw.VITE_FEES_ADDRESS ?? DEFAULT_FEES_ADDRESS).trim()
 
 /**

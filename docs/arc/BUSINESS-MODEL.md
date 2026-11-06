@@ -5,9 +5,9 @@ The CLI, proxy and SDK stay free and open source.
 
 ## The usage fee
 
-**Status: planned, not live.** The `ChainPeFees` contract is not deployed, so nothing is charged today.
+**Status: opt-in on Arc testnet.** `ChainPeFees` is deployed at `0x09c85EEdeF018274861aae0964f9681C11f91Af4`. Only a provider who approves an allowance in Billing is charged.
 
-ChainPe will charge **1% of verified revenue, or 0.5% on Pro**. Rules and limits: [spec 12](specs/12-usage-fees.md).
+ChainPe charges **1% of verified revenue, or 0.5% on Pro**, to providers who opt in. Rules and limits: [spec 12](specs/12-usage-fees.md).
 
 Circle's Facilitator Service requires a signature from the seller's own `payTo` key on every settle call
 (`Facilitator-Seller-Proof`), and the buyer signs one transfer to one address. So payments still go straight from

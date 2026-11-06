@@ -111,7 +111,7 @@ Commits during the hackathon: **79** on the `arc` branch, as of Nov 6, 2026 at 1
 - The CLI, proxy and SDK are free and open source.
 - Every registered developer gets a dashboard. **Free** covers one service and the last 7 days.
 - **Pro** costs 19 USDC per 30 days (1 USDC on testnet), paid on Arc. It adds full history, CSV export and more detail.
-- **Planned, not live yet:** a usage fee of 1% of verified revenue, or 0.5% on Pro. The fee contract is not deployed, so nothing is charged today. Buyers still pay the seller's wallet directly, because Circle only settles to a wallet the seller signs for. The fee will be collected afterwards, in batches, from USDC the seller approves and can revoke. Details: [spec 12](docs/arc/specs/12-usage-fees.md).
+- **Opt-in usage fee:** 1% of verified revenue, or 0.5% on Pro. The fee contract (`0x09c85EEdeF018274861aae0964f9681C11f91Af4`) is live on Arc testnet, and only a provider who approves an allowance in Billing is charged. Buyers still pay the seller's wallet directly, because Circle only settles to a wallet the seller signs for. The fee will be collected afterwards, in batches, from USDC the seller approves and can revoke. Details: [spec 12](docs/arc/specs/12-usage-fees.md).
 
 More detail: [docs/arc/BUSINESS-MODEL.md](docs/arc/BUSINESS-MODEL.md).
 

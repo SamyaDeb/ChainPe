@@ -1,6 +1,6 @@
 # Spec 12: usage fee on verified calls
 
-**Status: the service code is built, but `ChainPeFees` is not deployed, so nothing is charged yet** ([plan](../HACKATHON-PLAN.md), H7).
+**Status: `ChainPeFees` is deployed on Arc testnet at `0x09c85EEdeF018274861aae0964f9681C11f91Af4`, source verified. Charging is opt-in: `FEES_START_AT` is unset, so only a provider who approves an allowance in Billing is charged.**
 
 ChainPe takes a percentage of the verified revenue of each provider who opts in. This replaces "no cut of payments".
 

@@ -145,7 +145,7 @@ all USDC `Transfer` logs are also emitted by system address `0xffffFFFfFFfffffff
 | `CIRCLE_FACILITATOR_URL` | CLI | default `https://api.circle.com/v1/facilitator/x402` |
 | `CIRCLE_GATEWAY_URL` | CLI | default testnet URL above |
 | `CHAINPE_ACCOUNTS_ADDRESS` | CLI, cloud | deployed `ChainPeAccounts` |
-| `FEES_ADDRESS` | cloud | deployed `ChainPeFees`. Unset means no fee is charged |
+| `FEES_ADDRESS` | cloud | `ChainPeFees` on Arc testnet, `0x09c85EEdeF018274861aae0964f9681C11f91Af4`. Unset means no fee is charged |
 | `FEE_COLLECTOR_PRIVATE_KEY` | cloud (secret) | signs `collect`, needs USDC for gas. Unset means fees are recorded and not collected |
 | `FEES_START_AT` | cloud | providers registered from this time are charged without opting in. Unset means everyone opts in |
 | `CHAINPE_CLOUD_URL` | CLI, dashboard | `chainpe-cloud` base URL |
