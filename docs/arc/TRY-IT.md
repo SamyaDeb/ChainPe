@@ -60,5 +60,5 @@ Send Akash the transaction link the CLI printed. That proves a second, independe
 | You see | Do this |
 |---|---|
 | `insufficient` or balance error | The faucet drop has not arrived yet. Wait a minute and retry. |
-| `Refused: price is above --max` | The price changed. Raise `--max` a little. |
+| `rejected by spendControls` | The price is above `--max`. Nothing was signed. Raise `--max` a little. |
 | Connection error | The demo seller may be restarting. Try again in a minute. |

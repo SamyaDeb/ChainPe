@@ -31,6 +31,18 @@ ChainPe owns the proxy, the client tools, the provider accounts contract, the cl
 
 On the Gateway rail the shape is the same, but settling means Circle accepts the payment and locks the funds. Funds land in the seller's Gateway balance, and `chainpe withdraw` moves them on-chain.
 
+## Why the proxy can't deliver unpaid work
+
+Each rail's settlement goes through a guard that gives the proxy only a final answer.
+
+| Guard | Rule |
+|---|---|
+| `SettlementGuard` (`exact`) | `success` means `completed` on-chain. It polls pending payments, and answers duplicates locally |
+| `GatewayGuard` (Gateway) | `success` means Circle accepted it and returned a transfer id. An uncertain result only delivers if that exact transfer is found |
+| `RailRouter` | Sends each payment to its rail by `extra.name`, because both rails call themselves `exact` |
+
+The x402 middleware runs with an `upfront` flow, so settlement happens before the request reaches your API. Discovery documents are answered by exact path, so a crafted path can't reach your API without paying.
+
 ## Registration and sign-in
 
 1. `chainpe identity` mints an ERC-8004 identity on Arc.

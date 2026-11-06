@@ -1,4 +1,4 @@
 {
   "title": "Reference",
-  "pages": ["networks", "chainpe-accounts", "cloud-api", "configuration"]
+  "pages": ["errors", "configuration", "networks", "chainpe-accounts", "cloud-api"]
 }

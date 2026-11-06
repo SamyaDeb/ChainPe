@@ -45,7 +45,7 @@ Run `chainpe <command> --help` for all the options.
 
 | Option | What it does |
 |---|---|
-| `--max <usdc>` | The most to pay for one call. The default is 1 |
+| `--max <usdc>` | The most to pay for one call, refused before signing. The default is 1 |
 | `--rail <rail>` | `exact`, `gateway` or `auto`. `auto` uses Gateway if the deposit covers the price |
 | `-X`, `-H`, `-d` | Method, header and body, as in curl |
 | `--raw` | Prints only the response body |
@@ -62,8 +62,8 @@ Run `chainpe <command> --help` for all the options.
 
 Doctor exits with an error if a required check fails or can't get an answer. It needs no key unless you use `--pay`.
 
-## Limits
+## More
 
-- Only HTTP is proxied. WebSocket upgrades are not, because they would skip the payment check.
-- There are no refunds yet. If your API fails after a payment, the buyer is still charged. The proxy counts these cases.
-- Pending payments live in memory, so a restart while one is pending sends a retry to Circle.
+- [How the proxy behaves](/docs/developers/proxy): routes, reserved paths and what your API receives
+- [`chainpe doctor`](/docs/developers/doctor): all 12 checks and how to fix each one
+- [Errors](/docs/reference/errors#cli-messages): every CLI message

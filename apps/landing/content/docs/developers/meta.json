@@ -1,4 +1,4 @@
 {
   "title": "Tools",
-  "pages": ["cli", "sdk", "ai-tools", "mcp-wallet", "dashboard"]
+  "pages": ["cli", "proxy", "doctor", "sdk", "ai-tools", "mcp-wallet", "pay-without-sdk", "dashboard"]
 }

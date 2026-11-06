@@ -3,11 +3,11 @@ title: Pay an API in 5 minutes
 description: Pay $0.01 in test USDC to a live weather API from your own wallet.
 ---
 
-You will pay **$0.01 in test USDC** to a live weather API. No real money is involved, because everything runs on Arc testnet.
+You'll pay **$0.01 in test USDC** to a live weather API. No real money is involved, because everything runs on Arc testnet.
 
-You need Node.js 22.18 or newer, and Git.
+**You need:** Node.js 22.18 or newer, and Git.
 
-## 1. Get the code
+## 1. Build the CLI
 
 ```bash
 git clone https://github.com/SamyaDeb/ChainPe.git
@@ -15,11 +15,14 @@ cd ChainPe
 git checkout arc
 npm install
 npm run build:cli
+alias chainpe="node $(pwd)/packages/chainpe/dist/cli.js"
 ```
+
+The packages aren't on npm yet. On Linux, a build error about a missing `rollup` or `esbuild` package has [a one-line fix](/docs/troubleshooting#building-from-source).
 
 ## 2. Make a test wallet
 
-Use a new wallet just for this. Never use a wallet that holds real money.
+Use a new wallet just for this. Never use one that holds real money.
 
 ```bash
 cd packages/chainpe
@@ -27,35 +30,66 @@ node -e "const {generatePrivateKey,privateKeyToAccount}=require('viem/accounts')
 cd ../..
 ```
 
-Keep the key private, and copy the address.
+```bash
+export CHAINPE_PRIVATE_KEY=<the key it printed>
+```
+
+> The CLI also reads a `.env` file from the current folder. A key already exported in your shell takes priority over it.
 
 ## 3. Get free test USDC
 
-1. Open https://faucet.circle.com
-2. Pick **Arc Testnet** and **USDC**.
-3. Paste your address and request funds.
+Open https://faucet.circle.com, pick **Arc Testnet** and **USDC**, paste your address and request funds. Gas on Arc is paid in USDC, so this one drop covers everything.
 
-On Arc, gas is also paid in USDC, so this one faucet drop covers everything.
-
-## 4. Pay the API
+## 4. Pay
 
 ```bash
-export CHAINPE_PRIVATE_KEY=<your test key>
-node packages/chainpe/dist/cli.js fetch \
-  "https://chainpe-arc-demo-production.up.railway.app/forecast?city=Mumbai" \
+chainpe fetch "https://chainpe-arc-demo-production.up.railway.app/forecast?city=Mumbai" \
   --network arc-testnet --rail exact --max 0.02
 ```
 
-What happens:
+Three things happen:
 
-1. The API answers `402 Payment Required` with its price of $0.01.
-2. The CLI signs a USDC payment from your wallet. It refuses to pay more than `--max`.
-3. Circle settles the payment on Arc, and the API sends the forecast.
+1. The API answers `402` with a price of $0.01. That's under your `--max` of $0.02, so the CLI carries on. A higher price would stop here, before anything is signed.
+2. The CLI signs a USDC transfer of exactly $0.01 to the seller.
+3. Circle settles it on Arc, and only then does the API run.
 
-You will see the forecast JSON and a link to your transaction on the Arc explorer.
+You'll see the status, a transaction link and the forecast JSON:
+
+```text
+  ✓ 200
+    Tx:       0x11027eae…
+    Explorer: https://explorer.testnet.arc.io/tx/0x11027eae…
+
+{"success":true,"data":{ ... }}
+```
+
+Open the explorer link to see your USDC transfer on-chain.
+
+## 5. Try a nanopayment
+
+`/weather` costs $0.001. That's below the $0.01 floor for a normal payment, so it only takes Circle Gateway, which pays from a prepaid balance with no gas per call.
+
+```bash
+chainpe deposit 1 --network arc-testnet
+
+chainpe fetch "https://chainpe-arc-demo-production.up.railway.app/weather?city=Mumbai" \
+  --network arc-testnet --rail gateway --max 0.01
+```
+
+This time you get a Gateway payment id instead of a transaction hash, because Circle settles these in batches. [Compare the two rails](/docs/concepts/payment-rails).
+
+## If it failed
+
+| You see | Meaning | Fix |
+|---|---|---|
+| `insufficient_funds` | The wallet doesn't hold enough USDC | The faucet drop may not have landed. Wait a minute and retry |
+| `insufficient_balance` | Your Gateway deposit is too low | Run `chainpe deposit 1 --network arc-testnet` |
+| `rejected by spendControls` | The price is above `--max` | Raise `--max` if you accept the price. Nothing was signed |
+| `filtered out by policies` | The route has no option on your `--rail` | `/weather` is Gateway only, so use `--rail gateway` |
+
+Everything else is in the [error reference](/docs/reference/errors).
 
 ## Next
 
 - [Sell your own API](/docs/getting-started/sell-your-api)
 - [Pay from code with the SDK](/docs/developers/sdk)
-- [If something went wrong](/docs/troubleshooting)

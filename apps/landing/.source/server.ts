@@ -1,12 +1,16 @@
 // @ts-nocheck
-import * as __fd_glob_26 from "../content/docs/reference/networks.md?collection=docs"
-import * as __fd_glob_25 from "../content/docs/reference/configuration.md?collection=docs"
-import * as __fd_glob_24 from "../content/docs/reference/cloud-api.md?collection=docs"
-import * as __fd_glob_23 from "../content/docs/reference/chainpe-accounts.md?collection=docs"
-import * as __fd_glob_22 from "../content/docs/getting-started/sell-your-api.md?collection=docs"
-import * as __fd_glob_21 from "../content/docs/getting-started/quickstart.md?collection=docs"
-import * as __fd_glob_20 from "../content/docs/developers/sdk.md?collection=docs"
-import * as __fd_glob_19 from "../content/docs/developers/mcp-wallet.md?collection=docs"
+import * as __fd_glob_30 from "../content/docs/getting-started/sell-your-api.md?collection=docs"
+import * as __fd_glob_29 from "../content/docs/getting-started/quickstart.md?collection=docs"
+import * as __fd_glob_28 from "../content/docs/reference/networks.md?collection=docs"
+import * as __fd_glob_27 from "../content/docs/reference/errors.md?collection=docs"
+import * as __fd_glob_26 from "../content/docs/reference/configuration.md?collection=docs"
+import * as __fd_glob_25 from "../content/docs/reference/cloud-api.md?collection=docs"
+import * as __fd_glob_24 from "../content/docs/reference/chainpe-accounts.md?collection=docs"
+import * as __fd_glob_23 from "../content/docs/developers/sdk.md?collection=docs"
+import * as __fd_glob_22 from "../content/docs/developers/proxy.md?collection=docs"
+import * as __fd_glob_21 from "../content/docs/developers/pay-without-sdk.md?collection=docs"
+import * as __fd_glob_20 from "../content/docs/developers/mcp-wallet.md?collection=docs"
+import * as __fd_glob_19 from "../content/docs/developers/doctor.md?collection=docs"
 import * as __fd_glob_18 from "../content/docs/developers/dashboard.md?collection=docs"
 import * as __fd_glob_17 from "../content/docs/developers/cli.md?collection=docs"
 import * as __fd_glob_16 from "../content/docs/developers/ai-tools.md?collection=docs"
@@ -34,4 +38,4 @@ const create = server<typeof Config, import("fumadocs-mdx/runtime/types").Intern
   }
 }>({"doc":{"passthroughs":["extractedReferences"]}});
 
-export const docs = await create.docs("docs", "content/docs", {"meta.json": __fd_glob_0, "concepts/meta.json": __fd_glob_1, "developers/meta.json": __fd_glob_2, "getting-started/meta.json": __fd_glob_3, "reference/meta.json": __fd_glob_4, }, {"architecture.md": __fd_glob_5, "changelog.md": __fd_glob_6, "contributing.md": __fd_glob_7, "faq.md": __fd_glob_8, "introduction.md": __fd_glob_9, "security.md": __fd_glob_10, "troubleshooting.md": __fd_glob_11, "concepts/identity-and-ratings.md": __fd_glob_12, "concepts/payment-rails.md": __fd_glob_13, "concepts/plans-and-fees.md": __fd_glob_14, "concepts/x402.md": __fd_glob_15, "developers/ai-tools.md": __fd_glob_16, "developers/cli.md": __fd_glob_17, "developers/dashboard.md": __fd_glob_18, "developers/mcp-wallet.md": __fd_glob_19, "developers/sdk.md": __fd_glob_20, "getting-started/quickstart.md": __fd_glob_21, "getting-started/sell-your-api.md": __fd_glob_22, "reference/chainpe-accounts.md": __fd_glob_23, "reference/cloud-api.md": __fd_glob_24, "reference/configuration.md": __fd_glob_25, "reference/networks.md": __fd_glob_26, });
+export const docs = await create.docs("docs", "content/docs", {"meta.json": __fd_glob_0, "concepts/meta.json": __fd_glob_1, "developers/meta.json": __fd_glob_2, "getting-started/meta.json": __fd_glob_3, "reference/meta.json": __fd_glob_4, }, {"architecture.md": __fd_glob_5, "changelog.md": __fd_glob_6, "contributing.md": __fd_glob_7, "faq.md": __fd_glob_8, "introduction.md": __fd_glob_9, "security.md": __fd_glob_10, "troubleshooting.md": __fd_glob_11, "concepts/identity-and-ratings.md": __fd_glob_12, "concepts/payment-rails.md": __fd_glob_13, "concepts/plans-and-fees.md": __fd_glob_14, "concepts/x402.md": __fd_glob_15, "developers/ai-tools.md": __fd_glob_16, "developers/cli.md": __fd_glob_17, "developers/dashboard.md": __fd_glob_18, "developers/doctor.md": __fd_glob_19, "developers/mcp-wallet.md": __fd_glob_20, "developers/pay-without-sdk.md": __fd_glob_21, "developers/proxy.md": __fd_glob_22, "developers/sdk.md": __fd_glob_23, "reference/chainpe-accounts.md": __fd_glob_24, "reference/cloud-api.md": __fd_glob_25, "reference/configuration.md": __fd_glob_26, "reference/errors.md": __fd_glob_27, "reference/networks.md": __fd_glob_28, "getting-started/quickstart.md": __fd_glob_29, "getting-started/sell-your-api.md": __fd_glob_30, });
