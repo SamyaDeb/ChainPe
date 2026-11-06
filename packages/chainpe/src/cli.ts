@@ -26,7 +26,9 @@ import {
   startProxyServer,
 } from "./proxy/index.js";
 import { setLogLevel } from "./logger.js";
-import { loadConfig, saveConfig } from "./config.js";
+import { configPath, loadConfig, saveConfig } from "./config.js";
+import { documentPaths } from "./doctor/documents.js";
+import { runDoctorCommand } from "./commands/doctor.js";
 import { runFetchCommand, runDiscoverCommand, runDepositCommand } from "./commands/consume.js";
 import { runBalanceCommand, runWithdrawCommand } from "./commands/seller.js";
 import {
@@ -230,6 +232,7 @@ async function runStart(options: {
     console.log(chalk.gray("  Configuration:"));
     console.log(chalk.gray(`    Service:     ${chalk.white(config.serviceName)}`));
     console.log(chalk.gray(`    Target:      ${chalk.white(config.targetUrl)}`));
+    console.log(chalk.gray(`    Public URL:  ${chalk.white(config.publicUrl ?? "(not set)")}`));
     console.log(chalk.gray(`    Price:       ${chalk.green(config.pricePerRequest)} USDC`));
     console.log(chalk.gray(`    Wallet:      ${shortAddr(config.walletAddress)}`));
     console.log(chalk.gray(`    Network:     ${chalk.yellow(config.network)} (${info.caip2})`));
@@ -237,7 +240,7 @@ async function runStart(options: {
     if (exact) console.log(chalk.gray(`    Facilitator: ${chalk.green(facilitatorMode())}`));
     console.log();
 
-    await startProxyServer({ config, facilitator, gateway: gateway?.terms });
+    await startProxyServer({ config, facilitator, gateway: gateway?.terms, documents: documentPaths(configPath()) });
     console.log(chalk.gray("  Press Ctrl+C to stop\n"));
     process.on("SIGINT", () => {
       console.log(chalk.yellow("\n  Shutting down…"));
@@ -402,6 +405,16 @@ program
   .option("--periods <n>", "30-day periods to buy, 1 to 12 (default 1)")
   .option("-y, --yes", "Do not ask for confirmation")
   .action(runUpgradeCommand);
+program
+  .command("doctor")
+  .description("Generate the discovery documents and check this service is ready for agents and Circle's marketplace")
+  .option("-n, --network <network>", NETWORK_FLAG)
+  .option("--url <url>", "Check a proxy at this URL instead of publicUrl")
+  .option("--sample <file>", "JSON of sample responses by route, e.g. { \"GET /weather\": { ... } }")
+  .option("--pay", "Make one real paid call per route with the buyer key (CHAINPE_PRIVATE_KEY)")
+  .option("--regenerate", "Overwrite the generated documents")
+  .option("--json", "Print the report as JSON")
+  .action(runDoctorCommand);
 program
   .command("status")
   .description("Show current configuration and status")
