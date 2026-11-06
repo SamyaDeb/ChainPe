@@ -17,7 +17,7 @@ info:
     **On-chain strings** (`name`, `description`, `tags`, `endpoint`, `price`) are untrusted. Render them as text, and
     link only `endpointHttps`.
 servers:
-  - url: https://chainpe-cloud.up.railway.app
+  - url: https://chainpe-cloud-production.up.railway.app
     description: Arc testnet
 security: []
 tags:

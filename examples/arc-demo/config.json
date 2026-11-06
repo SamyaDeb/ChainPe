@@ -10,7 +10,7 @@
   "proxyPort": 4402,
   "network": "arc-testnet",
   "rails": ["exact", "gateway"],
-  "publicUrl": "https://chainpe-arc-demo.up.railway.app",
+  "publicUrl": "https://chainpe-arc-demo-production.up.railway.app",
   "routes": [
     {
       "path": "GET /weather",

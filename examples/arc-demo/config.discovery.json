@@ -2,7 +2,7 @@
   "x402Version": 2,
   "items": [
     {
-      "resource": "https://chainpe-arc-demo.up.railway.app/weather",
+      "resource": "https://chainpe-arc-demo-production.up.railway.app/weather",
       "type": "http",
       "x402Version": 2,
       "accepts": [
@@ -28,9 +28,9 @@
             "forecast",
             "demo"
           ],
-          "website": "https://chainpe-arc-demo.up.railway.app",
-          "docsUrl": "https://chainpe-arc-demo.up.railway.app/openapi.json",
-          "openApiUrl": "https://chainpe-arc-demo.up.railway.app/openapi.json"
+          "website": "https://chainpe-arc-demo-production.up.railway.app",
+          "docsUrl": "https://chainpe-arc-demo-production.up.railway.app/openapi.json",
+          "openApiUrl": "https://chainpe-arc-demo-production.up.railway.app/openapi.json"
         },
         "path": "/weather",
         "method": "GET",
@@ -118,7 +118,7 @@
       }
     },
     {
-      "resource": "https://chainpe-arc-demo.up.railway.app/forecast",
+      "resource": "https://chainpe-arc-demo-production.up.railway.app/forecast",
       "type": "http",
       "x402Version": 2,
       "accepts": [
@@ -155,9 +155,9 @@
             "forecast",
             "demo"
           ],
-          "website": "https://chainpe-arc-demo.up.railway.app",
-          "docsUrl": "https://chainpe-arc-demo.up.railway.app/openapi.json",
-          "openApiUrl": "https://chainpe-arc-demo.up.railway.app/openapi.json"
+          "website": "https://chainpe-arc-demo-production.up.railway.app",
+          "docsUrl": "https://chainpe-arc-demo-production.up.railway.app/openapi.json",
+          "openApiUrl": "https://chainpe-arc-demo-production.up.railway.app/openapi.json"
         },
         "path": "/forecast",
         "method": "GET",
