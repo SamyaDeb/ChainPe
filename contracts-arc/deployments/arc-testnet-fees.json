@@ -1,0 +1,24 @@
+{
+  "address": "0x09c85EEdeF018274861aae0964f9681C11f91Af4",
+  "network": "arc-testnet",
+  "chainId": 5042002,
+  "txHash": "0x18c84b59c59d5bb16c7327062b179359e67b461ccc2c41d2e6f33f7eece35b78",
+  "deployer": "0x5B12Ce46C7194aD57d143bC22847224047b1Ef42",
+  "owner": "0x3b8a312fac101E7163F9701457d8Dc46cE8fd30a",
+  "treasury": "0x3b8a312fac101E7163F9701457d8Dc46cE8fd30a",
+  "collector": "0x147af78E6aD88773206B3aAa2D8213D5422b11Be",
+  "usdc": "0x3600000000000000000000000000000000000000",
+  "maxFeeBps": 500,
+  "compiler": {
+    "solc": "0.8.28+commit.7893614a",
+    "optimizerRuns": 200,
+    "evmVersion": "cancun"
+  },
+  "sourceVerified": true,
+  "tests": 35,
+  "studio": {
+    "run": 8,
+    "traceId": "01a1b04e-3640-7343-8863-fc9ae612cad5",
+    "webUrl": "https://studio.arc.io/app/6872b96e-b3c0-4cdb-abe3-5f17865cdf5a"
+  }
+}
