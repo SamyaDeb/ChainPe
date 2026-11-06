@@ -1,4 +1,5 @@
-const channel = (name) => `rgb(var(--c-${name}) / <alpha-value>)`
+/* The colour values are the landing page's oklch tokens, stored as "L C H" so alpha still works. */
+const channel = (name) => `oklch(var(--c-${name}) / <alpha-value>)`
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -24,12 +25,14 @@ export default {
         'bad-soft': channel('bad-soft'),
       },
       fontFamily: {
-        sans: ['ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
-        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
+        sans: ['Instrument Sans Variable', 'Instrument Sans', 'system-ui', 'sans-serif'],
+        display: ['Instrument Serif', 'Georgia', 'serif'],
+        mono: ['JetBrains Mono Variable', 'JetBrains Mono', 'ui-monospace', 'monospace'],
+        brand: ['Poppins', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
-        lg: '8px',
-        md: '8px',
+        lg: '0.25rem',
+        md: '0.25rem',
       },
     },
   },
