@@ -16,7 +16,7 @@ Revenue counts verified payments only. Unverified, failed, self-pay and unattrib
 
 - Vite, React 18, TypeScript, Tailwind v3 (oklch CSS variables for light/dark in `src/index.css`, matching `apps/landing`)
 - Instrument Serif, Instrument Sans, JetBrains Mono and Poppins, self-hosted through fontsource because the CSP is `font-src 'self'`
-- viem 2.57.5 pinned, injected wallet through `window.ethereum`. No wagmi, ConnectKit or react-query.
+- viem 2.57.5 pinned. RainbowKit 2 + wagmi 2 for the wallet connection (`src/lib/wagmi.ts`, `src/auth/WalletProviders.tsx`): MetaMask, Rainbow and a WalletConnect QR code. RainbowKit needs wagmi 2, so do not move to wagmi 3. Do not add smart wallets: their accounts are not deployed on Arc, so ERC-1271 sign-in fails.
 - Contracts: Solidity 0.8.28 + Foundry in `contracts/`. Do not edit from the dashboard work.
 - Chain: Arc testnet (5042002), RPC `https://rpc.testnet.arc.io`, explorer `https://explorer.testnet.arc.io`
 - USDC ERC-20 (6 decimals) `0x3600000000000000000000000000000000000000`. Native gas is USDC with 18 decimals.
@@ -42,12 +42,17 @@ Revenue counts verified payments only. Unverified, failed, self-pay and unattrib
 
 ## Rules to keep
 
-- No inline `style` attributes (strict CSP): Tailwind classes, SVG attributes for chart sizes.
+- No inline `style` attributes in our own code: Tailwind classes, SVG attributes for chart sizes. The CSP allows inline styles only because RainbowKit's modal needs them. Scripts stay `'self'` only.
+- Sign-in is two taps on purpose (connect, then sign): a phone browser only opens the wallet app from a user gesture.
 - Motion lives in `src/index.css` and `src/components/ui/Motion.tsx`. Amounts count up as bigint, and everything respects reduced motion.
 - Render all API and onchain strings as text. No `dangerouslySetInnerHTML`. Never link `endpoint` or `feedbackUri`.
 - The address comes from the session only, never the URL. Session lives in sessionStorage only.
 - Keep `installShareSync()` in `src/main.tsx`. `src/tracing.ts` and `src/console-capture.ts` load in dev only.
 - `scripts/` (deploy tooling) still uses two Circle SDK packages, so those stay in `package.json`.
+
+## Install
+
+Use `npm ci`, which `vercel.json` also sets. A plain `npm install` fails with ERESOLVE, because the Solana packages that wagmi's connectors pull in clash with a peer range in the Circle SDK. To change dependencies, add `--legacy-peer-deps`. `qr` is pinned to 0.5.5 in `overrides`: RainbowKit's QR renderer asks for `~0`, and qr 0.7 rejects its `border: 0`, which crashes the page when a QR code draws.
 
 ## To Run
 

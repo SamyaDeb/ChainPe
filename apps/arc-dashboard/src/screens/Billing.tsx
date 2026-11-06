@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { isAddress, type Address } from 'viem'
+import { useAccount } from 'wagmi'
 import { Check, CheckCircle2, CircleDashed, Loader2, MinusCircle, AlertTriangle, XCircle } from 'lucide-react'
 import { useAuth } from '@/auth/AuthContext'
 import { useMe } from '@/auth/useMe'
@@ -14,7 +16,8 @@ import { accountsAbi, MAX_PERIODS, PERIOD_DAYS, usdcAbi } from '@/lib/accounts'
 import { ACCOUNTS_ADDRESS, ARC_NETWORK, USDC_ADDRESS, USE_MOCK } from '@/lib/env'
 import { formatUsdc, formatUsdcExact } from '@/lib/money'
 import { formatDate } from '@/lib/time'
-import { addArcTestnet, errorText, getProvider, isUserRejection, publicClient } from '@/lib/wallet'
+import { switchToArc } from '@/lib/wagmi'
+import { errorText, isUserRejection, publicClient } from '@/lib/wallet'
 
 const FREE_FEATURES = ['Revenue for 24 hours and 7 days', 'Payments from the last 7 days', 'Your oldest active service', 'Top 5 buyers', 'Latest doctor result', 'Rating averages']
 const PRO_FEATURES = ['30 day, 90 day and all-time ranges', 'Full payment history and CSV export', 'All services', 'All buyers with first and last seen', 'Doctor history, last 100 reports', 'Every review']
@@ -87,7 +90,8 @@ function Purchase({ chain, reload }: { chain: ChainState; reload: () => void }) 
   const [periods, setPeriods] = useState(1)
   const upgrade = useUpgrade({ me, address: session?.address ?? me.address, refreshMe, onDone: reload })
   const total = chain.price * BigInt(periods)
-  const hasWallet = getProvider() !== null
+  const { isConnected: hasWallet } = useAccount()
+  const { openConnectModal } = useConnectModal()
   const short = chain.balance !== null && chain.balance < total
   const verb = me.plan === 'pro' ? 'Extend Pro' : 'Upgrade to Pro'
 
@@ -122,7 +126,12 @@ function Purchase({ chain, reload }: { chain: ChainState; reload: () => void }) 
         </p>
       ) : null}
       {USE_MOCK ? <p className="mt-3 text-sm text-muted">Paying is turned off in sample mode. Run with a live backend to upgrade.</p> : null}
-      {!hasWallet ? <p className="mt-3 text-sm text-muted">No browser wallet was found. Install MetaMask or Rabby to pay with USDC.</p> : null}
+      {!hasWallet && !USE_MOCK ? (
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <p className="text-sm text-muted">Reconnect the wallet you signed in with to pay with USDC.</p>
+          <Button onClick={() => openConnectModal?.()}>Connect wallet</Button>
+        </div>
+      ) : null}
 
       <Button variant="primary" className="mt-6" disabled={USE_MOCK || !hasWallet || short || upgrade.running || upgrade.sent} onClick={() => void upgrade.run(periods)}>
         {upgrade.running ? <Loader2 size={16} className="animate-spin" aria-hidden /> : null}
@@ -151,11 +160,10 @@ function Purchase({ chain, reload }: { chain: ChainState; reload: () => void }) 
 
 function AddNetwork() {
   const [state, setState] = useState<'idle' | 'added' | { error: string }>('idle')
-  const provider = getProvider()
+  const { isConnected } = useAccount()
   const add = async () => {
-    if (!provider) return
     try {
-      await addArcTestnet(provider)
+      await switchToArc()
       setState('added')
     } catch (e) {
       setState({ error: isUserRejection(e) ? 'You declined the request in your wallet.' : errorText(e) })
@@ -163,10 +171,10 @@ function AddNetwork() {
   }
   return (
     <div className="flex flex-col items-start gap-2">
-      <Button onClick={() => void add()} disabled={!provider}>
+      <Button onClick={() => void add()} disabled={!isConnected}>
         Add Arc testnet to wallet
       </Button>
-      {!provider ? <p className="text-sm text-muted">No browser wallet was found in this browser.</p> : null}
+      {!isConnected ? <p className="text-sm text-muted">No wallet is connected.</p> : null}
       {state === 'added' ? <p role="status" className="text-sm text-ok">Arc testnet is in your wallet.</p> : null}
       {typeof state === 'object' ? <p role="alert" className="text-sm text-bad">{state.error}</p> : null}
     </div>

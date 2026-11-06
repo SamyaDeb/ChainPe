@@ -1,42 +1,24 @@
-import {
-  createPublicClient,
-  createWalletClient,
-  custom,
-  defineChain,
-  http,
-  type EIP1193Provider,
-  type PublicClient,
-  type WalletClient,
-} from 'viem'
+import { createPublicClient, defineChain, http, type PublicClient } from 'viem'
+
+export const ARC_RPC_URL = 'https://rpc.testnet.arc.io'
+
+/** Where a new wallet gets test USDC. On Arc that is also its gas. */
+export const FAUCET_URL = 'https://faucet.circle.com'
 
 /** Arc testnet. Native gas is USDC with 18 decimals; the USDC ERC-20 has 6. */
 export const arcTestnet = defineChain({
   id: 5042002,
   name: 'Arc Testnet',
   nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
-  rpcUrls: { default: { http: ['https://rpc.testnet.arc.io'] } },
+  rpcUrls: { default: { http: [ARC_RPC_URL] } },
   blockExplorers: { default: { name: 'Arc Explorer', url: 'https://explorer.testnet.arc.io' } },
   testnet: true,
 })
 
-declare global {
-  interface Window {
-    ethereum?: EIP1193Provider
-  }
-}
-
-export function getProvider(): EIP1193Provider | null {
-  return typeof window !== 'undefined' && window.ethereum ? window.ethereum : null
-}
-
 export const publicClient: PublicClient = createPublicClient({
   chain: arcTestnet,
-  transport: http('https://rpc.testnet.arc.io'),
+  transport: http(ARC_RPC_URL),
 })
-
-export function getWalletClient(provider: EIP1193Provider): WalletClient {
-  return createWalletClient({ chain: arcTestnet, transport: custom(provider) })
-}
 
 /** Finds an EIP-1193 error code on an error or any of its causes. */
 export function errorCode(e: unknown): number | null {
@@ -49,8 +31,10 @@ export function errorCode(e: unknown): number | null {
   return null
 }
 
+/** 4001 is the EIP-1193 rejection. 5000 is the same thing from a wallet paired over WalletConnect. */
 export function isUserRejection(e: unknown): boolean {
-  return errorCode(e) === 4001
+  const code = errorCode(e)
+  return code === 4001 || code === 5000
 }
 
 export function errorText(e: unknown): string {
@@ -59,21 +43,4 @@ export function errorText(e: unknown): string {
     return typeof short === 'string' ? short : e.message
   }
   return 'Something went wrong.'
-}
-
-/** Switch to Arc testnet, adding it first when the wallet does not know it (error 4902). */
-export async function ensureArcTestnet(provider: EIP1193Provider): Promise<void> {
-  const wallet = getWalletClient(provider)
-  try {
-    await wallet.switchChain({ id: arcTestnet.id })
-  } catch (e) {
-    if (errorCode(e) !== 4902) throw e
-    await wallet.addChain({ chain: arcTestnet })
-    await wallet.switchChain({ id: arcTestnet.id })
-  }
-}
-
-/** The "Add Arc testnet to wallet" button. */
-export async function addArcTestnet(provider: EIP1193Provider): Promise<void> {
-  await getWalletClient(provider).addChain({ chain: arcTestnet })
 }

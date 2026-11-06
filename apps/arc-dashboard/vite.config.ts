@@ -4,7 +4,8 @@ import path from 'path'
 
 /**
  * Injects a strict Content-Security-Policy into the BUILT index.html only. The dev server needs inline
- * scripts for hot reload, so it is left alone. connect-src is the API origin plus the Arc RPC.
+ * scripts for hot reload, so it is left alone. connect-src is the API origin, the Arc RPC and WalletConnect.
+ * style-src allows inline styles because RainbowKit's modal sets its theme that way. Scripts stay 'self' only.
  */
 function cspPlugin(apiUrl: string): Plugin {
   let apiOrigin = ''
@@ -13,14 +14,24 @@ function cspPlugin(apiUrl: string): Plugin {
   } catch {
     apiOrigin = ''
   }
-  const connect = [apiOrigin, 'https://rpc.testnet.arc.io'].filter(Boolean).join(' ')
+  const walletConnect = [
+    'wss://relay.walletconnect.org',
+    'wss://relay.walletconnect.com',
+    'https://rpc.walletconnect.org',
+    'https://rpc.walletconnect.com',
+    'https://pulse.walletconnect.org',
+    'https://api.web3modal.org',
+    'https://explorer-api.walletconnect.com',
+  ]
+  const connect = [apiOrigin, 'https://rpc.testnet.arc.io', ...walletConnect].filter(Boolean).join(' ')
   const policy = [
     "default-src 'none'",
     "script-src 'self'",
-    "style-src 'self'",
-    "img-src 'self' data:",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https://explorer-api.walletconnect.com https://api.web3modal.org",
     "font-src 'self'",
     `connect-src ${connect}`,
+    'frame-src https://verify.walletconnect.org https://verify.walletconnect.com',
     "base-uri 'none'",
     "form-action 'none'",
   ].join('; ')
@@ -58,7 +69,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id: string) {
-            if (/node_modules\/(viem|ox|abitype|@noble)\//.test(id)) return 'web3'
+            if (/node_modules\/(viem|ox|abitype|@noble|wagmi|@wagmi|@rainbow-me|@tanstack)\//.test(id)) return 'web3'
             if (/node_modules\/(react|react-dom)\//.test(id)) return 'react'
             return undefined
           },
