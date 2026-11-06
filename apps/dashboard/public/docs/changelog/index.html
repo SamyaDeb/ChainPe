@@ -22,16 +22,16 @@
 <li class=""><code>docs/PITCH.md</code> — the 1-page pitch with demo storyboard</li>
 <li class=""><code>docs/WHY-AVALANCHE.md</code> — measured finality + fees, ICM rationale</li>
 </ul>
-<p><strong>Phase 1 — @chainpeavax/sdk</strong></p>
+<p><strong>Phase 1 — @chainpe/sdk</strong></p>
 <ul>
 <li class=""><code>ChainPe</code> class with <code>fetch()</code>, <code>pay()</code>, <code>discover()</code>, <code>getReputation()</code>, <code>giveFeedback()</code>, <code>balance()</code></li>
 <li class=""><code>RegistryClient</code> with <code>listAllServices()</code>, <code>filterServices()</code>, <code>rankByReputation()</code></li>
 <li class=""><code>PolicyVaultClient</code> with owner/agent/relayer roles and EIP-712 signing</li>
 <li class="">Full TypeScript types: <code>ChainPeOptions</code>, <code>ChainPeService</code>, <code>RankedService</code>, <code>PaidResult</code>, <code>PaymentInfo</code>, <code>SpendAuthorization</code></li>
 <li class=""><code>ChainPePaymentError</code> with <code>txHash</code> and <code>reason</code></li>
-<li class="">Published to npm as <code>@chainpeavax/sdk@0.2.0</code></li>
+<li class="">Published to npm as <code>@chainpe/sdk@0.2.0</code></li>
 </ul>
-<p><strong>Phase 2 — @chainpeavax/ai-tools + CLI</strong></p>
+<p><strong>Phase 2 — @chainpe/ai-tools + CLI</strong></p>
 <ul>
 <li class="">Vercel AI SDK adapter: <code>createChainPeTools()</code> → <code>chainpeFetch</code>, <code>discoverService</code></li>
 <li class="">LangChain adapter: <code>createChainPeLangChainTools()</code> → <code>chainpe_fetch</code>, <code>discover_service</code></li>
@@ -79,7 +79,7 @@
 <li class=""><code>previewSpend()</code> view function</li>
 <li class=""><code>cleanupDailySpent()</code> for gas reclaim</li>
 <li class=""><code>PolicyVaultUpgradeable.sol</code> — UUPS version for mainnet</li>
-<li class=""><code>PolicyVaultClient</code> in <code>@chainpeavax/sdk</code></li>
+<li class=""><code>PolicyVaultClient</code> in <code>@chainpe/sdk</code></li>
 </ul>
 <p><strong>Phase 7 — Avalanche bench + ICM</strong></p>
 <ul>

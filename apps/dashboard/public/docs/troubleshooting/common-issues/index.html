@@ -111,10 +111,10 @@
 </ul>
 <hr>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="10-npm-publish-failures">10. npm publish failures<a href="#10-npm-publish-failures" class="hash-link" aria-label="Direct link to 10. npm publish failures" title="Direct link to 10. npm publish failures" translate="no">​</a></h2>
-<p><strong>Symptom:</strong> <code>npm publish @chainpeavax/sdk</code> fails with &quot;You do not have permission&quot; or &quot;Package already exists&quot;.</p>
+<p><strong>Symptom:</strong> <code>npm publish @chainpe/sdk</code> fails with &quot;You do not have permission&quot; or &quot;Package already exists&quot;.</p>
 <p><strong>Fixes:</strong></p>
 <ul>
-<li class="">Ensure you are logged in: <code>npm login</code> with the account that owns the <code>@chainpeavax</code> scope</li>
+<li class="">Ensure you are logged in: <code>npm login</code> with the account that owns the <code>@chainpe</code> scope</li>
 <li class="">If the version already exists, bump the version in <code>packages/chainpe-sdk/package.json</code></li>
 <li class="">Build before publishing: <code>npm run build</code> in the package directory (the <code>tsup.config.ts</code> outputs to <code>dist/</code>)</li>
 <li class="">Check <code>package.json</code> <code>files</code> field: ensure <code>dist/</code> is included</li>
