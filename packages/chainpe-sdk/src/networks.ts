@@ -5,7 +5,7 @@
  * live Fuji deployment (see docs/DEPLOYMENTS.md). Baking the deployed addresses
  * in as defaults is what lets the SDK work with zero config on Fuji.
  */
-import { createPublicClient, http, getAddress, type PublicClient } from 'viem'
+import { createPublicClient, http, getAddress, type Chain, type PublicClient } from 'viem'
 import { avalanche, avalancheFuji } from 'viem/chains'
 import type { Network as X402Network } from 'x402/types'
 import type { ChainPeNetwork } from './types.js'
@@ -55,7 +55,7 @@ export function getUsdcAddress(network: ChainPeNetwork): `0x${string}` {
   return USDC_ADDRESS[network]
 }
 
-export function chainFor(network: ChainPeNetwork) {
+export function chainFor(network: ChainPeNetwork): Chain {
   return CHAINS[network]
 }
 

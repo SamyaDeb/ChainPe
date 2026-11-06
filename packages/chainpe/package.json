@@ -64,13 +64,12 @@
     "commander": "^14.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
-    "express": "^4.21.2",
+    "express": "^4.22.3",
     "gradient-string": "^3.0.0",
-    "http-proxy-middleware": "^3.0.5",
+    "http-proxy-middleware": "^3.0.10",
     "ora": "^8.2.0",
     "picocolors": "^1.1.1",
-    "viem": "^2.52.0",
-    "zod": "^3.24.2"
+    "viem": "^2.57.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
