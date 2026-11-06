@@ -79,6 +79,7 @@ const STATE_ID = 1
 /** Not a finality rule: Arc has none to wait for. A load-balanced node behind head can answer an unseen block with an empty success. */
 export const TAIL_BLOCKS = 2n
 const MIN_CHUNK = 100n
+const GET_LOGS_GAP_MS = 400
 const MAX_TO_FILTER = 1000
 /**
  * Ran on Arc's public RPC. A refused range is -32012 "requested range too large" or "query exceeds max results 2000".
@@ -371,12 +372,20 @@ async function applyReputationEvent(tx: Tx, entry: RawLog, ts: bigint): Promise<
 
 /** The viem-backed RPC. Kept thin so tests can substitute a simulated chain. */
 export function viemRpc(client: import('viem').PublicClient, accounts: string): IndexerRpc {
+  // Ran: the public RPC answered 429 from the 4th getLogs in 600 ms, and one chunk takes 3.
+  let nextAt = 0
+  async function pace(): Promise<void> {
+    const wait = nextAt - Date.now()
+    nextAt = Math.max(Date.now(), nextAt) + GET_LOGS_GAP_MS
+    if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait))
+  }
   return {
     getBlockNumber: () => client.getBlockNumber({ cacheTime: 0 }),
     async getLogs({ address, events, args, fromBlock, toBlock }) {
       // viem drops `args` when given `events`, so a filtered read must use `event`, or the node returns every log on Arc.
       const selector = args ? { event: events[0], args: args as never } : { events }
       if (args && events.length !== 1) throw new Error('A filtered getLogs takes exactly one event.')
+      await pace()
       const logs = await client.getLogs({ address: address as `0x${string}`, ...selector, fromBlock, toBlock } as never)
       return logs as unknown as RawLog[]
     },
