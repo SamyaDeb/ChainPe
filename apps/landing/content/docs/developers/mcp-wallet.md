@@ -5,20 +5,18 @@ description: Give Claude a USDC wallet on Arc, with spending limits.
 
 `@chainpearc/wallet-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server. Claude can search for x402 services, pay for them per call and return the results in your chat.
 
-It isn't on npm yet. From the repo root, run `npm run build:sdk && npm run build:wallet`.
-
 ## Set up
 
 1. Make a new wallet just for this. Never use one that holds real money.
 2. Get free test USDC at https://faucet.circle.com (pick Arc Testnet). On Arc, this USDC also pays for gas.
-3. Add the server to Claude Desktop's config, or to any MCP client, using the path to your clone:
+3. Add the server to Claude Desktop's config, or to any MCP client:
 
 ```json
 {
   "mcpServers": {
     "chainpe-wallet": {
-      "command": "node",
-      "args": ["/path/to/ChainPe/packages/chainpe-wallet/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@chainpearc/wallet-mcp"],
       "env": {
         "CHAINPE_PRIVATE_KEY": "0x...",
         "MAX_PER_CALL": "0.10",

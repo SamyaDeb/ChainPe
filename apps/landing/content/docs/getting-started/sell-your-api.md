@@ -5,7 +5,11 @@ description: Put a USDC price on an HTTP API, test it locally, and go live on Ar
 
 By the end, agents can pay your API per call and you can see the revenue in your dashboard.
 
-**You need:** the CLI [built from source](/docs/getting-started/quickstart#1-build-the-cli), an API running somewhere, and a wallet just for receiving payments. Get test USDC from https://faucet.circle.com, because registering costs a little gas.
+**You need:** Node.js 22.18 or newer, an API running somewhere, and a wallet just for receiving payments. Get test USDC from https://faucet.circle.com, because registering costs a little gas.
+
+```bash
+npm install -g @chainpearc/cli
+```
 
 ## 1. Configure
 

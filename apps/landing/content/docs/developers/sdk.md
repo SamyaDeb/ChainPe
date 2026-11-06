@@ -7,14 +7,8 @@ description: Find, pay for and rate APIs from TypeScript, with spending limits a
 
 ## Install
 
-The package isn't on npm yet, so build it and link it into your project:
-
 ```bash
-git clone https://github.com/SamyaDeb/ChainPe.git && cd ChainPe && git checkout arc
-npm install && npm run build:sdk
-
-# from your project:
-npm install /path/to/ChainPe/packages/chainpe-sdk
+npm install @chainpearc/sdk
 ```
 
 Fund a test wallet at https://faucet.circle.com (pick Arc Testnet).

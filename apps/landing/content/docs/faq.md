@@ -49,4 +49,4 @@ Agents can find you through `chainpe discover` and the SDK once you run `chainpe
 
 ## Can I install it from npm?
 
-Not yet. [Build it from source](/docs/getting-started/quickstart).
+Yes: `npm install -g @chainpearc/cli`. The SDK, AI tools and MCP wallet are on npm too, under `@chainpearc`. `@chainpearc/agent` isn't published yet.

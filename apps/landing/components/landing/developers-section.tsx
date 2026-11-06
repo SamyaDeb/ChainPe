@@ -7,9 +7,8 @@ import { CodeStack, CONTAINER, SECTION, SectionHeader, SPLIT } from "./section-l
 const codeExamples = [
   {
     label: "Install",
-    code: `git clone https://github.com/SamyaDeb/ChainPe
-cd ChainPe && git checkout arc
-npm install && npm run build:cli`,
+    code: `npm install -g @chainpearc/cli
+chainpe --help`,
   },
   {
     label: "Sell",
@@ -114,6 +113,9 @@ export function DevelopersSection() {
               </a>
               <a href="https://github.com/SamyaDeb/ChainPe" className="text-muted-foreground hover:text-foreground">
                 View on GitHub
+              </a>
+              <a href="https://www.npmjs.com/package/@chainpearc/cli" className="text-muted-foreground hover:text-foreground">
+                npm package
               </a>
             </div>
           </div>

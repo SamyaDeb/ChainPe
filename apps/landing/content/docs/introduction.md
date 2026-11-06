@@ -53,6 +53,5 @@ ChainPe owns the proxy, client tools, accounts contract and dashboard. Circle ow
 Read this before you build on it:
 
 - **Testnet only.** Nothing has run on Arc mainnet, so `chainpe start` refuses it without `--allow-mainnet`.
-- **Not on npm yet.** Build from source, as the quickstart shows.
 - **Not in Circle's Agent Marketplace yet.** The listing is prepared, and Circle reviews each one by hand. Agents can still pay you at your URL, and `chainpe discover` finds you once you register.
 - **No refunds.** If your API fails after a payment settles, the buyer is still charged.

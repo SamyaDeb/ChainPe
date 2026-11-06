@@ -15,7 +15,7 @@ ChainPe now runs on Arc, built during ETHGlobal Mumbai.
 - Added `chainpe doctor`, to check a service is ready for agents and Circle's marketplace.
 - Added `chainpe-cloud` and the provider dashboard, with verified revenue.
 - The SDK, AI tools and MCP wallet moved to Arc, with both payment rails and Circle discovery.
-- The npm packages moved to the `@chainpearc` scope. They aren't published yet.
+- The npm packages moved to the `@chainpearc` scope: `@chainpearc/cli` 3.0.0, and `sdk`, `ai-tools` and `wallet-mcp` 0.3.0.
 
 Proof of live payments: [PROOF.md](https://github.com/SamyaDeb/ChainPe/blob/arc/docs/arc/PROOF.md).
 

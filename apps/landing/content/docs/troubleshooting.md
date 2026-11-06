@@ -130,7 +130,7 @@ It couldn't reach the RPC or an API, which doesn't mean the check failed. The pu
 
 ## Building from source
 
-On Linux, if the build fails with a missing `rollup` or `esbuild` package, run this once and build again:
+This only applies if you build the repo yourself. On Linux, if the build fails with a missing `rollup` or `esbuild` package, run this once and build again:
 
 ```bash
 npm install --no-save @esbuild/linux-x64@0.27.7 @rollup/rollup-linux-x64-gnu@4.62.0

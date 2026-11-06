@@ -5,7 +5,10 @@ description: Let a Vercel AI SDK or LangChain agent find and pay for APIs, with 
 
 `@chainpearc/ai-tools` gives an LLM agent two tools, built on the [SDK](/docs/developers/sdk). The model decides what to call, and the SDK handles the 402, the limit and the signature.
 
-The package isn't on npm yet. From the repo root, run `npm run build:sdk && npm run build:ai-tools`, then install `packages/chainpe-ai-tools` into your project along with `packages/chainpe-sdk`.
+```bash
+npm install @chainpearc/ai-tools @chainpearc/sdk
+# plus your framework: `ai` (Vercel AI SDK) or `@langchain/core`
+```
 
 ## Before you give an agent money
 

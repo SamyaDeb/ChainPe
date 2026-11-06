@@ -3,7 +3,11 @@ title: CLI and proxy
 description: Every chainpe command, and how the proxy behaves.
 ---
 
-`@chainpearc/cli` provides the `chainpe` command. It isn't on npm yet, so [build it from source](/docs/getting-started/quickstart).
+`@chainpearc/cli` provides the `chainpe` command. It needs Node.js 22.18 or newer.
+
+```bash
+npm install -g @chainpearc/cli
+```
 
 ## Selling
 
