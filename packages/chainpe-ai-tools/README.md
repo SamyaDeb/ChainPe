@@ -1,22 +1,20 @@
-# @chainpearc/ai-tools
+# @chainpeavax/ai-tools
 
-[![npm](https://img.shields.io/npm/v/@chainpearc/ai-tools.svg)](https://www.npmjs.com/package/@chainpearc/ai-tools)
-
-> **Use Arc testnet for now.** It is the default. ChainPe has not been tested with real USDC on Arc mainnet.
+[![npm](https://img.shields.io/npm/v/@chainpeavax/ai-tools.svg)](https://www.npmjs.com/package/@chainpeavax/ai-tools)
 
 **Drop-in ChainPe tools for AI agents** — let any Vercel AI SDK or LangChain agent
 **discover, pay for, and rate** HTTP APIs and other agents per request in USDC on
-Arc. Thin adapters over [`@chainpearc/sdk`](../chainpe-sdk).
+Avalanche C-Chain. Thin adapters over [`@chainpeavax/sdk`](../chainpe-sdk).
 
 Two tools per framework:
 
 - **`chainpeFetch` / `chainpe_fetch`** — call a URL; if it returns `402 Payment
-  Required`, pay it automatically in USDC and return the result.
-- **`discoverService` / `discover_service`** — search Circle's Discovery API and
-  ChainPe's on-chain listings, ranked by ERC-8004 reputation.
+  Required`, pay it automatically in USDC (EIP-3009) and return the result.
+- **`discoverService` / `discover_service`** — browse the on-chain marketplace,
+  ranked by ERC-8004 reputation.
 
 ```bash
-npm install @chainpearc/ai-tools @chainpearc/sdk
+npm install @chainpeavax/ai-tools @chainpeavax/sdk
 # plus your framework: `ai` (Vercel AI SDK) or `@langchain/core`
 ```
 
@@ -25,10 +23,11 @@ npm install @chainpearc/ai-tools @chainpearc/sdk
 ```ts
 import { generateText, stepCountIs } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
-import { createChainPeTools } from '@chainpearc/ai-tools/vercel'
+import { createChainPeTools } from '@chainpeavax/ai-tools/vercel'
 
 const tools = createChainPeTools({
   privateKey: process.env.PRIVATE_KEY!,
+  network: 'avalanche',
   autoFeedback: true // leave on-chain reputation after each paid call
 })
 
@@ -45,10 +44,11 @@ const { text } = await generateText({
 ```ts
 import { ChatAnthropic } from '@langchain/anthropic'
 import { createReactAgent } from '@langchain/langgraph/prebuilt'
-import { createChainPeLangChainTools } from '@chainpearc/ai-tools/langchain'
+import { createChainPeLangChainTools } from '@chainpeavax/ai-tools/langchain'
 
 const { chainpeFetchTool, discoverServiceTool } = createChainPeLangChainTools({
   privateKey: process.env.PRIVATE_KEY!,
+  network: 'avalanche',
   autoFeedback: true
 })
 
@@ -62,12 +62,12 @@ const agent = createReactAgent({
 
 `createChainPeTools(options)` / `createChainPeLangChainTools(options)` take the same
 options as [`new ChainPe(...)`](../chainpe-sdk#api) — `privateKey`, `network`,
-`rails?`, `accountsAddress?`, `reputationRegistry?`, `maxPerCall?`, `autoFeedback?` — or a
+`registryAddress?`, `reputationRegistry?`, `maxPerCall?`, `autoFeedback?` — or a
 pre-built client via `{ client }`:
 
 ```ts
-import { ChainPe } from '@chainpearc/sdk'
-const client = new ChainPe({ privateKey })
+import { ChainPe } from '@chainpeavax/sdk'
+const client = new ChainPe({ privateKey, network: 'avalanche' })
 const tools = createChainPeTools({ client })
 ```
 
@@ -77,9 +77,9 @@ The framework-agnostic core is exported from the package root, so you can wire t
 same logic into any tool-calling runtime:
 
 ```ts
-import { fetchInputSchema, runFetch, getClient } from '@chainpearc/ai-tools'
+import { fetchInputSchema, runFetch, getClient } from '@chainpeavax/ai-tools'
 
-const client = getClient({ privateKey })
+const client = getClient({ privateKey, network: 'avalanche' })
 const result = await runFetch(client, { url: 'https://api.example.com/paid' })
 ```
 

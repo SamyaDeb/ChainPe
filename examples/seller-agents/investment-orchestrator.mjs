@@ -18,7 +18,7 @@
  *   CHAINPE_PRIVATE_KEY=0x... node investment-orchestrator.mjs --sim   # simulation only
  */
 import 'dotenv/config'
-import { ChainPe } from '@chainpearc/sdk'
+import { ChainPe } from '@chainpe/sdk'
 
 // ── CLI args ──────────────────────────────────────────────────────────────────
 

@@ -2,7 +2,7 @@
 
 /**
  * ChainPe Agent CLI
- * Terminal interface for the AI agent on Arc.
+ * Terminal interface for configuring the AI agent (Avalanche C-Chain).
  *
  * SECURITY: Wallet private keys are stored in the OS keychain (macOS Keychain,
  * Linux Secret Service, Windows Credential Manager), never in plaintext files.
@@ -24,16 +24,16 @@ import {
   addressFromPrivateKey,
   DEFAULT_MODELS,
   getConfigPath,
+  getDefaultRegistryPath,
   saveWalletToKeychain,
   getWalletPrivateKey,
 } from "./config.js";
 import { getWalletBalance, formatBalance } from "./wallet.js";
-import { formatServiceForDisplay } from "./tools/index.js";
-import { discoverServices } from "@chainpearc/sdk";
+import { RegistryClient } from "./registry.js";
 import { ChainPeAgent } from "./agent.js";
 import { isKeychainAvailable, hasPrivateKey, getCredentialInfo } from "./keychain.js";
 
-const VERSION = "3.1.0";
+const VERSION = "2.0.0";
 
 const agentGradient = gradient(["#E84142", "#FF6B6B", "#FFD93D"]);
 
@@ -53,7 +53,7 @@ function printBanner(): void {
   \\_____|_| |_|\\__,_|_|_| |_|_|   \\___|  \\_____|\\___|_| |_|\\__|
 `)
   );
-  console.log(chalk.gray("  An AI agent that pays for APIs per call, in USDC on Arc"));
+  console.log(chalk.gray("  Pre-built AI Agent with x402 USDC Payments on Avalanche"));
   console.log();
 }
 
@@ -73,11 +73,6 @@ function shortAddr(addr: string): string {
 
 function validateApiKey(value: string | undefined): string | undefined {
   if (!value || value.length < 10) return "Please enter a valid API key";
-  return undefined;
-}
-
-function validateUsdc(value: string | undefined): string | undefined {
-  if (!value || !/^\d+(\.\d{1,6})?$/.test(value) || Number(value) <= 0) return "Enter a positive USDC amount, e.g. 0.10";
   return undefined;
 }
 
@@ -169,13 +164,20 @@ async function runInit(): Promise<void> {
     )) as string;
   }
 
-  // Mainnet takes real USDC and is not tested yet, so the wizard only sets up testnet.
-  const network: ChainPeNetwork = "arc-testnet";
+  printSection("Network");
+  const network = (await prompt(
+    p.select({
+      message: "Avalanche network",
+      options: [
+        { value: "fuji", label: "Fuji (testnet)", hint: "recommended" },
+        { value: "avalanche", label: "Avalanche (mainnet)" },
+      ],
+    })
+  )) as ChainPeNetwork;
 
   printSection("Wallet Configuration (Secure Storage)");
   console.log(chalk.gray("  Your wallet private key is stored in the OS keychain, NEVER in files."));
-  console.log(chalk.gray("  Use a new wallet just for the agent. Get free test USDC at https://faucet.circle.com (pick Arc Testnet)."));
-  console.log(chalk.gray("  On Arc, the same USDC also pays for gas."));
+  console.log(chalk.gray("  Get Fuji funds: https://faucet.avax.network/ (AVAX) · https://faucet.circle.com (USDC)"));
   console.log();
 
   const walletMode = await prompt(
@@ -225,18 +227,24 @@ async function runInit(): Promise<void> {
 
   spinner.start("Checking wallet balance…");
   try {
-    const fmt = formatBalance(await getWalletBalance(walletAddress, network, privateKey));
-    spinner.succeed(`Balance: ${chalk.green(fmt.usdc)} USDC, ${chalk.green(fmt.gateway ?? "0")} USDC in Gateway`);
+    const balance = await getWalletBalance(walletAddress, network);
+    const fmt = formatBalance(balance);
+    spinner.succeed(`Balance: ${chalk.green(fmt.avax)} AVAX, ${chalk.green(fmt.usdc)} USDC`);
   } catch {
     spinner.warn("Could not check balance");
   }
 
-  printSection("Spending limits");
-  const maxPricePerRequest = (await prompt(
-    p.text({ message: "Most USDC to pay for one call", initialValue: "0.10", validate: validateUsdc })
+  printSection("Registry");
+  const registryAddress = (await prompt(
+    p.text({
+      message: "ChainPe Registry contract address (optional)",
+      placeholder: "0x… (leave blank to set later)",
+      defaultValue: "",
+    })
   )) as string;
-  const maxPerRun = (await prompt(
-    p.text({ message: "Most USDC to spend on one task", initialValue: "1.00", validate: validateUsdc })
+
+  const registryPath = (await prompt(
+    p.text({ message: "Local registry cache path", initialValue: getDefaultRegistryPath() })
   )) as string;
 
   spinner.start("Saving configuration…");
@@ -249,8 +257,8 @@ async function runInit(): Promise<void> {
       llmBaseURL: llmBaseURL || undefined,
       walletAddress,
       preferredToken: "USDC" as PaymentToken,
-      maxPricePerRequest,
-      maxPerRun,
+      registryPath,
+      registryAddress: (registryAddress as string) || process.env.CHAINPE_REGISTRY_ADDRESS,
       network,
     });
     await saveConfig(config);
@@ -267,11 +275,11 @@ async function runInit(): Promise<void> {
   console.log(chalk.gray("  Private key: OS Keychain (encrypted)"));
   console.log();
   console.log(chalk.gray("  Usage:"));
-  console.log(chalk.white('    import { ChainPeAgent } from "@chainpearc/agent";'));
+  console.log(chalk.white('    import { ChainPeAgent } from "@chainpe/agent";'));
   console.log(chalk.white("    const agent = new ChainPeAgent();"));
   console.log(chalk.white('    const result = await agent.run("Your task here");'));
   console.log();
-  p.outro(chalk.green(`Ready. Try: chainpe-agent run "What is the weather in Mumbai?"`));
+  p.outro(chalk.green("Ready to use paid AI services on Avalanche!"));
 }
 
 // ============================================================================
@@ -301,7 +309,7 @@ async function runStatus(): Promise<void> {
 
   console.log(chalk.gray("  Wallet:"));
   console.log(chalk.gray(`    Address:  ${chalk.cyan(config.wallet.address || "unknown")}`));
-  console.log(chalk.gray(`    Network:  ${chalk.yellow(config.network || "arc-testnet")}`));
+  console.log(chalk.gray(`    Network:  ${chalk.yellow(config.network || "fuji")}`));
 
   if (config.wallet.address) {
     const inKeychain = await hasPrivateKey(config.wallet.address);
@@ -313,11 +321,11 @@ async function runStatus(): Promise<void> {
 
     const spinner = ora("Checking balance…").start();
     try {
-      const key = (await getWalletPrivateKey(config.wallet.address)) ?? undefined;
-      const fmt = formatBalance(await getWalletBalance(config.wallet.address, config.network || "arc-testnet", key));
+      const balance = await getWalletBalance(config.wallet.address, config.network || "fuji");
+      const fmt = formatBalance(balance);
       spinner.stop();
-      console.log(chalk.gray(`    USDC:     ${chalk.green(fmt.usdc)} (also pays gas)`));
-      if (fmt.gateway !== undefined) console.log(chalk.gray(`    Gateway:  ${chalk.green(fmt.gateway)} USDC`));
+      console.log(chalk.gray(`    AVAX:     ${chalk.green(fmt.avax)}`));
+      console.log(chalk.gray(`    USDC:     ${chalk.green(fmt.usdc)}`));
     } catch {
       spinner.stop();
       console.log(chalk.gray(`    Balance:  ${chalk.yellow("(could not fetch)")}`));
@@ -325,9 +333,17 @@ async function runStatus(): Promise<void> {
   }
   console.log();
 
-  console.log(chalk.gray("  Spending limits:"));
-  console.log(chalk.gray(`    Per call: ${chalk.white(config.payment.maxPricePerRequest ?? "0.10")} USDC`));
-  console.log(chalk.gray(`    Per task: ${chalk.white(config.payment.maxPerRun ?? "1.00")} USDC`));
+  console.log(chalk.gray("  Payment:"));
+  console.log(chalk.gray(`    Token:    ${chalk.white(config.payment.preferredToken)}`));
+  console.log();
+
+  console.log(chalk.gray("  Registry:"));
+  const registryAddr = config.registryAddress || process.env.CHAINPE_REGISTRY_ADDRESS;
+  console.log(
+    chalk.gray(
+      `    Contract: ${registryAddr ? chalk.white(registryAddr) : chalk.yellow("not set — deploy & set registryAddress")}`
+    )
+  );
   console.log();
 }
 
@@ -335,35 +351,44 @@ async function runStatus(): Promise<void> {
 // services
 // ============================================================================
 
-async function runServices(query: string | undefined): Promise<void> {
+async function runServices(): Promise<void> {
   printBanner();
   const config = await loadConfig();
-  const network = config?.network ?? "arc-testnet";
+  if (!config) {
+    console.log(chalk.yellow("  ⚠ Agent not configured. Run chainpe-agent init.\n"));
+    return;
+  }
 
-  console.log(chalk.cyan.bold(`▸ Services on ${network}${query ? ` matching "${query}"` : ""}`));
+  console.log(chalk.cyan.bold("▸ Available Services"));
   console.log(chalk.gray("─".repeat(50)));
   console.log();
 
-  const spinner = ora("Searching Circle's Discovery API and ChainPeAccounts…").start();
+  const registryAddr = config.registryAddress || process.env.CHAINPE_REGISTRY_ADDRESS;
+  if (!registryAddr) {
+    console.log(chalk.yellow("  ⚠ Registry address not set."));
+    console.log(chalk.gray("    Set registryAddress in ~/.chainpe/agent.json or CHAINPE_REGISTRY_ADDRESS.\n"));
+    return;
+  }
+
+  const spinner = ora("Fetching services from the on-chain registry…").start();
   try {
-    const services = await discoverServices(network, { query, limit: 15 }, {
-      accountsAddress: config?.accountsAddress,
-      reputationRegistry: config?.reputationRegistry,
-    });
+    const client = new RegistryClient(config.network || "fuji", registryAddr);
+    const services = await client.listAllServices();
     spinner.stop();
     if (services.length === 0) {
-      console.log(chalk.gray("  No services found.\n"));
+      console.log(chalk.gray("  No services registered yet.\n"));
       return;
     }
-    for (const service of services.map(formatServiceForDisplay)) {
-      console.log(chalk.white.bold(`  ${service.name}`));
-      if (service.description) console.log(chalk.gray(`    ${service.description}`));
-      console.log(chalk.gray(`    Price: ${chalk.green(service.price)}, by ${service.rails.join(" or ")}${service.rating ? `  ·  ⭐ ${service.rating}` : ""}`));
-      console.log(chalk.gray(`    ${service.method ? `${service.method} ` : ""}${service.url}`));
+    for (const s of services) {
+      console.log(chalk.white.bold(`  ${s.name}`));
+      console.log(chalk.gray(`    ${s.description}`));
+      console.log(chalk.gray(`    Price: ${chalk.green(s.pricePerRequest)} ${s.paymentToken}  ·  ${s.endpoint}`));
+      if (s.agentId) console.log(chalk.gray(`    Agent ID: ${s.agentId} (ERC-8004)`));
       console.log();
     }
+    console.log(chalk.gray(`  Registry: ${client.getAddress()}\n`));
   } catch (error) {
-    spinner.fail("Could not search for services");
+    spinner.fail("Could not fetch services");
     console.log(chalk.red(`  ${(error as Error).message}\n`));
   }
 }
@@ -393,7 +418,7 @@ async function runSecurityInfo(): Promise<void> {
   console.log(chalk.cyan.bold("▸ Recommendations"));
   console.log(chalk.gray("─".repeat(50)));
   console.log(chalk.gray("  1. Use a dedicated hot wallet with limited funds"));
-  console.log(chalk.gray("  2. Keep only enough USDC for the agent's tasks, and set low spending limits"));
+  console.log(chalk.gray("  2. Keep only enough USDC/AVAX for agent operations"));
   console.log(chalk.gray("  3. Never share your private key"));
   console.log(chalk.gray("  4. The OS Keychain is encrypted with your login password"));
   console.log();
@@ -436,7 +461,7 @@ async function runTask(task: string, options: { provider?: string; verbose?: boo
         spinner.text = step.toolName ? `Calling ${step.toolName}…` : "Thinking…";
       },
       onPayment: (receipt) => {
-        console.log(chalk.green(`  💰 Paid ${receipt.amount} ${receipt.token} to ${receipt.service} (${receipt.rail})`));
+        console.log(chalk.green(`  💰 Paid ${receipt.amount} ${receipt.token} to ${receipt.service}`));
       },
     });
 
@@ -482,12 +507,12 @@ async function prompt<T>(thenable: Promise<T | symbol>): Promise<T> {
 
 program
   .name("chainpe-agent")
-  .description("ChainPe Agent: an AI agent that pays for APIs per call, in USDC on Arc")
+  .description("ChainPe Agent — Pre-built AI agent with x402 USDC payments on Avalanche")
   .version(VERSION);
 
 program.command("init").description("Configure the agent (stores wallet in OS keychain)").action(runInit);
 program.command("status").description("Show agent configuration and status").action(runStatus);
-program.command("services [query]").description("Find paid services on Arc").action(runServices);
+program.command("services").description("List services registered on-chain").action(runServices);
 program.command("security").description("Show security information and recommendations").action(runSecurityInfo);
 program
   .command("run <task>")

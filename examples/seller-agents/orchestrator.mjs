@@ -10,7 +10,7 @@
  * Run: node orchestrator.mjs "your topic here"   (needs CHAINPE_PRIVATE_KEY)
  */
 import 'dotenv/config'
-import { ChainPe } from '@chainpearc/sdk'
+import { ChainPe } from '@chainpe/sdk'
 
 const privateKey = process.env.CHAINPE_PRIVATE_KEY || process.env.BUYER_KEY
 if (!privateKey) {

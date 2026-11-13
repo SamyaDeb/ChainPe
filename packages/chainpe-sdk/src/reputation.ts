@@ -133,9 +133,7 @@ export async function giveFeedback(
     transport: http(rpcUrlFor(network))
   })
 
-  // Simulates first, so a revert such as self-feedback costs no gas.
-  const client = publicClientFor(network)
-  const { request } = await client.simulateContract({
+  const hash = await wallet.writeContract({
     account,
     chain: chainFor(network),
     address: registry,
@@ -152,11 +150,9 @@ export async function giveFeedback(
       ZERO_HASH
     ]
   })
-  const hash = await wallet.writeContract(request)
 
   if (params.waitConfirm) {
-    const receipt = await client.waitForTransactionReceipt({ hash })
-    if (receipt.status !== 'success') throw new Error(`Feedback transaction ${hash} reverted.`)
+    await publicClientFor(network).waitForTransactionReceipt({ hash })
   }
   return hash
 }

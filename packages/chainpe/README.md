@@ -1,148 +1,133 @@
-# @chainpearc/cli
+# @chainpeavax/cli
 
-[![npm](https://img.shields.io/npm/v/@chainpearc/cli.svg)](https://www.npmjs.com/package/@chainpearc/cli)
+[![npm](https://img.shields.io/npm/v/@chainpeavax/cli.svg)](https://www.npmjs.com/package/@chainpeavax/cli)
 
-**Put a USDC price on any HTTP API, and let AI agents pay per call on Arc.**
+**Monetize any API with x402 micropayments on Avalanche**
 
-ChainPe is a reverse proxy that sits in front of your API. An unpaid request gets `402 Payment Required` with a price (the x402 standard). When an agent pays, Circle settles the payment on Arc, and only then does ChainPe call your API. Your API's code doesn't change.
+ChainPe is a reverse proxy that sits in front of your HTTP API and enforces x402 protocol payments on every request. One command, zero backend changes, real AVAX/USDC settlements on Avalanche.
 
-> **Use Arc testnet for now.** ChainPe has not been tested on Arc mainnet, so `chainpe start` refuses it unless you pass `--allow-mainnet`.
-
-## Requirements
-
-- Node.js 22.18 or newer
-- A wallet to receive payments. Get free test USDC at https://faucet.circle.com. On Arc, gas is also paid in USDC.
-
-## Install
+## Installation
 
 ```bash
-npm install -g @chainpearc/cli
+npm install -g @chainpeavax/cli
 ```
 
-## Sell your API
+## Quick Start
+
+### 1. Initialize Configuration
 
 ```bash
-chainpe init                          # your API URL, price and payout wallet
-
-export CHAINPE_SELLER_PRIVATE_KEY=<the payout wallet's key>
-chainpe start --network arc-testnet   # the paying proxy, on port 4402 by default
+chainpe init
 ```
 
-Every request to the proxy now needs a payment.
+This interactive wizard will ask you for:
+- Your API URL (the backend to monetize)
+- Service name and description
+- Price per request
+- Payment token (USDC)
+- Your Avalanche wallet address (to receive payments)
+- Optional: private key for on-chain registration
 
-## Go public
+**Note:** The provider CLI only needs your **wallet address** to receive payments. The private key is only required if you want to register your service on-chain during setup. You can also skip registration and do it manually later.
 
-Agents need to reach the proxy, so run it somewhere with a public HTTPS address. Any host that runs Node or Docker works; [this Dockerfile](https://github.com/SamyaDeb/ChainPe/blob/arc/examples/arc-demo/Dockerfile) is what the demo API uses. Set that address as `publicUrl` in `~/.chainpe/config.json`, then:
+### 2. Start the Proxy
 
 ```bash
-chainpe identity     # an ERC-8004 identity for your service
-chainpe register     # your provider account on Arc
-chainpe login        # connects this machine to the dashboard, on Arc testnet
-chainpe doctor       # checks you are ready for agents and Circle's Agent Marketplace
+chainpe start
 ```
 
-Restart the proxy after `chainpe login`. Your payments then appear at https://chainpe.vercel.app/dashboard. On a hosted proxy, set `CHAINPE_CLOUD_URL` and `CHAINPE_INGEST_KEY` from the values `chainpe login` saves.
+Your API is now monetized! Every request to `http://localhost:4402/*` requires a micropayment.
 
-Circle's marketplace needs each route's response fields, so `chainpe doctor` needs a real answer from your API. Run `chainpe doctor --pay` with a funded buyer key in `CHAINPE_PRIVATE_KEY`, which spends one payment per route, or pass an example response with `--sample <file>`. Run it where the proxy can read the documents it writes, then restart the proxy.
+### 3. Register Your Service (Optional)
 
-When every required check passes, `chainpe doctor` prints the values for [Circle's listing form](https://forms.gle/7YFzvdmMcn1JH5tF6). Circle reviews listings by hand. Until yours is approved, agents can still pay you at your URL.
+Make your service discoverable by AI agents with on-chain registration. You have 3 options:
 
-## Keep your key safe
-
-The payout wallet's key has to be on the machine running the proxy, because Circle requires the seller to sign each settlement. Anyone who breaks into that machine can take what the wallet holds, so keep that small:
-
-- **Use a wallet only for receiving payments.** Never your main wallet, and never one that holds other funds.
-- **Move earnings out often.** Gateway earnings stay in Circle Gateway until you run `chainpe withdraw --all`. Exact-rail earnings land in the wallet itself: send them on to a wallet whose key never touches a server, from any wallet app.
-- **Keep the key in your host's secret settings.** Never commit it or put it in a file that gets uploaded.
-- **Rotate if in doubt.** Make a new wallet, update `walletAddress`, run `chainpe register` again, and move what is left.
-- `chainpe login` saves an ingest key in `~/.chainpe/config.json`. It only lets a proxy report payments, but treat it as a secret too.
-
-## Routes and prices
-
-`chainpe init` asks which paths to list. Each one is a route in `~/.chainpe/config.json`, with its own price:
-
-```json
-"routes": [
-  { "path": "GET /weather", "pricePerRequest": "0.001", "paymentToken": "USDC", "description": "Current weather" },
-  { "path": "GET /forecast", "pricePerRequest": "0.01", "paymentToken": "USDC" }
-]
-```
-
-With routes listed, any other path answers `404` and costs the caller nothing. To charge `pricePerRequest` for every other path instead, set `"chargeUnlistedPaths": true`. With no routes, every path costs `pricePerRequest`. A price below $0.01 can only be paid through Circle Gateway.
-
-## Sell an MCP server
-
-Put the proxy in front of an MCP server that speaks Streamable HTTP, and add:
-
-```json
-"mcp": { "path": "/mcp", "tools": { "get_forecast": "0.01", "ping": "0" }, "toolPrice": "0.005" }
-```
-
-- Clients connect, list tools and read resources for free. Only `tools/call` is paid.
-- A tool in `tools` costs its own price; `"0"` makes it free. Any other tool costs `toolPrice`, or `pricePerRequest` if that is not set.
-- Send one tool call per request. A JSON-RPC batch containing a tool call is refused, because it can't be priced.
-- Responses pass through unchanged, including server-sent events.
-
-A buyer pays with any x402 client, such as `@chainpearc/sdk`, or Claude with `@chainpearc/wallet-mcp`.
-
-**A server that only speaks stdio** needs an HTTP bridge in front of it first, such as [supergateway](https://www.npmjs.com/package/supergateway):
+#### Option 1: QR Code with Core Wallet Mobile (Recommended) 📱
 
 ```bash
-npx -y supergateway --stdio "node my-server.js" --outputTransport streamableHttp --port 8000
+chainpe init
+# Select "Scan QR code with Core Wallet mobile app"
 ```
 
-Then set `targetUrl` to `http://localhost:8000`.
+1. A QR code will appear in your terminal
+2. Open Core Wallet on your phone
+3. Tap the WalletConnect icon (top right)
+4. Scan the QR code
+5. Approve the transaction (~1.5 USDC fee)
+6. Done! Your service is registered on-chain
 
-**Selling an agent** works the same way as any API: give it an HTTP endpoint, list that path as a route, and set its price.
-
-## Pay an API
+#### Option 2: Private key Phrase 🔑
 
 ```bash
-chainpe discover weather              # finds services on Circle and ChainPe
-export CHAINPE_PRIVATE_KEY=<a test wallet key>
-chainpe fetch "https://chainpe-arc-demo-production.up.railway.app/forecast?city=Mumbai" \
-  --network arc-testnet --rail exact --max 0.02
+chainpe init
+# Select "Paste private key phrase"
 ```
 
-`--max` is the most you will pay for the call. To pay from a prepaid balance with no gas, run `chainpe deposit 1 --network arc-testnet` once, then use `--rail gateway`.
+Paste your private key (0x…) to sign the transaction directly.
+
+**Getting your private key from Core Wallet:**
+1. Open Core Wallet mobile app
+2. Go to Settings → Account Settings
+3. Select your account → Show Passphrase
+4. Copy all a 0x private key in order
+
+#### Option 3: Manual Registration Later ⏭️
+
+Skip registration during init and do it later:
+
+```bash
+chainpe register
+```
 
 ## Commands
 
-| Command | What it does |
-|---|---|
-| `chainpe init` | Set up your API URL, price and payout wallet |
-| `chainpe start` | Start the payment proxy |
-| `chainpe login` / `logout` | Connect this machine to the ChainPe dashboard, or disconnect it |
-| `chainpe identity` | Find or mint your ERC-8004 identity |
-| `chainpe register` / `deregister` | Add or deactivate your service on `ChainPeAccounts` |
+| Command | Description |
+|---------|-------------|
+| `chainpe init` | Interactive setup wizard |
+| `chainpe start` | Start the x402 payment proxy |
+| `chainpe register` | Register service on Avalanche |
 | `chainpe list` | List registered services |
-| `chainpe plan` / `upgrade` | Show your plan, or pay for Pro in USDC |
-| `chainpe doctor` | Check your service is ready for agents and Circle's marketplace |
-| `chainpe status` | Show your configuration |
-| `chainpe discover [query]` | Find paid services through Circle's Discovery API and `ChainPeAccounts` |
-| `chainpe fetch <url>` | Call a URL, paying any x402 price in USDC |
-| `chainpe deposit <amount>` | Deposit USDC into Circle Gateway, to pay as a buyer |
-| `chainpe balance` | Show your Gateway and on-chain USDC balances |
-| `chainpe withdraw [amount]` | Withdraw your earnings from Gateway to your payout wallet |
+| `chainpe status` | Show current config and wallet balance |
 
-Run `chainpe <command> --help` for the options.
+## How It Works
 
-## How it works
+```
+Client Request → ChainPe Proxy → 402 Payment Required
+                     ↓
+Client Signs Payment → Proxy Verifies → Forwards to Your API
+                                              ↓
+                                      Response + Settlement
+```
 
-1. An agent calls the proxy and gets `402 Payment Required` with the price.
-2. The agent signs a USDC payment.
-3. Circle settles the payment on Arc. There are two options: a normal x402 payment for each call, or Circle Gateway, where small payments are batched from a prepaid balance.
-4. The proxy calls your API and returns the answer. A payment that is pending or failed never reaches your API.
+1. Client makes request to proxy
+2. Proxy returns 402 with payment instructions
+3. Client signs x402 payment authorization
+4. Proxy verifies signature, forwards request to your API
+5. Response sent to client, payment settled on Avalanche
 
-## Limits
+## Programmatic Usage
 
-- Only HTTP is proxied. WebSocket upgrades are not, because they would skip the payment check. MCP over Streamable HTTP works.
-- There are no refunds yet. If your API fails after a payment, the buyer is still charged.
+```typescript
+import { startProxyServer } from "@chainpeavax/cli";
 
-## Links
+const handle = await startProxyServer({
+  config: {
+    targetUrl: "http://localhost:3000",
+    pricePerRequest: "0.01",
+    paymentToken: "AVAX",
+    walletAddress: "YOUR_ADDRESS",
+    proxyPort: 4402,
+    network: "avalanche",
+  }
+});
 
-- [Source and full docs](https://github.com/SamyaDeb/ChainPe)
-- [Provider dashboard](https://chainpe.vercel.app/dashboard)
+console.log(`Proxy running at ${handle.url}`);
+```
+
+## Requirements
+
+- Node.js >= 18
+- Avalanche wallet with AVAX for gas
 
 ## License
 

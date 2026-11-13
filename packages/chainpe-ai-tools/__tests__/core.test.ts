@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import type { ChainPe } from '@chainpearc/sdk'
+import type { ChainPe } from '@chainpe/sdk'
 import {
   getClient,
   runFetch,
@@ -46,8 +46,7 @@ describe('runFetch', () => {
       payment: {
         amount: '0.01',
         recipient: '0xabc',
-        network: 'arc-testnet' as const,
-        rail: 'exact' as const,
+        network: 'fuji' as const,
         txHash: '0xdead',
         settlement: { foo: 'bar' }
       },
@@ -72,8 +71,7 @@ describe('runFetch', () => {
     expect(out.payment).toEqual({
       amount: '0.01',
       recipient: '0xabc',
-      network: 'arc-testnet',
-      rail: 'exact',
+      network: 'fuji',
       txHash: '0xdead'
     })
     expect(out.reputation).toEqual({ agentId: '7', score: 100, txHash: '0xfeed' })
@@ -105,8 +103,7 @@ describe('runDiscover', () => {
         pricePerRequest: '0.01',
         paymentToken: 'USDC' as const,
         walletAddress: '0x1',
-        network: 'arc-testnet' as const,
-        rail: 'exact' as const,
+        network: 'fuji' as const,
         developer: '0x9',
         agentId: '5',
         reputation: { score: 90, count: 3 }
@@ -120,8 +117,7 @@ describe('runDiscover', () => {
         pricePerRequest: '0.5',
         paymentToken: 'USDC' as const,
         walletAddress: '0x2',
-        network: 'arc-testnet' as const,
-        rail: 'exact' as const,
+        network: 'fuji' as const,
         developer: '0x9',
         reputation: null
       }

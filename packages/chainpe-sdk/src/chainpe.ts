@@ -1,115 +1,119 @@
 /**
- * ChainPe — x402 payments on Arc, service discovery and ERC-8004 reputation.
+ * ChainPe — x402 payments + ERC-8004 reputation in a few lines.
  *
- *   const cp = new ChainPe({ privateKey })
+ *   const cp = new ChainPe({ privateKey, network: 'fuji' })
  *   const res = await cp.fetch('https://api.example.com/paid')   // auto-pays a 402
  *   const data = await res.json()
  */
-import { erc20Abi, formatUnits, parseUnits, getAddress, type Address } from 'viem'
+import {
+  erc20Abi,
+  formatUnits,
+  parseUnits,
+  getAddress,
+  type Address
+} from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { ExactEvmScheme } from '@x402/evm/exact/client'
+import { createSigner, decodeXPaymentResponse } from 'x402-fetch'
+import { createPaymentHeader } from 'x402/client'
+import type { PaymentRequirements } from 'x402/types'
 import {
-  decodePaymentResponseHeader,
-  wrapFetchWithPaymentFromConfig,
-  type PaymentPolicy
-} from '@x402/fetch'
-import { isBatchPayment } from '@circle-fin/x402-batching'
-import {
-  BatchEvmScheme,
-  CompositeEvmScheme,
-  GatewayClient
-} from '@circle-fin/x402-batching/client'
-import {
-  assertNetwork,
-  getCaip2,
-  getGatewayChain,
-  getUsdcAddress,
-  normalizeKey,
   publicClientFor,
-  resolveAccountsAddress,
+  getUsdcAddress,
+  getX402Network,
+  resolveRegistryAddress,
   resolveReputationRegistry,
-  rpcUrlFor,
+  normalizeKey,
   USDC_DECIMALS
 } from './networks.js'
-import { discoverServices } from './discovery.js'
-import { RegistryClient } from './registry.js'
+import {
+  RegistryClient,
+  filterServices,
+  rankByReputation
+} from './registry.js'
 import { getReputation, giveFeedback } from './reputation.js'
 import type {
-  Balances,
   ChainPeNetwork,
   ChainPeOptions,
-  DiscoverOptions,
   FetchOptions,
-  PaidResponse,
+  DiscoverOptions,
+  RankedService,
+  ReputationSummary,
   PaidResult,
   PaymentInfo,
-  PaymentRail,
-  RankedService,
-  ReputationSummary
+  Balances
 } from './types.js'
 import { ChainPePaymentError } from './types.js'
 
-const DEFAULT_RAILS: PaymentRail[] = ['gateway', 'exact']
-const AGENT_ID_HEADER = 'x-chainpe-agent-id'
-const TX_HASH = /^0x[0-9a-fA-F]{64}$/
-const DEFAULT_TIMEOUT_MS = 30_000
+type Signer = Awaited<ReturnType<typeof createSigner>>
 
-type Requirement = Parameters<PaymentPolicy>[1][number]
+interface PaymentAccept {
+  scheme: string
+  network: string
+  asset: string
+  maxAmountRequired: string
+  payTo: string
+  resource?: string
+  description?: string
+  extra?: Record<string, unknown>
+}
 
-/**
- * Keeps the options of the first usable rail. Gateway only counts when the
- * deposit covers the price, so a wallet with no deposit falls back to `exact`.
- */
-export function railPolicy(
-  rails: PaymentRail[],
-  gatewayAvailable: bigint
-): PaymentPolicy {
-  return (_version, requirements) => {
-    for (const rail of rails) {
-      const options =
-        rail === 'gateway'
-          ? requirements.filter(
-              r => isBatchPayment(r) && BigInt(r.amount) <= gatewayAvailable
-            )
-          : requirements.filter(r => !isBatchPayment(r))
-      if (options.length > 0) return options
-    }
-    return []
-  }
+interface PaymentRequiredBody {
+  x402Version: number
+  error?: string
+  accepts?: PaymentAccept[]
+  /** ChainPe extension (3b): the provider's ERC-8004 agent id. */
+  agentId?: string
+}
+
+const X402_TO_NETWORK: Record<string, ChainPeNetwork> = {
+  'avalanche-fuji': 'fuji',
+  avalanche: 'avalanche'
+}
+
+/** Internal result of a paid request: a live (unconsumed) Response + metadata. */
+interface PaidRequest {
+  response: Response
+  /** Set when a payment was actually made. */
+  payment?: PaymentInfo
+  /** The selected 402 offer, when payment occurred. */
+  payTo?: string
+  /** Provider's ERC-8004 agent id, advertised on the 402 (3b). */
+  agentId?: string
 }
 
 export class ChainPe {
   readonly network: ChainPeNetwork
-  readonly rails: PaymentRail[]
-  readonly accountsAddress?: `0x${string}`
-  readonly reputationRegistry: `0x${string}`
+  readonly registryAddress: `0x${string}`
+  readonly reputationRegistry?: `0x${string}`
 
-  private readonly privateKey: `0x${string}`
+  private readonly privateKey: string
   private readonly account: Address
   private readonly maxPerCallAtomic: bigint
   private readonly autoFeedback: boolean
-  private gatewayClient?: GatewayClient
+  private readonly facilitatorUrl?: string
+  private signer?: Signer
 
   constructor(options: ChainPeOptions) {
     if (!options.privateKey) {
       throw new Error('ChainPe: `privateKey` is required.')
     }
-    this.privateKey = normalizeKey(options.privateKey)
-    this.network = assertNetwork(options.network ?? 'arc-testnet')
-    this.rails = options.rails?.length ? options.rails : DEFAULT_RAILS
-    for (const rail of this.rails) {
-      if (rail !== 'gateway' && rail !== 'exact') {
-        throw new Error(`Invalid rail "${String(rail)}" (expected gateway or exact).`)
-      }
-    }
-    this.accountsAddress = resolveAccountsAddress(this.network, options.accountsAddress)
+    this.privateKey = options.privateKey
+    this.network = options.network ?? 'avalanche'
+    this.registryAddress = resolveRegistryAddress(
+      this.network,
+      options.registryAddress
+    )
     this.reputationRegistry = resolveReputationRegistry(
       this.network,
       options.reputationRegistry
     )
-    this.account = privateKeyToAccount(this.privateKey).address
-    this.maxPerCallAtomic = parseUnits(options.maxPerCall ?? '1', USDC_DECIMALS)
+    this.account = privateKeyToAccount(normalizeKey(this.privateKey)).address
+    this.maxPerCallAtomic = parseUnits(
+      options.maxPerCall ?? '1',
+      USDC_DECIMALS
+    )
     this.autoFeedback = options.autoFeedback ?? false
+    this.facilitatorUrl = options.facilitatorUrl
   }
 
   /** Echoes the resolved configuration (no secrets). */
@@ -117,9 +121,9 @@ export class ChainPe {
     return {
       network: this.network,
       address: this.account,
-      rails: this.rails,
-      accountsAddress: this.accountsAddress,
+      registryAddress: this.registryAddress,
       reputationRegistry: this.reputationRegistry,
+      facilitatorUrl: this.facilitatorUrl,
       maxPerCall: formatUnits(this.maxPerCallAtomic, USDC_DECIMALS)
     }
   }
@@ -129,47 +133,37 @@ export class ChainPe {
     return this.account
   }
 
-  /** Reads the wallet's USDC and the Circle Gateway deposit (human units). */
+  /** Reads on-chain USDC + AVAX balances (human units). */
   async balance(): Promise<Balances> {
-    const usdc = (await publicClientFor(this.network).readContract({
-      address: getUsdcAddress(this.network),
-      abi: erc20Abi,
-      functionName: 'balanceOf',
-      args: [getAddress(this.account)]
-    })) as bigint
+    const client = publicClientFor(this.network)
+    const address = getAddress(this.account)
+    const [usdcRaw, wei] = await Promise.all([
+      client
+        .readContract({
+          address: getUsdcAddress(this.network),
+          abi: erc20Abi,
+          functionName: 'balanceOf',
+          args: [address]
+        })
+        .catch(() => 0n) as Promise<bigint>,
+      client.getBalance({ address }).catch(() => 0n)
+    ])
     return {
-      usdc: formatUnits(usdc, USDC_DECIMALS),
-      gateway: formatUnits(await this.gatewayAvailable(), USDC_DECIMALS)
+      usdc: formatUnits(usdcRaw, USDC_DECIMALS),
+      avax: formatUnits(wei, 18)
     }
-  }
-
-  /** Deposits USDC into Circle Gateway, to pay on the Gateway rail with no gas. */
-  async depositGateway(amount: string): Promise<{ txHash: string; amount: string }> {
-    if (!/^\d+(\.\d{1,6})?$/.test(amount) || parseUnits(amount, USDC_DECIMALS) <= 0n) {
-      throw new Error(`Invalid amount "${amount}" (expected positive USDC, e.g. 1.50).`)
-    }
-    const result = await this.gateway().deposit(amount)
-    return { txHash: result.depositTxHash, amount: result.formattedAmount }
   }
 
   /**
-   * Drop-in `fetch` that automatically pays an x402 `402 Payment Required` in
-   * USDC and returns the final live {@link Response}.
+   * Drop-in `fetch` that automatically pays an x402 `402 Payment Required`
+   * (USDC via EIP-3009) and returns the final live {@link Response}.
    */
   async fetch(url: string, opts: FetchOptions = {}): Promise<Response> {
     const { result, autoFeedback } = await this.execute(url, opts)
     if (result.payment && (autoFeedback ?? this.autoFeedback)) {
-      await this.tryAutoFeedback(url, result.payment.recipient, result.agentId)
+      await this.tryAutoFeedback(url, result.payTo, result.agentId)
     }
     return result.response
-  }
-
-  /**
-   * Like {@link fetch}, but returns the live, unread {@link Response} together
-   * with the payment details. Never posts feedback.
-   */
-  async request(url: string, opts: FetchOptions = {}): Promise<PaidResponse> {
-    return (await this.execute(url, opts)).result
   }
 
   /**
@@ -185,11 +179,7 @@ export class ChainPe {
 
     let reputation: PaidResult<T>['reputation']
     if (result.payment && (autoFeedback ?? this.autoFeedback)) {
-      reputation = await this.tryAutoFeedback(
-        url,
-        result.payment.recipient,
-        result.agentId
-      )
+      reputation = await this.tryAutoFeedback(url, result.payTo, result.agentId)
     }
 
     const data = (await this.parseBody(response)) as T
@@ -204,17 +194,30 @@ export class ChainPe {
   }
 
   /**
-   * Finds services through Circle's Discovery API and ChainPeAccounts, annotated
-   * with ERC-8004 reputation and ranked. ChainPeAccounts also covers providers
-   * Circle has not listed yet. Throws only when neither source can be read.
+   * Discovers registered services, annotated with ERC-8004 reputation and
+   * ranked (scored first, higher score first). Pass a search string or filters.
    */
   async discover(
     query: string | DiscoverOptions = {}
   ): Promise<RankedService[]> {
-    return discoverServices(this.network, query, {
-      accountsAddress: this.accountsAddress,
-      reputationRegistry: this.reputationRegistry
-    })
+    const options: DiscoverOptions =
+      typeof query === 'string' ? { query } : query
+    const registry = new RegistryClient(this.network, this.registryAddress)
+    const services = filterServices(await registry.listAllServices(), options)
+
+    const ranked: RankedService[] = await Promise.all(
+      services.map(async s => ({
+        ...s,
+        reputation: s.agentId
+          ? await getReputation(
+              this.network,
+              this.reputationRegistry,
+              s.agentId
+            )
+          : null
+      }))
+    )
+    return rankByReputation(ranked)
   }
 
   /** Reads a provider agent's aggregate ERC-8004 reputation. */
@@ -228,180 +231,165 @@ export class ChainPe {
     score: number,
     opts: { endpoint?: string; tag?: string; waitConfirm?: boolean } = {}
   ): Promise<string> {
-    return giveFeedback(this.network, this.reputationRegistry, this.privateKey, {
-      agentId,
-      value: score,
-      ...opts
-    })
+    return giveFeedback(
+      this.network,
+      this.reputationRegistry,
+      this.privateKey,
+      { agentId, value: score, ...opts }
+    )
   }
 
   // ─── internals ─────────────────────────────────────────────────────────────
 
-  private gateway(): GatewayClient {
-    this.gatewayClient ??= new GatewayClient({
-      chain: getGatewayChain(this.network),
-      privateKey: this.privateKey,
-      rpcUrl: rpcUrlFor(this.network)
-    })
-    return this.gatewayClient
-  }
-
-  /** A deposit we cannot read counts as empty, so payment falls back to the wallet. */
-  private async gatewayAvailable(): Promise<bigint> {
-    try {
-      return (await this.gateway().getBalances()).gateway.available
-    } catch {
-      return 0n
+  private async ensureSigner(): Promise<Signer> {
+    if (!this.signer) {
+      this.signer = await createSigner(
+        getX402Network(this.network),
+        normalizeKey(this.privateKey)
+      )
     }
+    return this.signer
   }
 
   /**
-   * Runs the x402 flow: request → on 402, cap the price, choose a rail, sign →
-   * retry. Spend limits run before anything is signed.
+   * Runs the x402 flow manually so we can surface the payment metadata and the
+   * `payTo` (needed to resolve the provider's agent for feedback): initial
+   * request → on 402, select the matching offer, sign, retry with `X-PAYMENT`.
    */
   private async execute(
     url: string,
     opts: FetchOptions
-  ): Promise<{ result: PaidResponse; autoFeedback?: boolean }> {
-    const { autoFeedback, timeout = DEFAULT_TIMEOUT_MS, ...init } = opts
+  ): Promise<{ result: PaidRequest; autoFeedback?: boolean }> {
+    const { autoFeedback, timeout = 30_000, ...init } = opts
 
-    let selected: Requirement | undefined
-    let agentId: string | undefined
-    let gatewayAvailable = 0n
-
-    const baseFetch: typeof fetch = async (input, requestInit) => {
-      const caller = requestInit?.signal ?? (input instanceof Request ? input.signal : undefined)
-      const expiry = AbortSignal.timeout(timeout)
-      const response = await fetch(input, {
-        ...requestInit,
-        signal: caller ? AbortSignal.any([caller, expiry]) : expiry
-      })
-      agentId = response.headers.get(AGENT_ID_HEADER) ?? agentId
-      // Only a request that has to pay spends a call on reading the deposit.
-      if (
-        response.status === 402 &&
-        !selected &&
-        this.rails.includes('gateway')
-      ) {
-        gatewayAvailable = await this.gatewayAvailable()
-      }
-      return response
+    // Wraps fetch with an AbortController timeout so hung servers don't stall forever.
+    const fetchWithTimeout = (input: string, options: RequestInit) => {
+      const ctrl = new AbortController()
+      const timer = setTimeout(() => ctrl.abort(), timeout)
+      return fetch(input, { ...options, signal: ctrl.signal }).finally(() => clearTimeout(timer))
     }
 
-    const account = privateKeyToAccount(this.privateKey)
-    const client = new CompositeEvmScheme(
-      new BatchEvmScheme(account),
-      new ExactEvmScheme(account)
+    const initial = await fetchWithTimeout(url, init)
+    if (initial.status !== 402) {
+      return { result: { response: initial }, autoFeedback }
+    }
+
+    const body = (await initial.json()) as PaymentRequiredBody
+    const accept = (body.accepts ?? []).find(
+      a => X402_TO_NETWORK[a.network] === this.network
     )
-    const caip2 = getCaip2(this.network) as `${string}:${string}`
-    const payingFetch = wrapFetchWithPaymentFromConfig(baseFetch, {
-      schemes: [{ network: caip2, client: client as unknown as ExactEvmScheme }],
-      // CompositeEvmScheme cannot name default assets, so Arc USDC is listed with its own cap.
-      spendControls: {
-        maxAmountPerPayment: false as const,
-        allowedAssets: [
-          {
-            network: caip2,
-            asset: getUsdcAddress(this.network),
-            maxAmountPerPayment: this.maxPerCallAtomic.toString()
-          }
-        ]
-      },
-      policies: [
-        (version, requirements) => {
-          const options = railPolicy(this.rails, gatewayAvailable)(version, requirements)
-          selected = options[0]
-          return options
-        }
-      ]
-    })
-
-    let response: Response
-    try {
-      response = await payingFetch(url, init)
-    } catch (err) {
-      throw this.explainPaymentError(err, url)
-    }
-
-    if (response.status === 402) {
-      const reason = await readFailureReason(response)
-      throw new ChainPePaymentError(
-        `x402: payment signed but the server did not accept it (${reason}). ` +
-          `Check the USDC on ${this.network} or the Gateway deposit.`,
-        { reason }
+    if (!accept) {
+      const nets = (body.accepts ?? []).map(a => a.network).join(', ') || 'none'
+      throw new Error(
+        `x402: server accepts [${nets}] but wallet is on ${this.network}.`
       )
     }
+
+    const required = BigInt(accept.maxAmountRequired)
+    if (required > this.maxPerCallAtomic) {
+      throw new Error(
+        `x402: payment of ${formatUnits(required, USDC_DECIMALS)} USDC exceeds maxPerCall ` +
+          `${formatUnits(this.maxPerCallAtomic, USDC_DECIMALS)} USDC for ${url}.`
+      )
+    }
+
+    let header: string | null
+    try {
+      const signer = await this.ensureSigner()
+      header = await createPaymentHeader(
+        signer,
+        body.x402Version,
+        accept as unknown as PaymentRequirements
+      )
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      throw new ChainPePaymentError(`x402: failed to sign payment — ${msg}`, { reason: msg })
+    }
+    if (!header) throw new ChainPePaymentError('x402: failed to generate payment header.')
+
+    const retryHeaders = new Headers(init.headers)
+    retryHeaders.set('X-PAYMENT', header)
+    const paid = await fetchWithTimeout(url, { ...init, headers: retryHeaders })
+
+    if (paid.status === 402) {
+      throw new ChainPePaymentError(
+        `x402: payment signed but the server could not settle (needs USDC on ${this.network}). ` +
+          `Attempted ${formatUnits(required, USDC_DECIMALS)} USDC → ${accept.payTo}.`,
+        { reason: 'settlement_rejected' }
+      )
+    }
+
+    // 3b: prefer the provider-advertised agent id (header → body → offer extra)
+    // so feedback skips the registry scan.
+    const advertisedAgentId =
+      initial.headers.get('x-chainpe-agent-id') ??
+      body.agentId ??
+      (accept.extra?.agentId as string | undefined)
+
+    const payment: PaymentInfo = {
+      amount: formatUnits(required, USDC_DECIMALS),
+      recipient: accept.payTo,
+      network: this.network
+    }
+    const settleHeader = paid.headers.get('X-PAYMENT-RESPONSE')
+    if (settleHeader) {
+      try {
+        const decoded = decodeXPaymentResponse(settleHeader) as Record<
+          string,
+          unknown
+        >
+        payment.settlement = decoded
+        payment.txHash =
+          (decoded.transaction as string) ?? (decoded.txHash as string)
+      } catch {
+        /* keep undecoded */
+      }
+    }
+
     return {
       result: {
-        response,
-        payment: selected ? this.paymentInfo(selected, response) : undefined,
-        agentId
+        response: paid,
+        payment,
+        payTo: accept.payTo,
+        agentId: advertisedAgentId
       },
       autoFeedback
     }
   }
 
-  private paymentInfo(selected: Requirement, response: Response): PaymentInfo {
-    const payment: PaymentInfo = {
-      amount: formatUnits(BigInt(selected.amount), USDC_DECIMALS),
-      recipient: selected.payTo,
-      network: this.network,
-      rail: isBatchPayment(selected) ? 'gateway' : 'exact'
-    }
-    const header = response.headers.get('PAYMENT-RESPONSE')
-    if (header) {
-      try {
-        const receipt = decodePaymentResponseHeader(header)
-        payment.settlement = receipt
-        if (TX_HASH.test(receipt.transaction)) payment.txHash = receipt.transaction
-        else if (receipt.transaction) payment.transferId = receipt.transaction
-      } catch {
-        /* Keep what is known without the receipt. */
-      }
-    }
-    return payment
-  }
-
-  private explainPaymentError(err: unknown, url: string): unknown {
-    const message = err instanceof Error ? err.message : String(err)
-    if (/no network\/scheme registered/i.test(message)) {
-      return new Error(`x402: ${url} does not accept payment on ${this.network}.`)
-    }
-    if (/spend|maxAmountPerPayment|allowedAssets|exceed/i.test(message)) {
-      return new Error(
-        `x402: the price for ${url} exceeds maxPerCall ` +
-          `${formatUnits(this.maxPerCallAtomic, USDC_DECIMALS)} USDC. Nothing was signed.`
-      )
-    }
-    if (/filtered|policy|policies/i.test(message)) {
-      return new ChainPePaymentError(
-        `x402: ${url} has no payment option for rails [${this.rails.join(', ')}]. ` +
-          'A Gateway-only price needs a Gateway deposit.',
-        { reason: 'no_usable_rail' }
-      )
-    }
-    return err
-  }
-
   /**
    * Best-effort positive feedback for the provider's agent after a paid call.
-   * Prefers the agent id the provider advertises; otherwise looks for its `payTo`
-   * in ChainPeAccounts. Never throws (self-feedback, no gas, etc. are swallowed).
+   * Prefers the agent id advertised on the 402 (3b); otherwise resolves it by
+   * matching `payTo` (then URL prefix) against the registry. Never throws
+   * (self-feedback, no agentId, etc. are swallowed).
    */
   private async tryAutoFeedback(
     url: string,
-    payTo: string,
+    payTo?: string,
     advertisedAgentId?: string
   ): Promise<{ agentId: string; score: number; txHash: string } | undefined> {
     try {
+      if (!this.reputationRegistry) return undefined
+
       let agentId = advertisedAgentId
-      if ((!agentId || agentId === '0') && this.accountsAddress) {
-        const registry = new RegistryClient(this.network, this.accountsAddress)
+      let endpoint: string | undefined
+
+      // No advertised id → fall back to a registry scan by payTo / URL.
+      if (!agentId || agentId === '0') {
+        const registry = new RegistryClient(this.network, this.registryAddress)
         const services = await registry.listAllServices()
-        agentId = services.find(
-          s => s.walletAddress.toLowerCase() === payTo.toLowerCase() && s.agentId
-        )?.agentId
+        const svc =
+          (payTo &&
+            services.find(
+              s =>
+                s.walletAddress.toLowerCase() === payTo.toLowerCase() &&
+                s.agentId
+            )) ||
+          services.find(s => url.startsWith(s.endpoint) && s.agentId)
+        agentId = svc?.agentId
+        endpoint = svc?.endpoint
       }
+
       if (!agentId || agentId === '0') return undefined
       const txHash = await giveFeedback(
         this.network,
@@ -410,7 +398,7 @@ export class ChainPe {
         {
           agentId,
           value: 100,
-          endpoint: new URL(url).origin,
+          endpoint: endpoint ?? new URL(url).origin,
           tag: 'x402-success'
         }
       )
@@ -430,24 +418,6 @@ export class ChainPe {
       }
     }
     return response.text()
-  }
-}
-
-async function readFailureReason(response: Response): Promise<string> {
-  const header = response.headers.get('PAYMENT-RESPONSE')
-  if (header) {
-    try {
-      const receipt = decodePaymentResponseHeader(header)
-      if (receipt.errorReason) return receipt.errorReason
-    } catch {
-      /* Fall through to the body. */
-    }
-  }
-  try {
-    const body = (await response.clone().json()) as { reason?: string; error?: string }
-    return body.reason ?? body.error ?? 'settlement refused'
-  } catch {
-    return 'settlement refused'
   }
 }
 

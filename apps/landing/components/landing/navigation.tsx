@@ -39,8 +39,8 @@ export function Navigation() {
         }`}
       >
         <div 
-          className={`flex items-center justify-between transition-all duration-500 ${
-            isScrolled ? "h-14 px-6 lg:px-8" : "h-20 px-6 lg:px-12"
+          className={`flex items-center justify-between transition-all duration-500 px-6 lg:px-8 ${
+            isScrolled ? "h-14" : "h-20"
           }`}
         >
           {/* Logo */}
@@ -70,9 +70,8 @@ export function Navigation() {
             <Button
               size="sm"
               className={`bg-foreground hover:bg-foreground/90 text-background rounded-full transition-all duration-500 ${isScrolled ? "px-4 h-8 text-xs" : "px-6"}`}
-              onClick={() => { window.location.href = '/dashboard'; }}
             >
-              Dashboard
+              Get started
             </Button>
           </div>
 
@@ -141,12 +140,9 @@ export function Navigation() {
             </Button>
             <Button 
               className="flex-1 bg-foreground text-background rounded-full h-14 text-base"
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                window.location.href = '/dashboard';
-              }}
+              onClick={() => setIsMobileMenuOpen(false)}
             >
-              Dashboard
+              Get started
             </Button>
           </div>
         </div>

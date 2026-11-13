@@ -9,13 +9,13 @@
 ### Step 1: Install ChainPe Agent
 
 ```bash
-npm install -g @chainpearc/agent
+npm install -g @chainpe/agent
 ```
 
 Or use it as a library in your project:
 
 ```bash
-npm install @chainpearc/agent
+npm install @chainpe/agent
 ```
 
 ### Step 2: Get a Free LLM API Key
@@ -108,7 +108,7 @@ Your agent just discovered a service, paid 0.05 AVAX, and got the data - all aut
 ### Basic Usage
 
 ```typescript
-import { ChainPeAgent } from "@chainpearc/agent";
+import { ChainPeAgent } from "@chainpe/agent";
 
 // Create agent (reads config from ~/.chainpe/agent.json)
 const agent = new ChainPeAgent();
@@ -123,7 +123,7 @@ console.log(`Spent: ${result.payments.totalSpent.AVAX} AVAX`);
 ### Advanced Usage with Options
 
 ```typescript
-import { ChainPeAgent } from "@chainpearc/agent";
+import { ChainPeAgent } from "@chainpe/agent";
 
 const agent = new ChainPeAgent();
 
@@ -154,7 +154,7 @@ console.log("Total USDC spent:", result.payments.totalSpent.USDC);
 ### Custom Configuration
 
 ```typescript
-import { ChainPeAgent } from "@chainpearc/agent";
+import { ChainPeAgent } from "@chainpe/agent";
 
 // Override config file with custom settings
 const agent = new ChainPeAgent({
@@ -179,7 +179,7 @@ const result = await agent.run("Get weather data");
 ### Listing Available Services
 
 ```typescript
-import { ChainPeAgent } from "@chainpearc/agent";
+import { ChainPeAgent } from "@chainpe/agent";
 
 const agent = new ChainPeAgent();
 
@@ -260,7 +260,7 @@ services.forEach(service => {
 
 ```typescript
 // weather-agent.ts
-import { ChainPeAgent } from "@chainpearc/agent";
+import { ChainPeAgent } from "@chainpe/agent";
 
 const agent = new ChainPeAgent();
 
@@ -290,7 +290,7 @@ npx tsx weather-agent.ts
 
 ```typescript
 // research-agent.ts
-import { ChainPeAgent } from "@chainpearc/agent";
+import { ChainPeAgent } from "@chainpe/agent";
 
 const agent = new ChainPeAgent();
 
@@ -317,7 +317,7 @@ for (const topic of topics) {
 
 ```typescript
 // multi-service-agent.ts
-import { ChainPeAgent } from "@chainpearc/agent";
+import { ChainPeAgent } from "@chainpe/agent";
 
 const agent = new ChainPeAgent();
 
@@ -370,7 +370,7 @@ console.log("\n✅ All tasks completed!");
 ### Example: Secure Configuration
 
 ```typescript
-import { ChainPeAgent } from "@chainpearc/agent";
+import { ChainPeAgent } from "@chainpe/agent";
 
 const agent = new ChainPeAgent({
   llm: {

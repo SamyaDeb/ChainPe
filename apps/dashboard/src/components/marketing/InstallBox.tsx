@@ -5,9 +5,9 @@ import { useState } from 'react'
 type Tab = 'npm' | 'yarn' | 'pnpm'
 
 const commands: Record<Tab, string> = {
-  npm: 'npm install @chainpearc/agent',
-  yarn: 'yarn add @chainpearc/agent',
-  pnpm: 'pnpm add @chainpearc/agent',
+  npm: 'npm install @chainpe/agent',
+  yarn: 'yarn add @chainpe/agent',
+  pnpm: 'pnpm add @chainpe/agent',
 }
 
 export default function InstallBox() {

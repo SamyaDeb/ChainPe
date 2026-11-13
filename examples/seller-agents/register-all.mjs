@@ -21,7 +21,7 @@ import {
 } from 'viem'
 import { avalancheFuji } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
-import { ChainPeRegistryClient } from '@chainpearc/cli'
+import { ChainPeRegistryClient } from '@chainpe/cli'
 
 // ── Config ────────────────────────────────────────────────────────────────────
 

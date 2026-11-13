@@ -1,10 +1,10 @@
 {
-  "name": "@chainpearc/cli",
-  "version": "3.1.2",
-  "description": "ChainPe Provider CLI — Monetize any API with x402 micropayments on Arc",
+  "name": "@chainpeavax/cli",
+  "version": "2.0.1",
+  "description": "ChainPe Provider CLI — Monetize any API with x402 micropayments on Avalanche C-Chain",
   "type": "module",
   "bin": {
-    "chainpe": "dist/cli.js"
+    "chainpe": "./dist/cli.js"
   },
   "publishConfig": {
     "access": "public"
@@ -30,15 +30,14 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsx src/cli.ts",
-    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
     "x402",
-    "arc",
-    "circle",
+    "avalanche",
+    "c-chain",
     "proxy",
     "micropayments",
     "pay-per-request",
@@ -51,36 +50,33 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=22.18"
+    "node": ">=18"
   },
   "dependencies": {
-    "@circle-fin/x402-batching": "^4.0.0",
+    "@chainpeavax/sdk": "^0.2.0",
     "@clack/prompts": "^0.9.1",
-    "@x402/core": "^2.30.0",
-    "@x402/evm": "^2.30.0",
-    "@x402/express": "^2.30.0",
-    "@x402/fetch": "^2.30.0",
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
-    "express": "^4.22.3",
+    "express": "^4.21.2",
     "gradient-string": "^3.0.0",
-    "http-proxy-middleware": "^3.0.10",
+    "http-proxy-middleware": "^3.0.5",
     "ora": "^8.2.0",
     "picocolors": "^1.1.1",
-    "viem": "^2.57.5"
+    "viem": "^2.21.0",
+    "x402": "^1.2.0",
+    "x402-express": "^1.2.0",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/gradient-string": "^1.1.6",
     "@types/node": "^22.15.21",
-    "ajv": "^8.20.0",
     "tsup": "^8.5.0",
     "tsx": "^4.19.4",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.7"
+    "typescript": "^5.8.3"
   },
   "files": [
     "dist",
