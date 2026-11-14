@@ -24,3 +24,12 @@ export const CONFIG_ERROR: string | null =
  */
 const DEFAULT_WALLETCONNECT_PROJECT_ID = '7aa07d85cda239efbe75641c6e749f9f'
 export const WALLETCONNECT_PROJECT_ID: string = (raw.VITE_WALLETCONNECT_PROJECT_ID ?? DEFAULT_WALLETCONNECT_PROJECT_ID).trim()
+
+/**
+ * The provider shown read-only at /sample ("View sample provider" on sign-in), from GET
+ * /v1/public/providers/:address/summary. The backend serves only addresses in its SAMPLE_PROVIDERS allowlist.
+ * Unset hides the button. In mock mode it defaults to the provider in src/mock/fixtures/public-provider-summary.json, so the page can be previewed.
+ */
+const MOCK_SAMPLE_PROVIDER = '0xeD99A0cC39179f850D0a3Aa1fD2D0280B3efc35f'
+const sampleRaw = (raw.VITE_SAMPLE_PROVIDER ?? '').trim()
+export const SAMPLE_PROVIDER: string | null = /^0x[0-9a-fA-F]{40}$/.test(sampleRaw) ? sampleRaw : USE_MOCK ? MOCK_SAMPLE_PROVIDER : null

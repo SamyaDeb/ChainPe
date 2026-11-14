@@ -1,0 +1,134 @@
+{
+  "address": "0xeD99A0cC39179f850D0a3Aa1fD2D0280B3efc35f",
+  "range": "all",
+  "since": null,
+  "revenue": {
+    "totalVerifiedAtomic": "1430000"
+  },
+  "calls": {
+    "completed": 59,
+    "failed": 2,
+    "verified": 59,
+    "successRate": 0.9672131147540983
+  },
+  "uniqueBuyers": 6,
+  "series": {
+    "unit": "day",
+    "points": [
+      {
+        "t": "2026-11-01T00:00:00Z",
+        "revenueAtomic": "10000",
+        "calls": 1
+      },
+      {
+        "t": "2026-11-02T00:00:00Z",
+        "revenueAtomic": "70000",
+        "calls": 3
+      },
+      {
+        "t": "2026-11-03T00:00:00Z",
+        "revenueAtomic": "50000",
+        "calls": 1
+      },
+      {
+        "t": "2026-11-04T00:00:00Z",
+        "revenueAtomic": "130000",
+        "calls": 5
+      },
+      {
+        "t": "2026-11-05T00:00:00Z",
+        "revenueAtomic": "20000",
+        "calls": 2
+      },
+      {
+        "t": "2026-11-06T00:00:00Z",
+        "revenueAtomic": "90000",
+        "calls": 5
+      },
+      {
+        "t": "2026-11-07T00:00:00Z",
+        "revenueAtomic": "110000",
+        "calls": 3
+      },
+      {
+        "t": "2026-11-08T00:00:00Z",
+        "revenueAtomic": "80000",
+        "calls": 4
+      },
+      {
+        "t": "2026-11-09T00:00:00Z",
+        "revenueAtomic": "200000",
+        "calls": 8
+      },
+      {
+        "t": "2026-11-10T00:00:00Z",
+        "revenueAtomic": "120000",
+        "calls": 4
+      },
+      {
+        "t": "2026-11-11T00:00:00Z",
+        "revenueAtomic": "90000",
+        "calls": 5
+      },
+      {
+        "t": "2026-11-12T00:00:00Z",
+        "revenueAtomic": "130000",
+        "calls": 5
+      },
+      {
+        "t": "2026-11-13T00:00:00Z",
+        "revenueAtomic": "190000",
+        "calls": 7
+      },
+      {
+        "t": "2026-11-14T00:00:00Z",
+        "revenueAtomic": "140000",
+        "calls": 6
+      }
+    ]
+  },
+  "services": [
+    {
+      "key": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "name": "weather",
+      "description": "Current conditions and a 3-day forecast for any city.",
+      "tags": "weather,forecast",
+      "endpoint": "https://chainpe-demo.example/weather",
+      "price": "0.01",
+      "payTo": "0x85b7a78090E3C51F81916Fc00809C8091Ad1bbCB",
+      "provider": "0xeD99A0cC39179f850D0a3Aa1fD2D0280B3efc35f",
+      "agentId": "41",
+      "paidScore": 93.33,
+      "paidReviews": 9,
+      "rawScore": 93.33,
+      "rawReviews": 9,
+      "paidCalls": 38,
+      "totalSettledAtomic": "380000",
+      "payToShared": false
+    },
+    {
+      "key": "0x415ba197b119f267c41aef2578c38bcd968adb08931503c0797db11fd83c2e9b",
+      "name": "summarize",
+      "description": "Summarises a web page or text into five bullet points with an LLM.",
+      "tags": "ai,llm,text",
+      "endpoint": "https://chainpe-demo.example/summarize",
+      "price": "0.05",
+      "payTo": "0x85b7a78090E3C51F81916Fc00809C8091Ad1bbCB",
+      "provider": "0xeD99A0cC39179f850D0a3Aa1fD2D0280B3efc35f",
+      "agentId": "41",
+      "paidScore": 86.67,
+      "paidReviews": 6,
+      "rawScore": 86.67,
+      "rawReviews": 6,
+      "paidCalls": 21,
+      "totalSettledAtomic": "1050000",
+      "payToShared": false
+    }
+  ],
+  "reputation": {
+    "paidScore": 90.67,
+    "paidReviews": 15,
+    "rawScore": 90.67,
+    "rawReviews": 15
+  }
+}

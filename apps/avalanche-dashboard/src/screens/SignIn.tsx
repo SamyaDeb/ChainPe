@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
-import { ArrowRight, Loader2, QrCode, Wallet } from 'lucide-react'
+import { ArrowRight, Eye, Loader2, QrCode, Wallet } from 'lucide-react'
 import { useAccount } from 'wagmi'
 import { useAuth, type AuthIssue, type MockScenario, type SignInStep } from '@/auth/AuthContext'
 import { AnimatedSphere } from '@/components/AnimatedSphere'
@@ -12,6 +12,8 @@ import { CommandBlock } from '@/components/ui/Copy'
 import { Button } from '@/components/ui/forms'
 import { CharIn, prefersReducedMotion } from '@/components/ui/Motion'
 import { useNow } from '@/hooks/useNow'
+import { SAMPLE_PROVIDER } from '@/lib/env'
+import { navigate } from '@/lib/router'
 import { disconnectAll, QR_ENABLED } from '@/lib/wagmi'
 
 export const INIT_COMMAND = 'npx @chainpeavax/cli init'
@@ -125,11 +127,11 @@ export function SignIn() {
             <p className="font-mono text-sm text-muted">Choose a sample account</p>
             {(
               [
-                ['pro', 'Sample provider'],
+                ['sample', 'Sample provider'],
                 ['unregistered', 'Unregistered wallet'],
               ] satisfies Array<[MockScenario, string]>
             ).map(([scenario, text]) => (
-              <Button key={scenario} variant={scenario === 'pro' ? 'primary' : 'secondary'} className="group" disabled={busy} onClick={() => void auth.signInMock(scenario)}>
+              <Button key={scenario} variant={scenario === 'sample' ? 'primary' : 'secondary'} className="group" disabled={busy} onClick={() => void auth.signInMock(scenario)}>
                 {text}
                 <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
               </Button>
@@ -179,8 +181,30 @@ export function SignIn() {
           <pre className="mt-3 max-h-56 overflow-auto whitespace-pre-wrap break-all border border-ink/10 bg-subtle p-3 font-mono text-xs text-ink">{pendingMessage}</pre>
         ) : null}
         {issue ? <IssueNotice issue={issue} /> : null}
+        <SampleLinks />
       </div>
     </Shell>
+  )
+}
+
+/** For visitors without a registered wallet: a read-only provider view and the public explorer. No sign-in needed. */
+function SampleLinks() {
+  return (
+    <div className="mt-8 border-t border-ink/10 pt-6">
+      <p className="mb-3 text-sm text-muted">No provider wallet? Look around first, nothing to sign.</p>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        {SAMPLE_PROVIDER ? (
+          <Button className="group flex-1" onClick={() => navigate('/sample')}>
+            <Eye size={16} aria-hidden />
+            View sample provider
+          </Button>
+        ) : null}
+        <Button variant="ghost" className="group flex-1" onClick={() => navigate('/explore')}>
+          Explore live payments
+          <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
+        </Button>
+      </div>
+    </div>
   )
 }
 
