@@ -35,7 +35,9 @@ async function main() {
   const receiverAddr = await receiver.getAddress();
 
   const Sender = await ethers.getContractFactory("ChainPeICMSender");
-  const sender = await Sender.deploy(messenger);
+  // Payment-intent-only deploy: no oracle / registry (reputation sends disabled).
+  // For portable reputation use scripts/deploy-icm-reputation.ts.
+  const sender = await Sender.deploy(messenger, ethers.ZeroAddress, ethers.ZeroAddress);
   await sender.waitForDeployment();
   const senderAddr = await sender.getAddress();
 

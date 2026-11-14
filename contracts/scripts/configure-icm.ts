@@ -3,8 +3,8 @@
  *
  * After deploying ChainPeICMReceiver on the destination chain, call this
  * script to register the trusted ChainPeICMSender address(es) so only
- * genuine intent messages are accepted. Until set, ANY sender on the source
- * chain can deliver intents.
+ * genuine intent messages are accepted. The receiver fails closed: until a
+ * trusted sender is set for a source chain, every message from it is rejected.
  *
  * Usage:
  *   SOURCE_BLOCKCHAIN_ID=0x... \
@@ -18,7 +18,7 @@
  *   DEPLOYER_PRIVATE_KEY   Key that owns ChainPeICMReceiver.
  *
  * You can call this script multiple times to register additional source chains.
- * Set TRUSTED_SENDER=0x0000...0000 to clear a previously registered sender.
+ * Set TRUSTED_SENDER=0x0000...0000 to stop accepting messages from that chain.
  */
 import { ethers, network } from "hardhat";
 import { readFileSync, existsSync } from "fs";
@@ -64,7 +64,7 @@ async function main() {
 
   const before = await (receiver as unknown as { trustedSenders(id: string): Promise<string> })
     .trustedSenders(sourceBlockchainId);
-  console.log(`  Current trusted sender: ${before === ethers.ZeroAddress ? "(any — not restricted)" : before}`);
+  console.log(`  Current trusted sender: ${before === ethers.ZeroAddress ? "(none — chain rejected)" : before}`);
 
   const tx = await (receiver as unknown as {
     setTrustedSender(id: string, addr: string): Promise<{ hash: string; wait(): Promise<unknown> }>
