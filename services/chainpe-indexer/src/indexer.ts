@@ -139,7 +139,7 @@ export async function runIndexer(
       backoff = 1_000
       if (to >= head) await sleep(deps.pollIntervalMs)
     } catch (err) {
-      console.error(`indexer loop error (retrying in ${backoff}ms):`, err)
+      console.error(`indexer loop error (retrying in ${backoff}ms):`, err instanceof Error ? err.message : String(err))
       await sleep(backoff)
       backoff = Math.min(backoff * 2, 60_000)
     }

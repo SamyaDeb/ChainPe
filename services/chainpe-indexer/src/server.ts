@@ -50,14 +50,14 @@ async function main() {
     chunk: LOG_CHUNK,
     pollIntervalMs: POLL_INTERVAL_MS
   }).catch(err => {
-    console.error('indexer loop crashed:', err)
+    console.error('indexer loop crashed:', err instanceof Error ? err.message : String(err))
     process.exit(1)
   })
 }
 
 if (process.env.NODE_ENV !== 'test') {
   main().catch(err => {
-    console.error(err)
+    console.error(err instanceof Error ? err.message : String(err))
     process.exit(1)
   })
 }
