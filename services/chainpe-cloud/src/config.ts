@@ -22,11 +22,16 @@ const schema = z.object({
   USDC_ADDRESS: address.default('0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E'),
   ERC8004_IDENTITY_REGISTRY: address.default('0xB1330d7B1b083ba689C7f56bDf667F1F528a3195'),
   ERC8004_REPUTATION_REGISTRY: address.default('0xfe7Df66e6BFbd3A76B68dF26b9312E6c85a38543'),
-  // eth_getLogs block range. The public Avalanche RPC refuses more than 100; provider RPCs take 2000 or more.
-  GETLOGS_MAX_BLOCKS: z.coerce.bigint().min(100n).default(2000n),
+  // eth_getLogs block range. The public Avalanche RPC refuses more than 100 (the default); raise it to 2000 or more only with a provider RPC.
+  GETLOGS_MAX_BLOCKS: z.coerce.bigint().min(100n).default(100n),
   // Gap between getLogs calls. The public RPC's Cloudflare limit (error 1015) needs about 1000 ms.
   GETLOGS_GAP_MS: z.coerce.number().int().min(0).default(400),
   CORS_ORIGIN: list,
+  // Extra origins that may read /v1/public from a browser. https://chainpe.vercel.app and the SIWE hosts are always allowed.
+  PUBLIC_CORS_ORIGIN: list.optional(),
+  // Providers whose aggregate summary is public at /v1/public/providers/:address/summary (the dashboard's sample
+  // provider page), comma-separated. Unset or empty: that endpoint answers 404 for every address.
+  SAMPLE_PROVIDERS: list.pipe(z.array(address)).default([]),
   // Hosts the dashboard is served from, comma-separated. Sign-in uses the one the browser's Origin names; the first is the default.
   SIWE_DOMAIN: list.pipe(z.array(z.string().min(1)).min(1)),
   SIWE_CLI_DOMAIN: z.string().min(1),

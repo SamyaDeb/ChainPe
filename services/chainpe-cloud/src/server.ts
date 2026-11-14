@@ -10,6 +10,7 @@ import { revokedSessions, siweNonces } from './schema.js'
 import { createSessions } from './session.js'
 import { createIndexer, viemRpc } from './workers/indexer.js'
 import { createReconciler } from './workers/reconciler.js'
+import { createFeedbackVerifier } from './workers/verifyFeedback.js'
 import { startLoop, type Loop } from './workers/runner.js'
 
 async function main(): Promise<void> {
@@ -35,6 +36,7 @@ async function main(): Promise<void> {
     onProviderChanged: (provider) => views.invalidate(provider),
   })
   const reconciler = createReconciler({ db, rpc, usdc: env.USDC_ADDRESS })
+  const verifier = createFeedbackVerifier({ db, rpc, usdc: env.USDC_ADDRESS })
 
   let reconcileLoop: Loop | undefined
   const app = createApp({
@@ -43,6 +45,8 @@ async function main(): Promise<void> {
     sessions,
     views,
     corsOrigins: env.CORS_ORIGIN,
+    publicCorsOrigins: env.PUBLIC_CORS_ORIGIN,
+    sampleProviders: env.SAMPLE_PROVIDERS,
     chainId: env.CHAIN_ID,
     dashboardDomain: env.SIWE_DOMAIN,
     cliDomain: env.SIWE_CLI_DOMAIN,
@@ -58,6 +62,8 @@ async function main(): Promise<void> {
     loops.push(
       reconcileLoop,
       startLoop('indexer', 3_000, () => indexer.step(), 1_000),
+      // Checks the payment behind each new rating; ratings whose tx is not visible yet retry with backoff.
+      startLoop('verify-feedback', 10_000, () => verifier.run(), 1_000),
       startLoop('cleanup', 600_000, async () => {
         await db.delete(siweNonces).where(lt(siweNonces.expiresAt, new Date()))
         await db.delete(revokedSessions).where(lt(revokedSessions.expiresAt, new Date()))
