@@ -11,7 +11,7 @@ After the proxy receives a request with an `X-PAYMENT` header, it calls the faci
 ## Verify endpoint
 
 ```
-POST https://chainpe-facilitator-production.up.railway.app/verify
+POST https://chainpe-facilitator-production-000a.up.railway.app/verify
 Content-Type: application/json
 
 {

@@ -13,13 +13,13 @@ sidebar_position: 2
 **Causes and fixes:**
 
 - No facilitator configured: run `chainpe start --facilitator 0xYOUR_GAS_KEY` to use an in-process facilitator, or set `CHAINPE_FACILITATOR_URL` in your config.
-- The facilitator is down: check `curl https://chainpe-facilitator-production.up.railway.app/health`. If 503, the gas key is low on AVAX.
+- The facilitator is down: check `curl https://chainpe-facilitator-production-000a.up.railway.app/health`. If 503, the gas key is low on AVAX.
 - The proxy is on the wrong network: ensure `network` in `~/.chainpe/config.json` matches the client's `network` constructor option.
 - The client and server are on different networks: the SDK error message will say `"server accepts [avalanche] but wallet is on fuji"`.
 
 ```bash
 # Check facilitator health
-curl https://chainpe-facilitator-production.up.railway.app/health
+curl https://chainpe-facilitator-production-000a.up.railway.app/health
 
 # Run with in-process facilitator
 chainpe start --facilitator 0xYOUR_GAS_PRIVATE_KEY
@@ -34,7 +34,7 @@ chainpe start --facilitator 0xYOUR_GAS_PRIVATE_KEY
 **Fixes:**
 - Check your USDC balance: `chainpe status` (after `chainpe init`)
 - Obtain USDC on Avalanche C-Chain from a CEX or bridge (e.g., [Stargate](https://stargate.finance)). For Fuji testnet development, use [faucet.circle.com](https://faucet.circle.com/) — select "Avalanche Fuji" — but the primary network is mainnet.
-- For `register()`, ensure you have approved the registry for at least 0.1 USDC: the CLI does this automatically via `safeTransferFrom`, but you need the balance first.
+- For `register()`, ensure you have approved the registry for at least 1 USDC: the CLI does this automatically via `safeTransferFrom`, but you need the balance first.
 
 ```ts
 // Check balance programmatically
@@ -52,7 +52,7 @@ console.log('USDC balance:', usdc)
 **Fixes:**
 - Confirm the service is registered: `chainpe list`
 - The registry address must match: check `CHAINPE_REGISTRY_ADDRESS=0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E` for mainnet
-- The indexer may lag: check `chainpe-indexer-production.up.railway.app/health` and compare `lastIndexedBlock` to `chainHead`
+- If you query a self-hosted indexer, it may lag: check its `/health` and compare `lastIndexedBlock` to `chainHead`
 - Try reading directly from the contract: `chainpe list` bypasses the indexer
 
 ---
@@ -104,7 +104,7 @@ End-to-end ICM testing requires two live Avalanche L1s. Use the Hardhat test sui
   // For register(): approve ChainPeRegistry for the registration fee
   // For PolicyVault deposit(): approve the vault for the deposit amount
   ```
-- For `register()`, check that `registrationFee` is 0.1 USDC (100000 atomic) and you have approved at least that amount
+- For `register()`, check that `registrationFee` is 1 USDC (1000000 atomic) and you have approved at least that amount
 - Gas estimation can sometimes fail spuriously. Pass `gas: 300000n` explicitly as a fallback
 - Gas estimation failures apply on any network — the same steps work for mainnet and Fuji testnet
 
@@ -123,7 +123,7 @@ End-to-end ICM testing requires two live Avalanche L1s. Use the Hardhat test sui
 
 ```bash
 # Check facilitator status (includes gas balance)
-curl https://chainpe-facilitator-production.up.railway.app/status
+curl https://chainpe-facilitator-production-000a.up.railway.app/status
 ```
 
 ---
@@ -142,16 +142,15 @@ curl https://chainpe-facilitator-production.up.railway.app/status
 
 ---
 
-## 9. Dashboard not connecting wallet
+## 9. Provider dashboard does not sign in
 
-**Symptom:** The marketplace dashboard at `chainpe-dashboard-production.up.railway.app` shows a blank service list or MetaMask does not connect.
+**Symptom:** The provider dashboard at [/dashboard](/dashboard) does not connect your wallet, or shows no services after sign-in.
 
 **Fixes:**
-- Check the indexer health: if the indexer is down, the dashboard shows no services
-- Add Avalanche C-Chain to MetaMask: chainId `43114`, RPC `https://api.avax.network/ext/bc/C/rpc`
-- The dashboard reads `NEXT_PUBLIC_INDEXER_URL` — if it is misconfigured, the service list will be empty
-- Try a hard refresh (Ctrl+Shift+R) to clear Next.js cached data
-- For Fuji testnet development only, use chainId `43113`, RPC `https://api.avax-test.network/ext/bc/C/rpc`
+- Add Avalanche C-Chain to your wallet: chainId `43114`, RPC `https://api.avax.network/ext/bc/C/rpc`
+- Sign in with the same address you used for `chainpe register`. The dashboard only shows services registered by the signed-in wallet
+- New registrations appear after the chainpe-cloud indexer catches up (usually under a minute)
+- Try a hard refresh (Ctrl+Shift+R)
 
 ---
 

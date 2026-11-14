@@ -66,7 +66,7 @@ The ReputationRegistry's `giveFeedback` function reverts if `msg.sender == agent
 | Registry | Address |
 |---|---|
 | IdentityRegistry | [`0xB1330d7B1b083ba689C7f56bDf667F1F528a3195`](https://snowtrace.io/address/0xB1330d7B1b083ba689C7f56bDf667F1F528a3195) |
-| ReputationRegistry | [`0xfe7Df66e6BFbd3A76B68dDF26b9312E6c85a38543`](https://snowtrace.io/address/0xfe7Df66e6BFbd3A76B68dDF26b9312E6c85a38543) |
+| ReputationRegistry | [`0xfe7Df66e6BFbd3A76B68dF26b9312E6c85a38543`](https://snowtrace.io/address/0xfe7Df66e6BFbd3A76B68dF26b9312E6c85a38543) |
 | ValidationRegistry | [`0x91477bD9211448a85eFb16ea858432a85d89b833`](https://snowtrace.io/address/0x91477bD9211448a85eFb16ea858432a85d89b833) |
 
 All three are deployed behind UUPS (ERC-1967) proxies. The owner (initially the deployer multisig) can upgrade the implementation.
@@ -86,10 +86,10 @@ if (rep) {
 }
 ```
 
-Or via the indexer REST API (no wallet needed):
+Or via a self-hosted [indexer](/docs/api-reference/indexer) (no wallet needed):
 
 ```bash
-curl https://chainpe-indexer-production.up.railway.app/services/developer:service-name/reputation
+curl http://localhost:4600/services/developer:service-name/reputation
 # { "count": 15, "score": 87.3 }
 ```
 

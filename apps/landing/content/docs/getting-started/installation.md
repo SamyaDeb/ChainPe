@@ -76,14 +76,14 @@ All packages read from environment variables. The minimum set for making payment
 # Your EOA private key — signs EIP-3009 USDC authorizations
 CHAINPE_PRIVATE_KEY=0x...
 
-# Target network: avalanche (mainnet) or avalanche-fuji (testnet)
+# Target network: avalanche (mainnet) or fuji (testnet)
 CHAINPE_NETWORK=avalanche
 
 # Deployed ChainPeRegistry (Avalanche C-Chain mainnet)
 CHAINPE_REGISTRY_ADDRESS=0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E
 
 # ERC-8004 reputation registries (Avalanche C-Chain mainnet)
-ERC8004_REPUTATION_REGISTRY=0xfe7Df66e6BFbd3A76B68dDF26b9312E6c85a38543
+ERC8004_REPUTATION_REGISTRY=0xfe7Df66e6BFbd3A76B68dF26b9312E6c85a38543
 ```
 
 Copy `.env.example` from the repo root and fill in your values. Never commit a `.env` file with real keys.

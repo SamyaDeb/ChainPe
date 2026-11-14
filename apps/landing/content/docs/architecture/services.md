@@ -11,7 +11,7 @@ ChainPe runs two Railway-deployed backend services: the **facilitator** and the 
 ## Facilitator
 
 **Repository:** `services/chainpe-facilitator/`
-**Live:** https://chainpe-facilitator-production.up.railway.app
+**Live:** https://chainpe-facilitator-production-000a.up.railway.app
 
 ### Responsibility
 
@@ -56,7 +56,7 @@ If the gas key balance drops below 0.05 AVAX, `/health` returns HTTP 503. Railwa
 ## Indexer
 
 **Repository:** `services/chainpe-indexer/`
-**Live:** https://chainpe-indexer-production.up.railway.app
+**Hosting:** self-hosted; there is no public instance right now. On mainnet, chainpe-cloud runs its own indexer behind the [provider dashboard](/dashboard).
 
 ### Responsibility
 

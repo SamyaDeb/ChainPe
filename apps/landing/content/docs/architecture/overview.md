@@ -17,7 +17,7 @@ graph TB
         AITOOLS["@chainpeavax/ai-tools\n(Vercel AI SDK / LangChain)"]
         CLI["@chainpeavax/cli\n(chainpe fetch / discover)"]
         MCP["chainpe-wallet-mcp\n(Claude Desktop)"]
-        DASH["apps/dashboard\n(Next.js marketplace)"]
+        DASH["apps/avalanche-dashboard\n(provider dashboard)"]
     end
 
     subgraph "Provider Layer"

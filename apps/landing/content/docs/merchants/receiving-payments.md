@@ -86,10 +86,10 @@ Every settled payment is a USDC `transferWithAuthorization` call on Avalanche. T
 
 ## ERC-8004 reputation
 
-Every client that pays for your API can rate your service. Ratings accumulate in the `ReputationRegistry` and are shown in `cp.discover()` results and the marketplace dashboard. A higher reputation score means your service appears higher in ranked discovery results — which drives more traffic.
+Every client that pays for your API can rate your service. Ratings accumulate in the `ReputationRegistry` and are shown in `cp.discover()` results and the provider dashboard. A higher reputation score means your service appears higher in ranked discovery results — which drives more traffic.
 
-To view your current reputation:
-```bash
-# Via the indexer
-curl https://chainpe-indexer-production.up.railway.app/services/youraddress:yourservicename/reputation
+To view your current reputation, sign in to the [provider dashboard](/dashboard) with your payTo wallet and open **Reputation**, or read it on-chain with the SDK:
+```ts
+const rep = await cp.getReputation('<your agentId>')
+// { score, count }  (score is null until the first rating)
 ```

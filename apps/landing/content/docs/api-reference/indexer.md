@@ -8,7 +8,9 @@ sidebar_position: 3
 
 The indexer watches on-chain events from `ChainPeRegistry` and `ReputationRegistry`, caches them in Postgres, and serves O(1) REST queries.
 
-**Base URL:** `https://chainpe-indexer-production.up.railway.app`
+**Base URL:** your own deployment, `http://localhost:4600` by default.
+
+> There is no hosted public instance of this indexer right now. Run `services/chainpe-indexer` yourself (it listens on `PORT`, default 4600). For discovery without an indexer, `cp.discover()` and `chainpe list` read `ChainPeRegistry` on-chain directly. Providers can see their own payments and reputation in the [provider dashboard](/dashboard).
 
 CORS is enabled for all origins.
 
@@ -33,7 +35,7 @@ Service liveness and sync status.
 
 **cURL:**
 ```bash
-curl https://chainpe-indexer-production.up.railway.app/health
+curl http://localhost:4600/health
 ```
 
 ---
@@ -53,7 +55,7 @@ Registry and feedback counts.
 
 **cURL:**
 ```bash
-curl https://chainpe-indexer-production.up.railway.app/stats
+curl http://localhost:4600/stats
 ```
 
 ---
@@ -109,16 +111,16 @@ Results are sorted: services with a reputation score (highest first) → unscore
 
 ```bash
 # All services
-curl https://chainpe-indexer-production.up.railway.app/services
+curl http://localhost:4600/services
 
 # Filter by query
-curl "https://chainpe-indexer-production.up.railway.app/services?query=weather"
+curl "http://localhost:4600/services?query=weather"
 
 # Filter by tag and price
-curl "https://chainpe-indexer-production.up.railway.app/services?tag=ai&maxPrice=0.05"
+curl "http://localhost:4600/services?tag=ai&maxPrice=0.05"
 
 # Paginate
-curl "https://chainpe-indexer-production.up.railway.app/services?offset=10&limit=5"
+curl "http://localhost:4600/services?offset=10&limit=5"
 ```
 
 ---
@@ -140,10 +142,10 @@ Get a single service by its key or `developer:name` identifier.
 **cURL:**
 ```bash
 # By developer:name
-curl "https://chainpe-indexer-production.up.railway.app/services/0x8cC8dADfAd2D39659314106bAf4Da10B3BA38A36:My%20Research%20Agent"
+curl "http://localhost:4600/services/0x8cC8dADfAd2D39659314106bAf4Da10B3BA38A36:My%20Research%20Agent"
 
 # By storage key
-curl "https://chainpe-indexer-production.up.railway.app/services/0xabc123..."
+curl "http://localhost:4600/services/0xabc123..."
 ```
 
 ---
@@ -172,7 +174,7 @@ For services with no `agentId` or no feedback:
 
 **cURL:**
 ```bash
-curl "https://chainpe-indexer-production.up.railway.app/services/0x8cC8...:My%20Agent/reputation"
+curl "http://localhost:4600/services/0x8cC8...:My%20Agent/reputation"
 ```
 
 ---

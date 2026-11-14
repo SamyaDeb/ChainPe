@@ -51,7 +51,7 @@ HTTP status `402 Payment Required` has been reserved since HTTP/1.1 but was neve
    X-PAYMENT: <base64-encoded signed authorization>
 
 5. Provider proxy submits payment to facilitator
-   POST https://chainpe-facilitator-production.up.railway.app/settle
+   POST https://chainpe-facilitator-production-000a.up.railway.app/settle
    {
      "paymentPayload": { ... signed authorization ... },
      "paymentRequirements": { ... the 402 body offer ... }

@@ -8,7 +8,7 @@ sidebar_position: 2
 
 The facilitator is a non-custodial x402 settlement service. It implements the x402 facilitator HTTP contract used by the `x402-express` middleware.
 
-**Base URL:** `https://chainpe-facilitator-production.up.railway.app`
+**Base URL:** `https://chainpe-facilitator-production-000a.up.railway.app`
 
 ---
 
@@ -63,7 +63,7 @@ Returns HTTP 503 when the AVAX balance drops below 0.05 AVAX. Railway will resta
 
 **cURL:**
 ```bash
-curl https://chainpe-facilitator-production.up.railway.app/health
+curl https://chainpe-facilitator-production-000a.up.railway.app/health
 ```
 
 ---
@@ -201,7 +201,7 @@ HTTP 400
 
 **cURL:**
 ```bash
-curl -X POST https://chainpe-facilitator-production.up.railway.app/verify \
+curl -X POST https://chainpe-facilitator-production-000a.up.railway.app/verify \
   -H "Content-Type: application/json" \
   -d '{ "paymentPayload": {...}, "paymentRequirements": {...} }'
 ```
@@ -239,7 +239,7 @@ HTTP 400
 
 **cURL:**
 ```bash
-curl -X POST https://chainpe-facilitator-production.up.railway.app/settle \
+curl -X POST https://chainpe-facilitator-production-000a.up.railway.app/settle \
   -H "Content-Type: application/json" \
   -d '{ "paymentPayload": {...}, "paymentRequirements": {...} }'
 ```

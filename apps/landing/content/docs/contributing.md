@@ -34,7 +34,7 @@ chainpe/
 ├── services/
 │   ├── chainpe-facilitator/  # Railway x402 facilitator
 │   └── chainpe-indexer/      # Railway events → Postgres → REST
-├── apps/dashboard/    # Next.js marketplace
+├── apps/avalanche-dashboard/  # Provider dashboard (Vite)
 ├── examples/          # seller-agents, agent-surfaces, policy-vault
 └── docs/              # CHANGELOG, DEPLOYMENTS, STRUCTURE, WHY-AVALANCHE
 ```

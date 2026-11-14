@@ -10,7 +10,7 @@ All notable changes to ChainPe are documented here.
 
 ## 2026-06-17 — Mainnet Launch
 
-- Deployed and verified all contracts on Avalanche C-Chain mainnet (chainId 43114) — ChainPeRegistry proxy `0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E`, PolicyVault proxy `0xFe38A9fE7bdA837549fed1b3608d138Bd9a168d8`, ERC-8004 registries (IdentityRegistry `0xB1330d7B1b083ba689C7f56bDf667F1F528a3195`, ReputationRegistry `0xfe7Df66e6BFbd3A76B68dDF26b9312E6c85a38543`, ValidationRegistry `0x91477bD9211448a85eFb16ea858432a85d89b833`), ICM Receiver/Sender.
+- Deployed and verified all contracts on Avalanche C-Chain mainnet (chainId 43114) — ChainPeRegistry proxy `0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E`, PolicyVault proxy `0xFe38A9fE7bdA837549fed1b3608d138Bd9a168d8`, ERC-8004 registries (IdentityRegistry `0xB1330d7B1b083ba689C7f56bDf667F1F528a3195`, ReputationRegistry `0xfe7Df66e6BFbd3A76B68dF26b9312E6c85a38543`, ValidationRegistry `0x91477bD9211448a85eFb16ea858432a85d89b833`), ICM Receiver/Sender.
 
 ---
 
@@ -83,7 +83,7 @@ All notable changes to ChainPe are documented here.
 | ChainPeRegistry (proxy) | `0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E` |
 | PolicyVault (proxy) | `0xFe38A9fE7bdA837549fed1b3608d138Bd9a168d8` |
 | ERC-8004 IdentityRegistry | `0xB1330d7B1b083ba689C7f56bDf667F1F528a3195` |
-| ERC-8004 ReputationRegistry | `0xfe7Df66e6BFbd3A76B68dDF26b9312E6c85a38543` |
+| ERC-8004 ReputationRegistry | `0xfe7Df66e6BFbd3A76B68dF26b9312E6c85a38543` |
 | ERC-8004 ValidationRegistry | `0x91477bD9211448a85eFb16ea858432a85d89b833` |
 | ChainPeICMReceiver | `0xc8aBD919F597C46dA889e76704F69A2809cd6D33` |
 | ChainPeICMSender | `0x097D7D4B46CB894142a72E91c3b8F8b5834255dF` |

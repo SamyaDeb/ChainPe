@@ -13,8 +13,8 @@ REST API reference for the two ChainPe backend services.
 
 | Service | Base URL | Notes |
 |---|---|---|
-| **Facilitator** | `https://chainpe-facilitator-production.up.railway.app` | Avalanche C-Chain mainnet |
-| **Indexer** | `https://chainpe-indexer-production.up.railway.app` | Avalanche C-Chain mainnet |
+| **Facilitator** | `https://chainpe-facilitator-production-000a.up.railway.app` | Avalanche C-Chain mainnet |
+| **Indexer** | Self-hosted (`http://localhost:4600` by default) | No hosted public instance; see [Indexer API](/docs/api-reference/indexer) |
 
 ## Authentication
 

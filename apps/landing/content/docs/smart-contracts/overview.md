@@ -18,7 +18,7 @@ Deployed 2026-06-17. Deployer / owner: `0x8cC8dADfAd2D39659314106bAf4Da10B3BA38A
 | **ChainPeRegistry** (proxy) | [`0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E`](https://snowtrace.io/address/0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E#code) | Verified on Snowtrace, UUPS proxy |
 | PolicyVault (proxy) | [`0xFe38A9fE7bdA837549fed1b3608d138Bd9a168d8`](https://snowtrace.io/address/0xFe38A9fE7bdA837549fed1b3608d138Bd9a168d8) | UUPS proxy |
 | ERC-8004 IdentityRegistry (proxy) | [`0xB1330d7B1b083ba689C7f56bDf667F1F528a3195`](https://snowtrace.io/address/0xB1330d7B1b083ba689C7f56bDf667F1F528a3195) | UUPS proxy |
-| ERC-8004 ReputationRegistry (proxy) | [`0xfe7Df66e6BFbd3A76B68dDF26b9312E6c85a38543`](https://snowtrace.io/address/0xfe7Df66e6BFbd3A76B68dDF26b9312E6c85a38543) | UUPS proxy |
+| ERC-8004 ReputationRegistry (proxy) | [`0xfe7Df66e6BFbd3A76B68dF26b9312E6c85a38543`](https://snowtrace.io/address/0xfe7Df66e6BFbd3A76B68dF26b9312E6c85a38543) | UUPS proxy |
 | ERC-8004 ValidationRegistry (proxy) | [`0x91477bD9211448a85eFb16ea858432a85d89b833`](https://snowtrace.io/address/0x91477bD9211448a85eFb16ea858432a85d89b833) | UUPS proxy |
 | ChainPeICMReceiver | [`0xc8aBD919F597C46dA889e76704F69A2809cd6D33`](https://snowtrace.io/address/0xc8aBD919F597C46dA889e76704F69A2809cd6D33) | no proxy |
 | ChainPeICMSender | [`0x097D7D4B46CB894142a72E91c3b8F8b5834255dF`](https://snowtrace.io/address/0x097D7D4B46CB894142a72E91c3b8F8b5834255dF) | no proxy |
@@ -33,7 +33,7 @@ Deployed 2026-06-17. Deployer / owner: `0x8cC8dADfAd2D39659314106bAf4Da10B3BA38A
 ## Registry config (mainnet)
 
 - Fee token: USDC (`0xB97E...6a6E`)
-- Registration fee: **0.1 USDC** (100000 atomic)
+- Registration fee: **1 USDC** (1000000 atomic)
 - Update fee: **0 USDC** (free updates)
 - Identity registry linked: yes (`0xB133...3195`)
 
