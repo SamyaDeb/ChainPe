@@ -13,12 +13,12 @@ import { RPC_URLS } from "./types.js";
 import { createClient } from "./wallet.js";
 
 const CHAINS = { fuji: avalancheFuji, avalanche } as const;
-const ZERO_HASH: Hex = "0x0000000000000000000000000000000000000000000000000000000000000000";
+export const ZERO_HASH: Hex = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 // Deployed ERC-8004 Reputation Registry per network (override via env/config).
 const DEFAULT_REPUTATION: Record<ChainPeNetwork, `0x${string}` | undefined> = {
   fuji: "0x89476DfEf9c72a668fa5E86f154B73EDB053aFe4",
-  avalanche: undefined,
+  avalanche: "0xfe7Df66e6BFbd3A76B68dF26b9312E6c85a38543",
 };
 
 const REPUTATION_ABI = [
@@ -75,13 +75,15 @@ export function resolveReputationRegistry(
   return candidate ? getAddress(candidate) : undefined;
 }
 
-export interface ReputationSummary {
-  count: number;
-  /** Aggregate score (e.g. 0–100), or null when there is no feedback yet. */
-  score: number | null;
-}
+export type { ReputationSummary } from "./cloud.js";
+import type { ReputationSummary } from "./cloud.js";
 
-/** Reads a provider's on-chain reputation (count 0 when unscored). */
+export const isTxHash = (v: string): v is Hex => /^0x[0-9a-fA-F]{64}$/.test(v);
+
+/**
+ * Reads a provider's plain on-chain average over EVERY rating. Anyone can post one, so it is labelled
+ * `source: "unverified"`; use chainpe-cloud's paid score as evidence.
+ */
 export async function getReputation(
   network: ChainPeNetwork,
   agentId: string,
@@ -99,7 +101,7 @@ export async function getReputation(
       functionName: "getClients",
       args: [id],
     })) as readonly `0x${string}`[];
-    if (clients.length === 0) return { count: 0, score: null };
+    if (clients.length === 0) return { count: 0, score: null, source: "unverified" };
 
     const [count, summaryValue, decimals] = (await client.readContract({
       address: registry,
@@ -108,7 +110,7 @@ export async function getReputation(
       args: [id, clients as `0x${string}`[], "", ""],
     })) as readonly [bigint, bigint, number];
 
-    return { count: Number(count), score: Number(summaryValue) / 10 ** Number(decimals) };
+    return { count: Number(count), score: Number(summaryValue) / 10 ** Number(decimals), source: "unverified" };
   } catch {
     return null;
   }
@@ -120,11 +122,21 @@ export async function giveFeedback(
   network: ChainPeNetwork,
   agentId: string,
   value: number,
-  opts: { endpoint?: string; tag?: string; reputationRegistry?: string; waitConfirm?: boolean } = {}
+  opts: {
+    endpoint?: string;
+    tag?: string;
+    /** The x402 settlement tx this rating is about, sent as feedbackHash so it can count as a paid review. */
+    paymentTx?: string;
+    reputationRegistry?: string;
+    waitConfirm?: boolean;
+  } = {}
 ): Promise<string> {
   const registry = resolveReputationRegistry(network, opts.reputationRegistry);
   if (!registry) throw new Error("Reputation registry address not configured");
 
+  if (opts.paymentTx !== undefined && !isTxHash(opts.paymentTx)) {
+    throw new Error("paymentTx must be a 32-byte 0x-prefixed transaction hash");
+  }
   const account = privateKeyToAccount(normalizeKey(privateKey));
   const wallet = createWalletClient({ account, chain: CHAINS[network], transport: http(RPC_URLS[network]) });
 
@@ -140,7 +152,7 @@ export async function giveFeedback(
       opts.tag ?? "paid-call",
       opts.endpoint ?? "",
       "",
-      ZERO_HASH,
+      opts.paymentTx ?? ZERO_HASH,
     ],
   });
 

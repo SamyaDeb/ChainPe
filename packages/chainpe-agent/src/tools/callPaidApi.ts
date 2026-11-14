@@ -13,6 +13,7 @@ import type { PaymentClient } from "../payment.js";
 import type { RegistryClient } from "../registry.js";
 import type { ServiceInfo, Registry, ChainPeNetwork } from "../types.js";
 import { giveFeedback } from "../reputation.js";
+import { ReputationTooLow } from "../cloud.js";
 
 export interface CallPaidApiToolOptions {
   paymentClient: PaymentClient;
@@ -186,19 +187,29 @@ export function createCallPaidApiTool(options: CallPaidApiToolOptions) {
           paid: response.paid ?? false,
         });
 
-        // On-chain reputation: leave a positive ERC-8004 score for the
-        // provider's agent after a successful paid call. Best-effort.
-        let reputation: { agentId: string; score: number; txHash: string } | undefined;
-        if (response.paid && privateKey && network && service.agentId && service.agentId !== "0") {
+        // On-chain reputation: leave a positive ERC-8004 score for the provider's agent after a successful paid call,
+        // carrying the settlement tx as feedbackHash so chainpe-cloud can verify the payment. The agent is resolved
+        // from the registry by the payTo that was actually signed, never from anything the server or a local file says.
+        // Skipped without a settlement tx (an unpaid rating would not count). Best-effort.
+        let reputation: { agentId: string; score: number; txHash: string; paymentTx: string } | undefined;
+        const receipt = response.paymentReceipt;
+        if (response.paid && privateKey && network && receipt?.txId && receipt.recipient) {
           try {
-            const txHash = await giveFeedback(privateKey, network, service.agentId, 100, {
-              endpoint: service.endpoint,
-              tag: "x402-success",
-              reputationRegistry,
-            });
-            reputation = { agentId: service.agentId, score: 100, txHash };
+            const onchain = (await registryClient.listAllServices()).filter(
+              (x) => x.walletAddress.toLowerCase() === receipt.recipient.toLowerCase()
+            );
+            const owner = onchain.find((x) => service!.endpoint.startsWith(x.endpoint) && x.agentId) ?? onchain.find((x) => x.agentId);
+            if (owner?.agentId && owner.agentId !== "0") {
+              const txHash = await giveFeedback(privateKey, network, owner.agentId, 100, {
+                endpoint: service.endpoint,
+                tag: "x402-success",
+                paymentTx: receipt.txId,
+                reputationRegistry,
+              });
+              reputation = { agentId: owner.agentId, score: 100, txHash, paymentTx: receipt.txId };
+            }
           } catch {
-            /* self-feedback / network / no-registry — non-fatal */
+            /* self-feedback / network / no-registry: non-fatal */
           }
         }
 
@@ -217,6 +228,16 @@ export function createCallPaidApiTool(options: CallPaidApiToolOptions) {
           reputation,
         };
       } catch (error) {
+        if (error instanceof ReputationTooLow) {
+          // Nothing was signed. Say so plainly so the model relays it instead of retrying.
+          return {
+            success: false,
+            refused: true,
+            reason: error.reason,
+            error: `REFUSED: ${error.message} Do not retry this service; tell the user and pick one from discoverService's recommended list.`,
+            serviceName,
+          };
+        }
         return {
           success: false,
           error: `API call failed: ${(error as Error).message}`,

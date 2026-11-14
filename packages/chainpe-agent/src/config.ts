@@ -25,12 +25,41 @@ async function ensureConfigDir(): Promise<void> {
   await fs.mkdir(CONFIG_DIR, { recursive: true });
 }
 
+/**
+ * MIN_REPUTATION (0-100), MIN_PAID_REVIEWS and CHAINPE_CLOUD_URL ("off" disables). Unset or blank means "not set".
+ * Anything else that is not a valid number throws, so a typo cannot silently turn a safety minimum off.
+ */
+export function readSafetyEnv(env: NodeJS.ProcessEnv = process.env): {
+  minReputation?: number;
+  minPaidReviews?: number;
+  cloudUrl?: string | false;
+} {
+  const num = (name: string, max: number): number | undefined => {
+    const raw = env[name];
+    if (raw === undefined || raw.trim() === "") return undefined;
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 0 || n > max) throw new Error(`${name} must be a number between 0 and ${max} (got "${raw}")`);
+    return n;
+  };
+  const cloud = env.CHAINPE_CLOUD_URL?.trim();
+  return {
+    minReputation: num("MIN_REPUTATION", 100),
+    minPaidReviews: num("MIN_PAID_REVIEWS", 1_000_000),
+    cloudUrl: cloud === "off" ? false : cloud || undefined,
+  };
+}
+
 /** Loads the agent configuration from disk (null if none). */
 export async function loadConfig(): Promise<AgentConfig | null> {
   try {
     const config = JSON.parse(await fs.readFile(CONFIG_FILE, "utf-8")) as AgentConfig;
     if (!config.llm.mode) config.llm.mode = "api";
     if (config.wallet.useKeychain === undefined) config.wallet.useKeychain = true;
+    // Environment overrides the saved file, so a safety minimum can be set per run.
+    const env = readSafetyEnv();
+    if (env.minReputation !== undefined) config.minReputation = env.minReputation;
+    if (env.minPaidReviews !== undefined) config.minPaidReviews = env.minPaidReviews;
+    if (env.cloudUrl !== undefined) config.cloudUrl = env.cloudUrl;
     return config;
   } catch {
     return null;
@@ -50,6 +79,9 @@ export async function saveConfig(config: AgentConfig): Promise<void> {
     registryPath: config.registryPath,
     registryAddress: config.registryAddress,
     reputationRegistry: config.reputationRegistry,
+    minReputation: config.minReputation,
+    minPaidReviews: config.minPaidReviews,
+    cloudUrl: config.cloudUrl,
     network: config.network,
   };
   await fs.writeFile(CONFIG_FILE, JSON.stringify(clean, null, 2), { mode: 0o600 });
@@ -128,6 +160,8 @@ export interface ConfigBuilder {
   registryPath?: string;
   registryAddress?: string;
   reputationRegistry?: string;
+  minReputation?: number;
+  minPaidReviews?: number;
   network?: ChainPeNetwork;
 }
 
@@ -147,7 +181,9 @@ export function buildConfig(builder: ConfigBuilder): AgentConfig {
     registryPath: builder.registryPath || DEFAULT_REGISTRY_PATH,
     registryAddress: builder.registryAddress,
     reputationRegistry: builder.reputationRegistry,
-    network: builder.network || "fuji",
+    minReputation: builder.minReputation,
+    minPaidReviews: builder.minPaidReviews,
+    network: builder.network || "avalanche",
   };
 }
 

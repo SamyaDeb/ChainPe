@@ -18,12 +18,24 @@ import type {
 } from "./types.js";
 import { addressFromPrivateKey, createWalletFromPrivateKey, parseAmount } from "./wallet.js";
 
+const DEFAULT_MAX_PER_PAYMENT = "0.10";
+
+/** What the payer actually signed (EIP-3009 authorization inside the X-PAYMENT header). */
+interface SignedAuthorization {
+  to: string;
+  value: string;
+}
+
 export interface PaymentClientOptions {
   privateKey: string;
   network?: ChainPeNetwork;
   onPayment?: (receipt: PaymentReceipt) => void;
-  /** Max USDC per payment (human string). Defaults to "10". */
+  /** Max USDC per payment (human string). Defaults to "0.10". */
   maxPerPayment?: string;
+  /**
+   * Called with each 402 offer's payTo BEFORE anything is signed. Throw to refuse the payment (e.g. ReputationTooLow).
+   */
+  gate?: (payTo: string, url: string) => Promise<void>;
 }
 
 export class PaymentClient {
@@ -32,17 +44,21 @@ export class PaymentClient {
   private readonly onPayment?: (receipt: PaymentReceipt) => void;
   private readonly maxValueAtomic: bigint;
   private readonly address: string;
+  private readonly gate?: (payTo: string, url: string) => Promise<void>;
 
   private wrappedFetch?: typeof fetch;
+  /** Authorization signed during each in-flight request, keyed by that request's AbortSignal. */
+  private readonly signed = new WeakMap<AbortSignal, SignedAuthorization>();
   private receipts: PaymentReceipt[] = [];
   private totalSpent: Record<PaymentToken, bigint> = { USDC: 0n };
 
   constructor(options: PaymentClientOptions) {
     this.privateKey = options.privateKey;
-    this.network = options.network || "fuji";
+    this.network = options.network || "avalanche";
     this.onPayment = options.onPayment;
-    this.maxValueAtomic = parseAmount(options.maxPerPayment ?? "10");
+    this.maxValueAtomic = parseAmount(options.maxPerPayment?.trim() || DEFAULT_MAX_PER_PAYMENT);
     this.address = addressFromPrivateKey(options.privateKey);
+    this.gate = options.gate;
   }
 
   /** Lazily builds the x402-wrapped fetch (signer creation is async). */
@@ -50,7 +66,24 @@ export class PaymentClient {
     if (!this.wrappedFetch) {
       const wallet = await createWalletFromPrivateKey(this.privateKey, this.network);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.wrappedFetch = wrapFetchWithPayment(fetch, wallet.signer as any, this.maxValueAtomic);
+      // x402-fetch builds the payment on the retry; we tap the base fetch to read the
+      // authorization that was really signed (amount + recipient), since the server's
+      // settlement header only carries the payer and tx hash.
+      const capturingFetch: typeof fetch = async (input, init) => {
+        const header = new Headers(init?.headers).get("X-PAYMENT");
+        if (header && init?.signal) {
+          const auth = decodeAuthorization(header);
+          if (auth) this.signed.set(init.signal, auth);
+        }
+        const response = await fetch(input, init);
+        // The unpaid probe came back 402: run the gate on who would be paid BEFORE x402-fetch signs anything.
+        if (this.gate && response.status === 402 && !header) {
+          const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : (input as Request).url;
+          for (const payTo of await offeredPayees(response.clone(), x402NetworkOf(this.network))) await this.gate(payTo, url);
+        }
+        return response;
+      };
+      this.wrappedFetch = wrapFetchWithPayment(capturingFetch, wallet.signer as any, this.maxValueAtomic);
     }
     return this.wrappedFetch;
   }
@@ -64,10 +97,11 @@ export class PaymentClient {
     const { method = "GET", headers = {}, body, timeout = 30000 } = options;
     const wrapped = await this.ensureReady();
 
+    const signal = AbortSignal.timeout(timeout);
     const fetchOptions: RequestInit = {
       method,
       headers: { "Content-Type": "application/json", ...headers },
-      signal: AbortSignal.timeout(timeout),
+      signal,
     };
     if (body && method !== "GET") fetchOptions.body = JSON.stringify(body);
 
@@ -78,7 +112,7 @@ export class PaymentClient {
     const paid = !!settleHeader;
     let receipt: PaymentReceipt | undefined;
     if (paid) {
-      receipt = this.recordPayment(url, settleHeader);
+      receipt = this.recordPayment(url, settleHeader, this.signed.get(signal));
     }
 
     const data = await this.parseResponse<T>(response);
@@ -103,22 +137,27 @@ export class PaymentClient {
     // Enrich the receipt with the service's metadata when available.
     if (response.paymentReceipt) {
       response.paymentReceipt.service = service.name;
-      response.paymentReceipt.recipient = service.walletAddress || response.paymentReceipt.recipient;
-      if (!response.paymentReceipt.amount || response.paymentReceipt.amount === "0") {
-        response.paymentReceipt.amount = service.pricePerRequest;
-      }
+      // Amount and recipient stay as signed — never overwrite them with the registry's claims.
     }
     return response;
   }
 
-  private recordPayment(url: string, settleHeader: string): PaymentReceipt {
+  private recordPayment(url: string, settleHeader: string, auth?: SignedAuthorization): PaymentReceipt {
+    // Real amount/recipient come from the authorization we signed.
     let amount = "0";
     let recipient = "unknown";
+    if (auth) {
+      try {
+        amount = formatAtomic(BigInt(auth.value));
+        recipient = auth.to;
+      } catch {
+        /* malformed value — keep defaults */
+      }
+    }
     let txId: string | undefined;
     try {
       const decoded = decodeXPaymentResponse(settleHeader) as Record<string, unknown>;
       txId = (decoded.transaction as string) ?? (decoded.txHash as string);
-      recipient = (decoded.payer as string) ?? recipient;
     } catch {
       /* header not decodable — keep defaults */
     }
@@ -178,6 +217,34 @@ export class PaymentClient {
       obj[key] = value;
     });
     return obj;
+  }
+}
+
+/** The payTo of every offer in a 402 body. */
+/** The x402 network id the wallet pays on; offers for any other network are never signed, so they are not gated. */
+function x402NetworkOf(network: ChainPeNetwork): string {
+  return network === "fuji" ? "avalanche-fuji" : "avalanche";
+}
+
+async function offeredPayees(response: Response, network: string): Promise<string[]> {
+  try {
+    const body = (await response.json()) as { accepts?: { payTo?: string; network?: string }[] };
+    const offers = (body.accepts ?? []).filter((a) => !a.network || a.network === network);
+    return [...new Set(offers.map((a) => a.payTo).filter((p): p is string => !!p))];
+  } catch {
+    return [];
+  }
+}
+
+function decodeAuthorization(xPayment: string): SignedAuthorization | undefined {
+  try {
+    const parsed = JSON.parse(Buffer.from(xPayment, "base64").toString("utf-8")) as {
+      payload?: { authorization?: SignedAuthorization };
+    };
+    const a = parsed.payload?.authorization;
+    return a?.to && a.value !== undefined ? { to: a.to, value: String(a.value) } : undefined;
+  } catch {
+    return undefined;
   }
 }
 
