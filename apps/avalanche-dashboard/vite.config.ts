@@ -4,7 +4,8 @@ import path from 'path'
 
 /**
  * Injects a strict Content-Security-Policy into the BUILT index.html only. The dev server needs inline
- * scripts for hot reload, so it is left alone. connect-src is the API origin, the Avalanche RPC and WalletConnect.
+ * scripts for hot reload, so it is left alone. connect-src is the API origin, the Avalanche RPC, WalletConnect, and
+ * any https origin (for "Try it", see below).
  * style-src allows inline styles because RainbowKit's modal sets its theme that way. Scripts stay 'self' only.
  */
 function cspPlugin(apiUrl: string): Plugin {
@@ -23,7 +24,10 @@ function cspPlugin(apiUrl: string): Plugin {
     'https://api.web3modal.org',
     'https://explorer-api.walletconnect.com',
   ]
-  const connect = [apiOrigin, 'https://api.avax.network', ...walletConnect].filter(Boolean).join(' ')
+  // 'https:' is for the Explore page's "Try it", which calls each service's own registered endpoint, and those are
+  // any https origin listed in the on-chain registry. Only https: no http, no other schemes. Scripts stay 'self'
+  // only, so this widens where the page's own code may send requests, not what code can run.
+  const connect = [apiOrigin, 'https://api.avax.network', ...walletConnect, 'https:'].filter(Boolean).join(' ')
   const policy = [
     "default-src 'none'",
     "script-src 'self'",

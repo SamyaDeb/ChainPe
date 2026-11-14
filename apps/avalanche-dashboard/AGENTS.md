@@ -27,7 +27,7 @@ Revenue counts verified payments only. On Avalanche the backend reads payments f
 - `src/lib/money.ts` - atomic string to bigint to display. Never use Number or parseFloat on an amount. Tests: `npm test`.
 - `src/lib/explorer.ts` - the only place that builds links from data.
 - `src/screens/` - one file per screen. `src/components/ui/` - shared UI.
-- `vite.config.ts` - injects the CSP into the built `index.html` only (connect-src: API, api.avax.network, WalletConnect).
+- `vite.config.ts` - injects the CSP into the built `index.html` only (connect-src: API, api.avax.network, WalletConnect, and `https:` for the Explore page's "Try it", which calls registered service endpoints).
 
 ## Mock and live
 

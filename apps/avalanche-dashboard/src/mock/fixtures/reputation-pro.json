@@ -5,6 +5,10 @@
   "payerCount": 1,
   "allAverage": "67.50",
   "allCount": 2,
+  "paidScore": null,
+  "paidReviews": 0,
+  "rawScore": "67.50",
+  "rawReviews": 2,
   "items": [
     {
       "client": "0x1111111111111111111111111111111111111111",
@@ -15,9 +19,13 @@
       "tag2": "",
       "endpoint": "",
       "feedbackUri": "",
-      "blockTs": "2026-11-14T06:26:03.388Z",
+      "blockTs": "2026-11-14T10:40:02.097Z",
       "txHash": "0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff3e8",
-      "fromPayer": false
+      "fromPayer": false,
+      "verified": false,
+      "verificationReason": "no_proof",
+      "paymentTx": null,
+      "paidAtomic": null
     },
     {
       "client": "0x24BC730c658201bC51873f7aeAaDE65A545c7A11",
@@ -28,9 +36,13 @@
       "tag2": "/marker-route-1000",
       "endpoint": "https://weather.example.com",
       "feedbackUri": "",
-      "blockTs": "2026-11-14T06:25:58.383Z",
+      "blockTs": "2026-11-14T10:39:57.096Z",
       "txHash": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee3e8",
-      "fromPayer": true
+      "fromPayer": true,
+      "verified": true,
+      "verificationReason": null,
+      "paymentTx": "0xddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd3e8",
+      "paidAtomic": "10000"
     }
   ]
 }

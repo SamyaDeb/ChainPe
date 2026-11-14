@@ -1,7 +1,6 @@
 import type {
   Buyers,
   CreatedKey,
-  Fees,
   Health,
   KeyList,
   Me,
@@ -10,6 +9,11 @@ import type {
   PaymentFilters,
   Payments,
   PaymentsQuery,
+  ProviderSummary,
+  PublicFeed,
+  PublicReviews,
+  PublicServices,
+  PublicStats,
   Range,
   Reputation,
   RevokedKey,
@@ -130,10 +134,15 @@ export interface ChainPeApi {
   health(): Promise<Health>
   wallets(): Promise<Wallets>
   putWallets(wallets: string[]): Promise<Wallets>
-  fees(): Promise<Fees>
   keys(): Promise<KeyList>
   createKey(name?: string): Promise<CreatedKey>
   revokeKey(id: string): Promise<RevokedKey>
+  /** Public reads: no session needed, the same on every account. */
+  publicStats(): Promise<PublicStats>
+  publicServices(): Promise<PublicServices>
+  publicReviews(serviceKey: string, query?: { limit?: number; offset?: number }): Promise<PublicReviews>
+  publicFeed(limit?: number): Promise<PublicFeed>
+  providerSummary(address: string, range: Range): Promise<ProviderSummary>
 }
 
 function build(transport: Transport): ChainPeApi {
@@ -165,10 +174,16 @@ function build(transport: Transport): ChainPeApi {
     health: () => json({ method: 'GET', path: '/v1/me/health' }),
     wallets: () => json({ method: 'GET', path: '/v1/me/wallets' }),
     putWallets: (wallets) => json({ method: 'PUT', path: '/v1/me/wallets', body: { wallets } }),
-    fees: () => json({ method: 'GET', path: '/v1/me/fees' }),
     keys: () => json({ method: 'GET', path: '/v1/keys' }),
     createKey: (name) => json({ method: 'POST', path: '/v1/keys', body: name ? { name } : {} }),
     revokeKey: (id) => json({ method: 'DELETE', path: `/v1/keys/${encodeURIComponent(id)}` }),
+    publicStats: () => json({ method: 'GET', path: '/v1/public/stats' }),
+    publicServices: () => json({ method: 'GET', path: '/v1/public/services' }),
+    publicReviews: (key, q) =>
+      json({ method: 'GET', path: `/v1/public/services/${encodeURIComponent(key)}/reviews`, query: { limit: q?.limit, offset: q?.offset } }),
+    publicFeed: (limit) => json({ method: 'GET', path: '/v1/public/feed', query: { limit } }),
+    providerSummary: (address, range) =>
+      json({ method: 'GET', path: `/v1/public/providers/${encodeURIComponent(address)}/summary`, query: { range } }),
   }
 }
 
@@ -184,3 +199,6 @@ function createLazyMockTransport(getToken: () => string | null): Transport {
 export function createApi(getToken: () => string | null): ChainPeApi {
   return build(USE_MOCK ? createLazyMockTransport(getToken) : createFetchTransport(getToken))
 }
+
+/** For the public pages: never sends a session token, so it works the same signed in or not. */
+export const publicApi: ChainPeApi = createApi(() => null)

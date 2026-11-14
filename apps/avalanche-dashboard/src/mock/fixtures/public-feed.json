@@ -1,0 +1,196 @@
+{
+  "settlements": [
+    {
+      "txHash": "0xbd2adbc5afc60d2e7847ad2ee85c7b0d7ecc9ed04b9677038f655295cb8cea86",
+      "serviceKey": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "service": "weather",
+      "amountAtomic": "10000",
+      "payer": "0x37066d1D52a231450510a865D6FA3480196cE573",
+      "ts": "2026-11-14T12:00:00.000Z"
+    },
+    {
+      "txHash": "0x14d177c3ade94adef2530e6efc578cc5b0df95445325e22c4fa8520eeee2cf18",
+      "serviceKey": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "service": "weather",
+      "amountAtomic": "10000",
+      "payer": "0x944dFBDdf694e0a0aD915C58A6711510b130b89F",
+      "ts": "2026-11-14T11:59:10.000Z"
+    },
+    {
+      "txHash": "0x87b14f89c3405f5663a00f9d1d1420e8e3f6b06ae9a67b04d19e8d5e8fda4ad3",
+      "serviceKey": "0x415ba197b119f267c41aef2578c38bcd968adb08931503c0797db11fd83c2e9b",
+      "service": "summarize",
+      "amountAtomic": "50000",
+      "payer": "0x0d5B06470DA552422d07888C646eb6a0D61aE68C",
+      "ts": "2026-11-14T11:58:14.000Z"
+    },
+    {
+      "txHash": "0x3afa90670efd4c87b9c443369c99d4ff3ebcd2c316e16d5931aff36a72ac0510",
+      "serviceKey": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "service": "weather",
+      "amountAtomic": "10000",
+      "payer": "0x98B953b7687CB7B9d61233fEF8D4e2DFA36a7A13",
+      "ts": "2026-11-14T11:57:12.000Z"
+    },
+    {
+      "txHash": "0xa86d2e1a8d22edb1a83c9d5927b9068d2c933b214ed2e3a9d4823aa196ae0652",
+      "serviceKey": "0x1c6c465c4bb1f86b2e7e853c7915960c559be77035aef593666db32232a5c96c",
+      "service": "cheap-weather",
+      "amountAtomic": "1000",
+      "payer": "0x37066d1D52a231450510a865D6FA3480196cE573",
+      "ts": "2026-11-14T11:56:04.000Z"
+    },
+    {
+      "txHash": "0x015ba4b9823904caceeb4bad53a2e8bb19ae0c4de7c4682253d792a0dc5b2eaf",
+      "serviceKey": "0x415ba197b119f267c41aef2578c38bcd968adb08931503c0797db11fd83c2e9b",
+      "service": "summarize",
+      "amountAtomic": "50000",
+      "payer": "0x944dFBDdf694e0a0aD915C58A6711510b130b89F",
+      "ts": "2026-11-14T11:54:50.000Z"
+    },
+    {
+      "txHash": "0x6aaf0379fa3af7de4b374739542ca8fc532229ec57ae5e4e82da61605924b209",
+      "serviceKey": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "service": "weather",
+      "amountAtomic": "10000",
+      "payer": "0x0d5B06470DA552422d07888C646eb6a0D61aE68C",
+      "ts": "2026-11-14T11:53:30.000Z"
+    },
+    {
+      "txHash": "0xce2f98638e12087c332d26c57cf3d6f8b887e893fbe1c06a58b8676c75667986",
+      "serviceKey": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "service": "weather",
+      "amountAtomic": "10000",
+      "payer": "0x98B953b7687CB7B9d61233fEF8D4e2DFA36a7A13",
+      "ts": "2026-11-14T11:52:04.000Z"
+    },
+    {
+      "txHash": "0x0465baa129eccd38b8d9504b7395d346805ff43538489c8fd94aafee2fe3c4ac",
+      "serviceKey": "0x415ba197b119f267c41aef2578c38bcd968adb08931503c0797db11fd83c2e9b",
+      "service": "summarize",
+      "amountAtomic": "50000",
+      "payer": "0x37066d1D52a231450510a865D6FA3480196cE573",
+      "ts": "2026-11-14T11:50:32.000Z"
+    },
+    {
+      "txHash": "0x6b2ef8481a866b14edc180e06e2b5a8a55f2b996242f6f6f6df0b08f9ab1313b",
+      "serviceKey": "0x1c6c465c4bb1f86b2e7e853c7915960c559be77035aef593666db32232a5c96c",
+      "service": "cheap-weather",
+      "amountAtomic": "1000",
+      "payer": "0x944dFBDdf694e0a0aD915C58A6711510b130b89F",
+      "ts": "2026-11-14T11:48:54.000Z"
+    },
+    {
+      "txHash": "0x76f62487992fb5b5012e05925e0c6399a02a4e252e4dbaf245e9f57bf2e9df8f",
+      "serviceKey": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "service": "weather",
+      "amountAtomic": "10000",
+      "payer": "0x0d5B06470DA552422d07888C646eb6a0D61aE68C",
+      "ts": "2026-11-14T11:47:10.000Z"
+    },
+    {
+      "txHash": "0x08f3a1e6b4798834380cb0c1b1bc54871b3f28dd4bfbff63d04b6e07f14f39e8",
+      "serviceKey": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "service": "weather",
+      "amountAtomic": "10000",
+      "payer": "0x98B953b7687CB7B9d61233fEF8D4e2DFA36a7A13",
+      "ts": "2026-11-14T11:45:20.000Z"
+    },
+    {
+      "txHash": "0x70396b6f93eec2d1575566e369d13d05eb4a09b57d7bd967d9761fac529db2bd",
+      "serviceKey": "0x415ba197b119f267c41aef2578c38bcd968adb08931503c0797db11fd83c2e9b",
+      "service": "summarize",
+      "amountAtomic": "50000",
+      "payer": "0x37066d1D52a231450510a865D6FA3480196cE573",
+      "ts": "2026-11-14T11:43:24.000Z"
+    },
+    {
+      "txHash": "0xf52a244c8a2aead4c2fec1b618d0238fbf4490663ce04b42a67ead3c063272da",
+      "serviceKey": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "service": "weather",
+      "amountAtomic": "10000",
+      "payer": "0x944dFBDdf694e0a0aD915C58A6711510b130b89F",
+      "ts": "2026-11-14T11:41:22.000Z"
+    },
+    {
+      "txHash": "0xafdd5f4732e78e16bf247ae800df3336b061486e2e69a7f290b3dab81149600b",
+      "serviceKey": "0x1c6c465c4bb1f86b2e7e853c7915960c559be77035aef593666db32232a5c96c",
+      "service": "cheap-weather",
+      "amountAtomic": "1000",
+      "payer": "0x0d5B06470DA552422d07888C646eb6a0D61aE68C",
+      "ts": "2026-11-14T11:39:14.000Z"
+    },
+    {
+      "txHash": "0x7e9c8b3534cf9d5561abd28410626fdb38a017777e0e184667783ca68f3bd875",
+      "serviceKey": "0x415ba197b119f267c41aef2578c38bcd968adb08931503c0797db11fd83c2e9b",
+      "service": "summarize",
+      "amountAtomic": "50000",
+      "payer": "0x98B953b7687CB7B9d61233fEF8D4e2DFA36a7A13",
+      "ts": "2026-11-14T11:37:00.000Z"
+    },
+    {
+      "txHash": "0x1e9e85babca81be32d45df502e4ed061083a73a930f147353a77a24583dfbe30",
+      "serviceKey": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "service": "weather",
+      "amountAtomic": "10000",
+      "payer": "0x37066d1D52a231450510a865D6FA3480196cE573",
+      "ts": "2026-11-14T11:34:40.000Z"
+    },
+    {
+      "txHash": "0x18e8567a03d1a19c0a691b6ddae68e2347c3184cec3762db06429c1513858130",
+      "serviceKey": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "service": "weather",
+      "amountAtomic": "10000",
+      "payer": "0x944dFBDdf694e0a0aD915C58A6711510b130b89F",
+      "ts": "2026-11-14T11:32:14.000Z"
+    },
+    {
+      "txHash": "0x1c7e96a1a00e91879cc858331c548c4ee832584a0a7d456d1094470e7277e293",
+      "serviceKey": "0x415ba197b119f267c41aef2578c38bcd968adb08931503c0797db11fd83c2e9b",
+      "service": "summarize",
+      "amountAtomic": "50000",
+      "payer": "0x0d5B06470DA552422d07888C646eb6a0D61aE68C",
+      "ts": "2026-11-14T11:29:42.000Z"
+    },
+    {
+      "txHash": "0x1da1e0d1bc5d2237d61e1c5c6a67921b355508923858558ee04a9db8b2b636c6",
+      "serviceKey": "0x1c6c465c4bb1f86b2e7e853c7915960c559be77035aef593666db32232a5c96c",
+      "service": "cheap-weather",
+      "amountAtomic": "1000",
+      "payer": "0x98B953b7687CB7B9d61233fEF8D4e2DFA36a7A13",
+      "ts": "2026-11-14T11:27:04.000Z"
+    },
+    {
+      "txHash": "0x0a772a2144a825361584dfe120ae09f821aca73547a173e208c5cadc4dfff8ee",
+      "serviceKey": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "service": "weather",
+      "amountAtomic": "10000",
+      "payer": "0x37066d1D52a231450510a865D6FA3480196cE573",
+      "ts": "2026-11-14T11:24:20.000Z"
+    },
+    {
+      "txHash": "0x77a5af4b27921423035a38ecadef6abaed91481ed3323b55bd36f75943e802c7",
+      "serviceKey": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "service": "weather",
+      "amountAtomic": "10000",
+      "payer": "0x944dFBDdf694e0a0aD915C58A6711510b130b89F",
+      "ts": "2026-11-14T11:21:30.000Z"
+    },
+    {
+      "txHash": "0x1141f8749127f57909f6fa2554606f462148d6bf08bc1b1ddcfb21670eadf098",
+      "serviceKey": "0x415ba197b119f267c41aef2578c38bcd968adb08931503c0797db11fd83c2e9b",
+      "service": "summarize",
+      "amountAtomic": "50000",
+      "payer": "0x0d5B06470DA552422d07888C646eb6a0D61aE68C",
+      "ts": "2026-11-14T11:18:34.000Z"
+    },
+    {
+      "txHash": "0xb7ee83ba0c4b15abe392844f52bf66ec5241fc8c0745fb1608369dabf6ff8af1",
+      "serviceKey": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "service": "weather",
+      "amountAtomic": "10000",
+      "payer": "0x98B953b7687CB7B9d61233fEF8D4e2DFA36a7A13",
+      "ts": "2026-11-14T11:15:32.000Z"
+    }
+  ]
+}

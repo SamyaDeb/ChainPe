@@ -45,7 +45,7 @@ export interface AuthIssue {
   retryAt?: number
 }
 
-export type MockScenario = 'pro' | 'unregistered'
+export type MockScenario = 'sample' | 'unregistered'
 
 interface MeState {
   token: string

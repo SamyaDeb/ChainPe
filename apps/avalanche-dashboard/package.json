@@ -10,7 +10,8 @@
     "check": "npm run lint && npm run typecheck",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "npx tsx scripts/test-money.ts"
+    "test": "npx tsx scripts/test-money.ts && npm run test-x402",
+    "test-x402": "npx tsx scripts/test-x402.ts"
   },
   "dependencies": {
     "@fontsource-variable/instrument-sans": "5.3.0",

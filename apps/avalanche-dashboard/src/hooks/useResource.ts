@@ -26,15 +26,22 @@ interface Options {
   enabled?: boolean
 }
 
+interface CoreOptions extends Options {
+  /** Returns true when it handled the error (e.g. ended the session), so the hook stops quietly. */
+  onError?: (e: unknown) => boolean
+  /** Double the wait after each failure in a row, up to MAX_BACKOFF_MS. Off: a fixed RETRY_DELAY_MS. */
+  backoff?: boolean
+}
+
 const RETRY_DELAY_MS = 6_000
+const MAX_BACKOFF_MS = 60_000
 
 /**
  * Loads data for `key`. Data stays on screen during refetches. A new key clears the data, so a previous
  * range or filter is never shown as the current one.
  */
-export function useResource<T>(key: string, fetcher: () => Promise<T>, options: Options = {}): Resource<T> {
-  const { pollMs, enabled = true } = options
-  const { handleError } = useAuth()
+function useResourceCore<T>(key: string, fetcher: () => Promise<T>, options: CoreOptions): Resource<T> {
+  const { pollMs, enabled = true, onError, backoff = false } = options
   const [state, setState] = useState<State<T>>({ key, data: null, error: null, updatedAt: null })
   const [tick, setTick] = useState(0)
   const fetcherRef = useRef(fetcher)
@@ -45,21 +52,21 @@ export function useResource<T>(key: string, fetcher: () => Promise<T>, options: 
 
   useEffect(() => {
     if (!enabled) return
-    const flags: { cancelled: boolean; busy: boolean; first: boolean; timer: number | undefined; stop: boolean } = {
+    const flags: { cancelled: boolean; busy: boolean; first: boolean; timer: number | undefined; failures: number } = {
       cancelled: false,
       busy: false,
       first: true,
       timer: undefined,
-      stop: false,
+      failures: 0,
     }
 
     const schedule = (delay: number) => {
       window.clearTimeout(flags.timer)
-      if (!flags.cancelled && !flags.stop && pollMs) flags.timer = window.setTimeout(() => void run(), delay)
+      if (!flags.cancelled && pollMs) flags.timer = window.setTimeout(() => void run(), delay)
     }
 
     const run = async () => {
-      if (flags.busy || flags.cancelled || flags.stop) return
+      if (flags.busy || flags.cancelled) return
       if (!flags.first && document.visibilityState !== 'visible') {
         schedule(pollMs ?? 0)
         return
@@ -70,13 +77,14 @@ export function useResource<T>(key: string, fetcher: () => Promise<T>, options: 
       try {
         const data = await fetcherRef.current()
         if (flags.cancelled) return
+        flags.failures = 0
         setState({ key, data, error: null, updatedAt: Date.now() })
       } catch (e) {
         if (flags.cancelled) return
-        if (handleError(e)) return
-        // A plan limit will not change by asking again, so polling stops here.
-        if (isApiError(e) && e.code === 'plan_required') flags.stop = true
-        const wait = isApiError(e) && e.retryAfterSec !== null ? e.retryAfterSec * 1000 : RETRY_DELAY_MS
+        if (onError?.(e)) return
+        flags.failures += 1
+        const base = backoff ? Math.min(MAX_BACKOFF_MS, Math.max(pollMs ?? RETRY_DELAY_MS, 1000) * 2 ** flags.failures) : RETRY_DELAY_MS
+        const wait = isApiError(e) && e.retryAfterSec !== null ? e.retryAfterSec * 1000 : base
         delay = Math.max(delay, wait)
         setState((s) => ({
           key,
@@ -91,7 +99,7 @@ export function useResource<T>(key: string, fetcher: () => Promise<T>, options: 
     }
 
     const onVisible = () => {
-      if (document.visibilityState === 'visible' && pollMs) {
+      if (document.visibilityState === 'visible' && pollMs && (!backoff || flags.failures === 0)) {
         window.clearTimeout(flags.timer)
         void run()
       }
@@ -104,7 +112,7 @@ export function useResource<T>(key: string, fetcher: () => Promise<T>, options: 
       window.clearTimeout(flags.timer)
       document.removeEventListener('visibilitychange', onVisible)
     }
-  }, [key, enabled, pollMs, tick, handleError])
+  }, [key, enabled, pollMs, tick, onError, backoff])
 
   const reload = useCallback(() => {
     setState((s) => ({ ...s, error: null }))
@@ -115,4 +123,15 @@ export function useResource<T>(key: string, fetcher: () => Promise<T>, options: 
   const data = current ? state.data : null
   const error = current ? state.error : null
   return { data, error, loading: enabled && data === null && error === null, updatedAt: current ? state.updatedAt : null, reload }
+}
+
+/** For signed-in screens: an error that ends the session signs the user out instead of showing. */
+export function useResource<T>(key: string, fetcher: () => Promise<T>, options: Options = {}): Resource<T> {
+  const { handleError } = useAuth()
+  return useResourceCore(key, fetcher, { ...options, onError: handleError })
+}
+
+/** For the public pages, which have no session. Backs off on errors in a row. */
+export function usePublicResource<T>(key: string, fetcher: () => Promise<T>, options: Options = {}): Resource<T> {
+  return useResourceCore(key, fetcher, { ...options, backoff: true })
 }

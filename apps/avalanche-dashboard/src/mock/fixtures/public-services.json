@@ -1,0 +1,58 @@
+{
+  "services": [
+    {
+      "key": "0x8c7bff2a3457cf2f20f355a2cb1f193268827ae8699730029b24fe4ff39a505f",
+      "name": "weather",
+      "description": "Current conditions and a 3-day forecast for any city.",
+      "tags": "weather,forecast",
+      "endpoint": "https://chainpe-demo.example/weather",
+      "price": "0.01",
+      "payTo": "0x85b7a78090E3C51F81916Fc00809C8091Ad1bbCB",
+      "provider": "0xeD99A0cC39179f850D0a3Aa1fD2D0280B3efc35f",
+      "agentId": "41",
+      "paidScore": 93.33,
+      "paidReviews": 9,
+      "rawScore": 93.33,
+      "rawReviews": 9,
+      "paidCalls": 38,
+      "totalSettledAtomic": "380000",
+      "payToShared": false
+    },
+    {
+      "key": "0x415ba197b119f267c41aef2578c38bcd968adb08931503c0797db11fd83c2e9b",
+      "name": "summarize",
+      "description": "Summarises a web page or text into five bullet points with an LLM.",
+      "tags": "ai,llm,text",
+      "endpoint": "https://chainpe-demo.example/summarize",
+      "price": "0.05",
+      "payTo": "0x85b7a78090E3C51F81916Fc00809C8091Ad1bbCB",
+      "provider": "0xeD99A0cC39179f850D0a3Aa1fD2D0280B3efc35f",
+      "agentId": "41",
+      "paidScore": 86.67,
+      "paidReviews": 6,
+      "rawScore": 86.67,
+      "rawReviews": 6,
+      "paidCalls": 21,
+      "totalSettledAtomic": "1050000",
+      "payToShared": false
+    },
+    {
+      "key": "0x1c6c465c4bb1f86b2e7e853c7915960c559be77035aef593666db32232a5c96c",
+      "name": "cheap-weather",
+      "description": "Weather at a tenth of the price. Mostly wrong.",
+      "tags": "weather",
+      "endpoint": "https://cheap-weather.example/weather",
+      "price": "0.001",
+      "payTo": "0x4A8ac16B18FE69156309e28B7cE35b4C5988552C",
+      "provider": "0x98798106D752831A4CE78a0CC3bf568D50e87307",
+      "agentId": "57",
+      "paidScore": 25,
+      "paidReviews": 4,
+      "rawScore": 66.67,
+      "rawReviews": 9,
+      "paidCalls": 7,
+      "totalSettledAtomic": "7000",
+      "payToShared": false
+    }
+  ]
+}
