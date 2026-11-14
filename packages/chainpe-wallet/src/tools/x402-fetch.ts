@@ -8,51 +8,50 @@ import type { SpendingTracker } from '@/spending.js'
 import { buildSigner, USDC_DECIMALS } from '@/clients.js'
 import { RegistryClient } from '@/chainpe-registry.js'
 import { giveFeedback, resolveReputationRegistry } from '@/reputation.js'
+import { reputationRefusal } from '@/gate.js'
 
 /**
- * After a successful paid call, record a positive on-chain reputation score for
- * the provider's ERC-8004 agent. Resolves the agent by matching the 402 payTo
- * (or the URL) against the on-chain registry. Best-effort — any failure
- * (no agentId, no registry, self-feedback, network) is swallowed.
+ * After a successful paid call, record a positive on-chain score for the provider's ERC-8004 agent, carrying the
+ * settlement tx as `feedbackHash` so chainpe-cloud can verify the payment and count it as a paid review.
+ *
+ * The agent is resolved from the on-chain registry by payTo. It is never taken from anything the server sends
+ * (the old x-chainpe-agent-id header let a server point your rating at someone else's agent). Skipped when the
+ * provider reported no settlement tx, since an unpaid rating would not count. Best-effort: failures are swallowed.
  */
 async function submitSuccessFeedback(
   config: AppConfig,
   url: string,
   payTo: string,
-  advertisedAgentId?: string
+  paymentTx?: string
 ): Promise<
-  | { agentId: string; score: number; txHash: string }
+  | { agentId: string; score: number; txHash: string; paymentTx: string }
   | { note: string }
   | undefined
 > {
   try {
     if (!resolveReputationRegistry(config)) return undefined
+    if (!paymentTx) return { note: 'no settlement tx reported by the provider; no rating posted' }
 
-    // 3b: prefer the provider-advertised agent id; otherwise fall back to a
-    // registry scan by payTo / URL (requires a registry address).
-    let agentId = advertisedAgentId
-    let endpoint: string | undefined
-    if (!agentId || agentId === '0') {
-      if (!config.registryAddress) return undefined
-      const client = new RegistryClient(config.network, config.registryAddress)
-      const services = await client.listAllServices()
-      const svc =
-        services.find(
-          s =>
-            s.walletAddress.toLowerCase() === payTo.toLowerCase() && s.agentId
-        ) ?? services.find(s => url.startsWith(s.endpoint) && s.agentId)
-      agentId = svc?.agentId
-      endpoint = svc?.endpoint
-    }
-
+    const client = new RegistryClient(config.network, config.registryAddress)
+    const services = (await client.listAllServices()).filter(
+      s => s.walletAddress.toLowerCase() === payTo.toLowerCase()
+    )
+    const svc =
+      services.find(s => url.startsWith(s.endpoint) && s.agentId) ??
+      services.find(s => s.agentId)
+    const agentId = svc?.agentId
     if (!agentId || agentId === '0') return undefined
+
+    const u = new URL(url)
     const txHash = await giveFeedback(config, {
       agentId,
       value: 100,
-      endpoint: endpoint ?? new URL(url).origin,
-      tag: 'x402-success'
+      // The resource, without its query string (which can carry keys).
+      endpoint: `${u.origin}${u.pathname}`,
+      tag: 'x402-success',
+      paymentTx
     })
-    return { agentId, score: 100, txHash }
+    return { agentId, score: 100, txHash, paymentTx }
   } catch {
     return undefined
   }
@@ -75,9 +74,9 @@ interface PaymentRequiredBody {
   x402Version: number
   error?: string
   accepts: PaymentAccept[]
-  /** ChainPe extension (3b): the provider's ERC-8004 agent id. */
-  agentId?: string
 }
+
+const MAX_TIMEOUT_SECONDS = 300
 
 const X402_TO_NETWORK: Record<string, PaymentNetwork> = {
   'avalanche-fuji': 'fuji',
@@ -228,6 +227,29 @@ export function registerX402Fetch(
 
         spending.check(usdcAmount)
 
+        // A long validity window lets a signed authorization sit around and be
+        // replayed later; refuse offers that ask for more than 5 minutes.
+        if (accept.maxTimeoutSeconds !== undefined && accept.maxTimeoutSeconds > MAX_TIMEOUT_SECONDS) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `Refusing offer: maxTimeoutSeconds ${accept.maxTimeoutSeconds} exceeds the ${MAX_TIMEOUT_SECONDS}s limit.`
+              }
+            ],
+            isError: true
+          }
+        }
+
+        // Before anything is signed: refuse a provider whose verified record is below MIN_REPUTATION.
+        const refusal = await reputationRefusal(config, accept.payTo, url)
+        if (refusal) {
+          return {
+            content: [{ type: 'text' as const, text: refusal.message }],
+            isError: true
+          }
+        }
+
         const signer = await buildSigner(network, config)
 
         const headerValue = await createPaymentHeader(
@@ -236,6 +258,10 @@ export function registerX402Fetch(
           accept as unknown as PaymentRequirements
         )
         if (!headerValue) throw new Error('Failed to generate payment header')
+
+        // The money is committed the moment a signature exists (the provider
+        // could settle it even if the retry looks like it failed), so count it now.
+        spending.record(usdcAmount, accept.payTo, network)
 
         const retryOptions: RequestInit = {
           method,
@@ -257,10 +283,14 @@ export function registerX402Fetch(
                   `  1. USDC on ${network} — at least ${usdcAmount} USDC`,
                   '  2. (the facilitator pays gas, so you do not need AVAX to pay)',
                   '',
-                  'Get Fuji testnet funds:',
-                  '  • AVAX: https://faucet.avax.network/',
-                  '  • USDC: https://faucet.circle.com  (select Avalanche Fuji)',
-                  '',
+                  ...(network === 'fuji'
+                    ? [
+                        'Get Fuji testnet funds:',
+                        '  • AVAX: https://faucet.avax.network/',
+                        '  • USDC: https://faucet.circle.com  (select Avalanche Fuji)',
+                        ''
+                      ]
+                    : []),
                   `Attempted payment: ${usdcAmount} USDC → ${accept.payTo} on ${network}`
                 ].join('\n')
               }
@@ -268,8 +298,6 @@ export function registerX402Fetch(
             isError: true
           }
         }
-
-        spending.record(usdcAmount, accept.payTo, network)
 
         let settlement: unknown
         const settleHeader = paid.headers.get('X-PAYMENT-RESPONSE')
@@ -281,19 +309,17 @@ export function registerX402Fetch(
           }
         }
 
-        // On-chain reputation: leave a positive score for the provider's
-        // ERC-8004 agent. Best-effort and non-blocking — never fails the fetch.
-        // 3b: prefer the agent id advertised on the 402 to skip a registry scan.
-        const advertisedAgentId =
-          initial.headers.get('x-chainpe-agent-id') ??
-          paymentRequired.agentId ??
-          (accept.extra?.agentId as string | undefined)
-        const feedback = await submitSuccessFeedback(
-          config,
-          url,
-          accept.payTo,
-          advertisedAgentId
-        )
+        // On-chain reputation: leave a positive score for the provider's ERC-8004 agent, with the settlement tx as proof.
+        // Best-effort and non-blocking: never fails the fetch.
+        const paymentTx =
+          typeof (settlement as { transaction?: unknown } | undefined)?.transaction === 'string'
+            ? ((settlement as { transaction: string }).transaction)
+            : undefined
+        // Never rate a failed call as a success: skip feedback on any error status.
+        const feedback =
+          paid.status >= 400
+            ? { skipped: `paid response was HTTP ${paid.status}; no feedback posted` }
+            : await submitSuccessFeedback(config, url, accept.payTo, paymentTx)
 
         return {
           content: [

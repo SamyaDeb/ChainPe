@@ -13,13 +13,13 @@ import type { AppConfig, PaymentNetwork } from '@/types.js'
 import { publicClientFor, rpcUrlFor } from '@/clients.js'
 
 const CHAINS = { fuji: avalancheFuji, avalanche }
-const ZERO_HASH: Hex =
+export const ZERO_HASH: Hex =
   '0x0000000000000000000000000000000000000000000000000000000000000000'
 
 // Deployed ERC-8004 Reputation Registry per network (override via env/config).
 const DEFAULT_REPUTATION: Record<PaymentNetwork, `0x${string}` | undefined> = {
   fuji: '0x89476DfEf9c72a668fa5E86f154B73EDB053aFe4',
-  avalanche: undefined
+  avalanche: '0xfe7Df66e6BFbd3A76B68dF26b9312E6c85a38543'
 }
 
 const REPUTATION_ABI = [
@@ -78,14 +78,14 @@ export function resolveReputationRegistry(
   return candidate ? getAddress(candidate) : undefined
 }
 
-export interface ReputationSummary {
-  count: number
-  /** Aggregate score (e.g. 0–100), or null when there is no feedback yet. */
-  score: number | null
-}
+export type { ReputationSummary } from '@/cloud.js'
+import type { ReputationSummary } from '@/cloud.js'
+
+export const isTxHash = (v: string): v is Hex => /^0x[0-9a-fA-F]{64}$/.test(v)
 
 /**
- * Reads a provider's reputation. getSummary requires the client list, so we
+ * Reads a provider's plain on-chain average over EVERY rating, which anyone can post, so it is labelled
+ * `source: 'unverified'`. Use chainpe-cloud's paid score (`CloudClient`) as evidence. getSummary requires the client list, so we
  * enumerate clients first via getClients. Returns count 0 when unscored.
  */
 export async function getReputation(
@@ -106,7 +106,7 @@ export async function getReputation(
       args: [id]
     })) as readonly `0x${string}`[]
 
-    if (clients.length === 0) return { count: 0, score: null }
+    if (clients.length === 0) return { count: 0, score: null, source: 'unverified' }
 
     const [count, summaryValue, decimals] = (await client.readContract({
       address: registry,
@@ -116,7 +116,7 @@ export async function getReputation(
     })) as readonly [bigint, bigint, number]
 
     const score = Number(summaryValue) / 10 ** Number(decimals)
-    return { count: Number(count), score }
+    return { count: Number(count), score, source: 'unverified' }
   } catch {
     return null
   }
@@ -134,6 +134,8 @@ export async function giveFeedback(
     value: number
     endpoint?: string
     tag?: string
+    /** The x402 settlement tx this rating is about, sent as `feedbackHash` so it can count as a paid review. */
+    paymentTx?: string
     waitConfirm?: boolean
   }
 ): Promise<string> {
@@ -141,6 +143,9 @@ export async function giveFeedback(
   const registry = resolveReputationRegistry(config)
   if (!registry) throw new Error('Reputation registry address not configured')
 
+  if (params.paymentTx !== undefined && !isTxHash(params.paymentTx)) {
+    throw new Error('paymentTx must be a 32-byte 0x-prefixed transaction hash')
+  }
   const account = privateKeyToAccount(normalizeKey(config.privateKey))
   const wallet = createWalletClient({
     account,
@@ -160,7 +165,7 @@ export async function giveFeedback(
       params.tag ?? 'paid-call',
       params.endpoint ?? '',
       '',
-      ZERO_HASH
+      params.paymentTx ?? ZERO_HASH
     ]
   })
 

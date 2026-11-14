@@ -10,7 +10,9 @@ import { z } from 'zod'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { AppConfig } from '@/types.js'
 import { RegistryClient } from '@/chainpe-registry.js'
-import { getReputation } from '@/reputation.js'
+import { getReputation, type ReputationSummary } from '@/reputation.js'
+import { toPaidSummary } from '@/cloud.js'
+import { cloudFor } from '@/gate.js'
 
 export function registerBazaarSearch(
   server: McpServer,
@@ -59,11 +61,24 @@ export function registerBazaarSearch(
           }
         }
 
-        // Read each provider's on-chain ERC-8004 reputation (best-effort).
-        const reputations = await Promise.all(
-          services.map(s =>
-            s.agentId ? getReputation(config, s.agentId) : Promise.resolve(null)
-          )
+        // Payment-verified scores from chainpe-cloud: only ratings backed by a verified x402 payment count. If it is
+        // unreachable, fall back to the plain on-chain average and label it "unverified" (anyone can post those).
+        let paid: Awaited<ReturnType<ReturnType<typeof cloudFor>['services']>> | undefined
+        try {
+          paid = await cloudFor(config).services()
+        } catch {
+          paid = undefined
+        }
+        const reputations: (ReputationSummary | null)[] = await Promise.all(
+          services.map(s => {
+            if (paid) {
+              const hit = paid.find(
+                c => c.payTo.toLowerCase() === s.walletAddress.toLowerCase() && !c.payToShared && c.endpoint === s.endpoint
+              ) ?? paid.find(c => c.payTo.toLowerCase() === s.walletAddress.toLowerCase() && !c.payToShared)
+              return Promise.resolve(toPaidSummary(hit ?? null))
+            }
+            return s.agentId ? getReputation(config, s.agentId) : Promise.resolve(null)
+          })
         )
 
         // Rank by reputation: scored first, higher score, then more reviews,
@@ -89,13 +104,22 @@ export function registerBazaarSearch(
         const serviceList = ranked
           .map(({ service: s, rep }, i) => {
             let repLine = ''
-            if (s.agentId) {
-              if (rep && rep.count > 0 && rep.score !== null) {
-                repLine = `  ·  ⭐ ${rep.score.toFixed(0)}/100 (${rep.count} review${rep.count === 1 ? '' : 's'})`
-              } else {
-                repLine = '  ·  ⭐ no ratings yet'
-              }
+            if (rep && rep.source === 'paid') {
+              const raw = rep.rawCount ? ` (unverified average: ${rep.rawScore?.toFixed(0)}/100 from ${rep.rawCount})` : ''
+              repLine =
+                rep.count > 0 && rep.score !== null
+                  ? `  ·  ⭐ ${rep.score.toFixed(0)}/100 verified (${rep.count} paid review${rep.count === 1 ? '' : 's'})${raw}`
+                  : `  ·  ⭐ no verified paid reviews yet${raw}`
+            } else if (s.agentId) {
+              repLine =
+                rep && rep.count > 0 && rep.score !== null
+                  ? `  ·  ⚠ UNVERIFIED ${rep.score.toFixed(0)}/100 (${rep.count} rating${rep.count === 1 ? '' : 's'}, anyone can post these; reputation service unreachable)`
+                  : '  ·  ⚠ no ratings (reputation service unreachable)'
             }
+            const refused =
+              config.minReputation > 0 &&
+              (!rep || rep.source !== 'paid' || rep.score === null || rep.score < config.minReputation || rep.count < config.minPaidReviews)
+            if (refused) repLine += `  ·  ⛔ below your MIN_REPUTATION ${config.minReputation}: x402_fetch will refuse it`
             return (
               `${i + 1}. ${s.name} — ${s.description}\n` +
               `   Price: ${s.pricePerRequest} ${s.paymentToken}` +

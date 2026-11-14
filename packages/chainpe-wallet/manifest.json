@@ -39,7 +39,8 @@
         "MAX_PER_CALL": "${user_config.max_per_call}",
         "MAX_PER_DAY": "${user_config.max_per_day}",
         "CHAINPE_REGISTRY_ADDRESS": "${user_config.chainpe_registry_address}",
-        "ERC8004_REPUTATION_REGISTRY": "${user_config.erc8004_reputation_registry}"
+        "ERC8004_REPUTATION_REGISTRY": "${user_config.erc8004_reputation_registry}",
+        "MIN_REPUTATION": "${user_config.min_reputation}"
       }
     }
   },
@@ -55,9 +56,9 @@
     "network": {
       "type": "string",
       "title": "Default Network",
-      "description": "Payment network: fuji (testnet) or avalanche (mainnet).",
+      "description": "Payment network: avalanche (mainnet, default) or fuji (testnet).",
       "required": false,
-      "default": "fuji"
+      "default": "avalanche"
     },
     "max_per_call": {
       "type": "string",
@@ -77,6 +78,13 @@
       "type": "string",
       "title": "ChainPe Registry Address",
       "description": "Address of the ChainPeRegistry contract on Avalanche. Leave blank unless you run your own registry.",
+      "required": false,
+      "default": ""
+    },
+    "min_reputation": {
+      "type": "string",
+      "title": "Minimum Provider Reputation (0–100)",
+      "description": "Refuse to pay any service whose payment-verified reputation score is below this. Only ratings backed by a real x402 payment count, so fake reviews cannot raise it. A service needs at least 3 verified paid reviews. Leave blank or 0 to disable.",
       "required": false,
       "default": ""
     },
@@ -124,7 +132,7 @@
     },
     {
       "name": "give_feedback",
-      "description": "Post an on-chain ERC-8004 reputation score (0–100) for a service provider's agent."
+      "description": "Post an on-chain ERC-8004 reputation score (0–100) for a service provider's agent, with the payment tx as proof."
     }
   ],
 

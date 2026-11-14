@@ -247,7 +247,7 @@ describe('x402_fetch tool', () => {
     expect(mockCreatePaymentHeader).not.toHaveBeenCalled()
   })
 
-  it('returns funding instructions when retry also returns 402 (settle failure)', async () => {
+  it('returns funding instructions and still records spend when retry returns 402 again', async () => {
     mockFetch
       .mockResolvedValueOnce({
         status: 402,
@@ -281,8 +281,9 @@ describe('x402_fetch tool', () => {
     expect(result.isError).toBe(true)
     expect(result.content[0].text).toContain('wallet needs')
     expect(result.content[0].text).toContain('faucet.circle.com')
-    expect(parseFloat(spending.getSummary().spentSession)).toBe(0)
-    expect(spending.getSummary().recentPayments).toHaveLength(0)
+    // The signature exists, so the spend is counted even though the retry failed.
+    expect(parseFloat(spending.getSummary().spentSession)).toBeCloseTo(0.02)
+    expect(spending.getSummary().recentPayments).toHaveLength(1)
   })
 
   it('records spending after successful paid fetch', async () => {
@@ -360,5 +361,48 @@ describe('x402_fetch tool', () => {
 
     expect(result.isError).toBe(true)
     expect(result.content[0].text).toContain('Network error')
+  })
+
+  function paidFlow(accept: Record<string, unknown>, paidResponse: Record<string, unknown>) {
+    mockFetch.mockReset() // drop queued responses an earlier test never consumed
+    mockFetch
+      .mockResolvedValueOnce({
+        status: 402,
+        statusText: 'Payment Required',
+        headers: { get: () => null },
+        json: vi.fn().mockResolvedValue({ x402Version: 1, accepts: [accept] })
+      })
+      .mockResolvedValueOnce(paidResponse)
+    mockCreatePaymentHeader.mockResolvedValue('header')
+    const server = { tool: vi.fn() } as unknown as McpServer
+    const config = payableConfig()
+    const spending = new SpendingTracker(config.budget)
+    registerX402Fetch(server, config, spending)
+    return { handler: extractToolHandler(server), spending }
+  }
+
+  it('refuses offers with maxTimeoutSeconds over 300 without signing', async () => {
+    const { handler, spending } = paidFlow(
+      { ...acceptsFuji('20000'), maxTimeoutSeconds: 3600 },
+      { status: 200, headers: { get: () => null }, text: vi.fn() }
+    )
+    const result = (await handler({ url: 'https://api.example.com/p', method: 'GET' })) as ToolResult
+    expect(result.isError).toBe(true)
+    expect(result.content[0].text).toContain('maxTimeoutSeconds')
+    expect(mockCreatePaymentHeader).not.toHaveBeenCalled()
+    expect(spending.getSummary().recentPayments).toHaveLength(0)
+  })
+
+  it('does not auto-post feedback when the paid response is >= 400', async () => {
+    const { handler } = paidFlow(acceptsFuji('20000'), {
+      status: 500,
+      statusText: 'Server Error',
+      headers: { get: () => 'application/json' },
+      text: vi.fn().mockResolvedValue('{"error":"boom"}')
+    })
+    const result = (await handler({ url: 'https://api.example.com/p', method: 'GET' })) as ToolResult
+    const parsed = JSON.parse(result.content[0].text)
+    expect(parsed.status).toBe(500)
+    expect(parsed.reputation.skipped).toContain('500')
   })
 })

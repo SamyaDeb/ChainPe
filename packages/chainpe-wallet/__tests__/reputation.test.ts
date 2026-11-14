@@ -30,8 +30,10 @@ describe('resolveReputationRegistry', () => {
     expect(resolveReputationRegistry(cfg())).toBe('0x89476DfEf9c72a668fa5E86f154B73EDB053aFe4')
   })
 
-  it('returns undefined for mainnet when unset', () => {
-    expect(resolveReputationRegistry(cfg({ network: 'avalanche' }))).toBeUndefined()
+  it('defaults to the deployed mainnet ReputationRegistry when unset', () => {
+    expect(resolveReputationRegistry(cfg({ network: 'avalanche' }))).toBe(
+      '0xfe7Df66e6BFbd3A76B68dF26b9312E6c85a38543'
+    )
   })
 
   it('honors an explicit config address', () => {
@@ -54,7 +56,7 @@ describe('getReputation', () => {
     mockRead.mockImplementation((args: { functionName: string }) =>
       args.functionName === 'getClients' ? [] : undefined
     )
-    expect(await getReputation(cfg(), '5')).toEqual({ count: 0, score: null })
+    expect(await getReputation(cfg(), '5')).toEqual({ count: 0, score: null, source: 'unverified' })
   })
 
   it('aggregates the on-chain score across clients', async () => {
@@ -63,7 +65,7 @@ describe('getReputation', () => {
       if (args.functionName === 'getSummary') return [3n, 90n, 0]
       return undefined
     })
-    expect(await getReputation(cfg(), '5')).toEqual({ count: 3, score: 90 })
+    expect(await getReputation(cfg(), '5')).toEqual({ count: 3, score: 90, source: 'unverified' })
   })
 
   it('applies valueDecimals when scaling the score', async () => {
@@ -72,6 +74,6 @@ describe('getReputation', () => {
       if (args.functionName === 'getSummary') return [2n, 855n, 1] // 85.5
       return undefined
     })
-    expect(await getReputation(cfg(), '5')).toEqual({ count: 2, score: 85.5 })
+    expect(await getReputation(cfg(), '5')).toEqual({ count: 2, score: 85.5, source: 'unverified' })
   })
 })

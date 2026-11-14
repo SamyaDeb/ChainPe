@@ -22,7 +22,7 @@ export function createMcpServer(config: AppConfig): McpServer {
   // Core wallet — Avalanche C-Chain
   registerCheckBalance(server, config)
   registerTransferUsdc(server, config, spending)
-  registerTransferAvax(server, config)
+  registerTransferAvax(server, config, spending)
 
   // x402 Payments
   registerPay(server, config, spending)

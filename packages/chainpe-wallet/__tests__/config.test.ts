@@ -30,9 +30,27 @@ describe('loadConfig', () => {
     expect(config.canPay).toBe(true)
   })
 
-  it('uses default network fuji', () => {
+  it('treats blank Claude Desktop fields as unset, so mainnet defaults still apply', () => {
+    process.env.NETWORK = ''
+    process.env.CHAINPE_REGISTRY_ADDRESS = '  '
+    process.env.ERC8004_REPUTATION_REGISTRY = ''
+    process.env.CHAINPE_PRIVATE_KEY = ''
     const config = loadConfig()
-    expect(config.network).toBe('fuji')
+    expect(config.network).toBe('avalanche')
+    expect(config.mode).toBe('READ_ONLY')
+    expect(config.registryAddress).toBeUndefined()
+    expect(config.reputationRegistry).toBeUndefined()
+    delete process.env.ERC8004_REPUTATION_REGISTRY
+  })
+
+  it('uses default network avalanche (mainnet)', () => {
+    const config = loadConfig()
+    expect(config.network).toBe('avalanche')
+  })
+
+  it('selects fuji only when asked explicitly', () => {
+    process.env.NETWORK = 'fuji'
+    expect(loadConfig().network).toBe('fuji')
   })
 
   it('respects NETWORK env var', () => {
@@ -41,10 +59,10 @@ describe('loadConfig', () => {
     expect(config.network).toBe('avalanche')
   })
 
-  it('falls back to fuji for unknown NETWORK values', () => {
+  it('falls back to avalanche for unknown NETWORK values', () => {
     process.env.NETWORK = 'algorand-testnet'
     const config = loadConfig()
-    expect(config.network).toBe('fuji')
+    expect(config.network).toBe('avalanche')
   })
 
   it('reads registry address from env', () => {
