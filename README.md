@@ -1,4 +1,4 @@
-<img width="2913" height="1663" alt="WhatsApp Image 2026-06-17 at 21 48 28" src="https://github.com/user-attachments/assets/bc86e069-5349-4496-83cb-da6ffdb912a4" />
+<img width="2913" height="1663" alt="ChainPe: payment and reputation rails for AI agents on Avalanche" src="https://github.com/user-attachments/assets/bc86e069-5349-4496-83cb-da6ffdb912a4" />
 <div align="center">
 
 # ChainPe
@@ -33,6 +33,9 @@ x402 payments + ERC-8004 reputation + on-chain spending caps in one loop, **live
 | **[Explore](https://chainpe.vercel.app/dashboard/explore)** | Live x402 USDC settlements on mainnet with Snowtrace links, and every service's **paid score next to its raw score** | No |
 | **[Sample provider](https://chainpe.vercel.app/dashboard/sample)** | A provider's dashboard (revenue, calls, reputation), read-only | No |
 | **Try it** (on any service card) | 402 → sign EIP-3009 → settlement tx → response → rate it on-chain → ✓ verified paid review | Yes (USDC + a little AVAX) |
+| **Run it locally with sample data** | `cd apps/avalanche-dashboard && npm install && VITE_USE_MOCK=true npm run dev`, then open `/explore` | No |
+
+> Explore and the sample provider read live mainnet data. Until the [mainnet rollout](#mainnet-rollout-status) is finished they can show few or no services; the local sample-data mode shows the full experience.
 
 ---
 
@@ -40,15 +43,15 @@ x402 payments + ERC-8004 reputation + on-chain spending caps in one loop, **live
 
 ChainPe's payment rails (registry, PolicyVault, ERC-8004 registries, facilitator, SDK, CLI, MCP wallet) were deployed on **2026-06-17**, before the Speedrun. Everything in this table was added **during the Speedrun (November 2026)**:
 
-| | What | Where | Proof |
-|---|---|---|---|
-| 1 | **Payment-gated reputation.** Every rating carries its x402 settlement tx in `feedbackHash`; the indexer checks that the tx is a USDC `transferWithAuthorization` from the rater to that service's payTo. Only verified ratings count, weighted by USDC paid (capped at 1 USDC each) | `services/chainpe-cloud/src/workers/verifyFeedback.ts`, `src/reputation.ts` | `/v1/public/services` |
-| 2 | **Reputation-gated spending.** SDK, Claude MCP wallet and agent refuse to sign a payment to a provider below `minReputation` (fails closed). PolicyVault v2 enforces the same minimum on-chain through `ChainPeReputationOracle` | `packages/*/src/cloud.ts`, `contracts/contracts/PolicyVaultUpgradeable.sol` | tests (`PolicyVault.reputationGate.test.ts`); mainnet: [rollout](#mainnet-rollout-status) |
-| 3 | **agentId ownership in the registry.** A service can only link an ERC-8004 agent the caller owns (`NotAgentOwner`), closing reputation hijacking | `contracts/contracts/ChainPeRegistryUpgradeable.sol` | tests (`ChainPeRegistry.agentOwnership.test.ts`); mainnet: [rollout](#mainnet-rollout-status) |
-| 4 | **Portable reputation over ICM.** A verified score is sent from Fuji C-Chain over Teleporter to **our own Avalanche L1** (launched with the Builder Console) and readable there **10.5 s later**. Receivers fail closed | `contracts/contracts/icm/*` | [send tx](https://testnet.snowtrace.io/tx/0xcb7aa4411b8e176d17fb8b8f4767942498563a11223971e6fe8ba536c63fc658) · [L1 delivery](https://build.avax.network/explorer/fuji/2QyrGkChHLjbi76A5uzwF2XEbfN5f3Krovs1j4qPtwe1BUP7h4/tx/0x67f98802f8cc90aae98555bbf40bbb7607165795344d5890420eab5306d0fb2f) |
-| 5 | **Public explorer, in-browser paid call, sample provider.** No wallet needed to see it working | `apps/avalanche-dashboard/src/screens/explore/*` | [Explore](https://chainpe.vercel.app/dashboard/explore) |
-| 6 | **Hardening.** Facilitator only settles real USDC to registered services and never settles one signature twice; CLI proxy no longer exposes its gas key; wallet and agent spending caps fail closed | `services/chainpe-facilitator`, `packages/chainpe`, `packages/chainpe-wallet` | tests |
-| 7 | **Honest site.** Fixed an invalid contract address in the docs, removed unbacked claims, deleted two dead apps | `apps/landing` | – |
+| | What | Where | Proof | Commits |
+|---|---|---|---|---|
+| 1 | **Payment-gated reputation.** Every rating carries its x402 settlement tx in `feedbackHash`; the indexer checks that the tx is a USDC `transferWithAuthorization` from the rater to that service's payTo. Only verified ratings count, weighted by USDC paid (capped at 1 USDC each) | `services/chainpe-cloud/src/workers/verifyFeedback.ts`, `src/reputation.ts` | `/v1/public/services` | `7601c58` `2b0f85b` `09d4c40` |
+| 2 | **Reputation-gated spending.** SDK, Claude MCP wallet and agent refuse to sign a payment to a provider below `minReputation` (fails closed). PolicyVault v2 enforces the same minimum on-chain through `ChainPeReputationOracle` | `packages/*/src/cloud.ts`, `contracts/contracts/PolicyVaultUpgradeable.sol` | tests (`PolicyVault.reputationGate.test.ts`); mainnet: [rollout](#mainnet-rollout-status) | `a3fb177` `bf8e41d` `94f8adf` `6475a79` |
+| 3 | **agentId ownership in the registry.** A service can only link an ERC-8004 agent the caller owns (`NotAgentOwner`), closing reputation hijacking | `contracts/contracts/ChainPeRegistryUpgradeable.sol` | tests (`ChainPeRegistry.agentOwnership.test.ts`); mainnet: [rollout](#mainnet-rollout-status) | `9599a21` |
+| 4 | **Portable reputation over ICM.** A verified score is sent from Fuji C-Chain over Teleporter to **our own Avalanche L1** (launched with the Builder Console) and readable there **10.5 s later**. Receivers fail closed | `contracts/contracts/icm/*` | [send tx](https://testnet.snowtrace.io/tx/0xcb7aa4411b8e176d17fb8b8f4767942498563a11223971e6fe8ba536c63fc658) · [L1 delivery](https://build.avax.network/explorer/fuji/2QyrGkChHLjbi76A5uzwF2XEbfN5f3Krovs1j4qPtwe1BUP7h4/tx/0x67f98802f8cc90aae98555bbf40bbb7607165795344d5890420eab5306d0fb2f) | `31ff163` `6c0b9f7` |
+| 5 | **Public explorer, in-browser paid call, sample provider.** No wallet needed to see it working | `apps/avalanche-dashboard/src/screens/explore/*` | [Explore](https://chainpe.vercel.app/dashboard/explore) | `3edd37c` `f666509` `2f9a7a3` |
+| 6 | **Hardening.** Facilitator only settles real USDC to registered services and never settles one signature twice; CLI proxy no longer exposes its gas key; wallet and agent spending caps fail closed | `services/chainpe-facilitator`, `packages/chainpe`, `packages/chainpe-wallet` | tests | `1298366` `2bcd70d` `94f8adf` |
+| 7 | **Honest site.** Fixed an invalid contract address in the docs, removed unbacked claims, deleted two dead apps | `apps/landing` | – | `34c31ef` `fd5a9ba` |
 
 ---
 
@@ -155,7 +158,7 @@ flowchart TB
     PROXY --> BACKEND
     FAC -->|"transferWithAuthorization"| chain
     CLOUD -.->|"indexes events, verifies receipts"| chain
-    CLOUD -->|"attester publishes scores"| ORACLE
+    CLOUD -->|"scores published by the attester<br/>(scripts/publish-scores.ts)"| ORACLE
     VAULT --> ORACLE
     ORACLE -->|"ICM / Teleporter"| MIRROR
 ```
@@ -201,6 +204,18 @@ The Speedrun contract upgrades are written, tested against a mainnet fork and va
 | ChainPeReputationMirror (L1) | `0x2193ED88f7e144D6679405CcBaFB0DDd4d545e84` |
 
 The L1 was launched with the Builder Console's Quick L1, whose managed validator is removed after 3 days, so the L1-side links stop working after about 2026-11-17. The Fuji C-Chain side stays on Snowtrace. Full run log: [`docs/PHASE5-RUNBOOK.md`](docs/PHASE5-RUNBOOK.md).
+
+### Public API (no sign-in)
+
+| Endpoint | Returns |
+|---|---|
+| `GET /v1/public/services` | Every active service: price, payTo, agentId, `paidScore`/`paidReviews`, `rawScore`/`rawReviews`, USDC settled, paid calls |
+| `GET /v1/public/services/:key/reviews` | Each rating with `verified`, its `verification_reason` and the payment tx |
+| `GET /v1/public/feed?limit=50` | Latest verified x402 settlements |
+| `GET /v1/public/stats` | Total USDC settled, paid calls, services, verified reviews |
+| `GET /v1/public/providers/:address/summary` | Aggregate dashboard data for an allowlisted sample provider |
+
+Base URL: `https://chainpe-cloud-production-1d71cb77.up.railway.app`. Full spec: [`services/chainpe-cloud/openapi.yaml`](services/chainpe-cloud/openapi.yaml).
 
 ### Hosted services
 
@@ -321,7 +336,22 @@ npm run build:mcpb --workspace=chainpe-wallet-mcp
 ```
 
 Claude gets 9 tools: `search_bazaar`, `x402_fetch`, `pay`, `transfer_usdc`, `transfer_avax`, `give_feedback`, `spending_report`, `check_balance`, `request_funding`.
+
+Safety settings (Claude Desktop fields or env): `MAX_PER_CALL` (default 0.10 USDC), `MAX_PER_DAY`, `MAX_AVAX_PER_TRANSFER`, `MAX_AVAX_PER_DAY`, and `MIN_REPUTATION` / `MIN_PAID_REVIEWS` to refuse providers without a good payment-verified record. Blank or invalid values fall back to safe defaults, never to "no limit".
 </details>
+
+---
+
+## Tech stack
+
+| Layer | What | Avalanche-specific |
+|---|---|---|
+| Contracts | Solidity 0.8.28, Hardhat, OpenZeppelin UUPS proxies | C-Chain mainnet; ERC-8004 registries; ICM/Teleporter sender, receivers and mirror; our own Fuji L1 |
+| Payments | x402 (`x402`, `x402-express`), EIP-3009 `transferWithAuthorization` | Native Circle USDC on C-Chain; hosted Avalanche facilitator that pays AVAX gas |
+| Backend | Node.js, Express, Postgres, Drizzle, viem, Railway | Indexes C-Chain within the public RPC's 100-block `eth_getLogs` limit |
+| Clients | TypeScript SDK, CLI, Claude MCP wallet, Vercel AI SDK / LangChain tools, agent | `avalanche` / `avalanche-fuji` x402 networks |
+| Frontend | Next.js + fumadocs (landing, docs), Vite + React + wagmi (explorer, dashboard) | SIWE and EIP-712 signing on chain 43114, Snowtrace links |
+| Cross-chain | `avaplatform/icm-relayer` | Builder Console Quick L1 with Interoperability preinstalled |
 
 ---
 
@@ -399,6 +429,39 @@ cd apps/avalanche-dashboard && npm run dev                     # explorer + dash
 
 ---
 
+## Configuration
+
+| Component | Variables |
+|---|---|
+| Facilitator | `FACILITATOR_PRIVATE_KEY` (gas key), `NETWORK`, `RPC_URL`, `REGISTRY_ADDRESS`, `MIN_AMOUNT` (default 1000 = 0.001 USDC), `ALLOWED_ORIGINS`, `ALLOW_ANY_PAYTO` (local dev only) |
+| chainpe-cloud | `DATABASE_URL`, `SESSION_SECRET`, `AVALANCHE_RPC_URL`, `SIWE_DOMAIN`, `CORS_ORIGIN`, `PUBLIC_CORS_ORIGIN`, `SAMPLE_PROVIDERS`, `GETLOGS_MAX_BLOCKS` (default 100), `REGISTRY_DEPLOY_BLOCK`; build args `VITE_CHAINPE_CLOUD_URL`, `VITE_WALLETCONNECT_PROJECT_ID`, `VITE_SAMPLE_PROVIDER` |
+| SDK | constructor options `network`, `minReputation`, `minPaidReviews` (default 3), `cloudUrl`, `maxPerCall`, `autoFeedback` |
+| MCP wallet | `CHAINPE_PRIVATE_KEY`, `NETWORK` (default `avalanche`), `MAX_PER_CALL`, `MAX_PER_DAY`, `MAX_AVAX_PER_TRANSFER`, `MAX_AVAX_PER_DAY`, `MIN_REPUTATION`, `MIN_PAID_REVIEWS`, `CHAINPE_CLOUD_URL` |
+| Agent | `~/.chainpe/agent.json` (`maxPricePerRequest`, `minReputation`), plus env `MIN_REPUTATION`, `MIN_PAID_REVIEWS`, `CHAINPE_CLOUD_URL` (`off` disables) |
+| Landing | `NEXT_PUBLIC_CHAINPE_CLOUD_URL` |
+| Dashboard (local) | `VITE_USE_MOCK=true` for sample data |
+
+The contract addresses default to the mainnet deployment everywhere; override them only for your own stack.
+
+---
+
+## Deploy your own stack
+
+```bash
+# 1. Contracts (Avalanche mainnet or Fuji)
+cd contracts && DEPLOYER_PRIVATE_KEY=0x... npx hardhat run scripts/deploy.ts --network avalanche
+
+# 2. Facilitator (Railway): FACILITATOR_PRIVATE_KEY, NETWORK=avalanche, REGISTRY_ADDRESS
+railway up --service chainpe-facilitator
+
+# 3. chainpe-cloud + dashboard: build services/chainpe-cloud/Dockerfile.with-dashboard from the repo root
+#    (serves the API and the explorer/dashboard at /dashboard; migrations run at boot)
+
+# 4. Landing: deploy apps/landing to Vercel, proxying /dashboard to chainpe-cloud
+```
+
+---
+
 ## Roadmap
 
 - x402 v2: CAIP-2 network ids, `PAYMENT-SIGNATURE` header, SIWx sessions
@@ -427,7 +490,7 @@ cd apps/avalanche-dashboard && npm run dev                     # explorer + dash
 
 ## AI tools disclosure
 
-This project was built with AI coding assistance (Claude Code) for code review, implementation and documentation. Every change was reviewed, tested and committed by the author.
+This project was built with AI coding assistance (Claude Code) for code review, implementation, testing and documentation, as allowed by the Speedrun rules. Commits are authored by SamyaDeb, and those made with AI help carry a `Co-Authored-By: Claude` trailer.
 
 ---
 
