@@ -2,7 +2,7 @@
   "name": "chainpe-proxy",
   "version": "1.0.0",
   "type": "module",
-  "description": "ChainPe x402 payment proxy — reads config from environment variables",
+  "description": "ChainPe x402 payment proxy for Avalanche mainnet: /weather, /summarize, /cheap-weather",
   "scripts": {
     "start": "node server.mjs"
   },

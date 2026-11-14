@@ -2,7 +2,7 @@
   "name": "chainpe-weather-api",
   "version": "1.0.0",
   "type": "module",
-  "description": "ChainPe Weather API backend — no external deps, pure Node.js http",
+  "description": "ChainPe demo backend (weather, summarize, cheap-weather): no dependencies, plain Node http",
   "scripts": {
     "start": "node server.mjs"
   },

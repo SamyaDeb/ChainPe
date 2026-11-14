@@ -27,3 +27,9 @@ npm-debug.log*
 
 # TypeScript
 *.tsbuildinfo
+
+# Local configs written by examples/proxy-railway/register.sh
+.chainpe-register/
+
+# Throwaway keys written by e2e/seed-reputation.mjs
+e2e/.seed-*.json
