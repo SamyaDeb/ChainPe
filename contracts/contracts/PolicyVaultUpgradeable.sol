@@ -12,6 +12,11 @@ import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/Pau
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
+/// @dev Payment-verified reputation of the address a spend pays (see ChainPeReputationOracle).
+interface IReputationOracle {
+    function score(address payTo) external view returns (uint8);
+}
+
 /**
  * @title PolicyVaultUpgradeable
  * @notice UUPS-upgradeable version of PolicyVault for mainnet deployment.
@@ -24,6 +29,12 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
  *   1. Deploy this implementation contract.
  *   2. Deploy ERC1967Proxy(impl, abi.encodeCall(initialize, (token, owner))).
  *   3. Interact with the proxy address only.
+ *
+ * v2.0.0 (Phase 3):
+ *  - spend() can refuse recipients whose payment-verified reputation is below the owner's `minScoreOf`.
+ *  - setPolicy() no longer resets `totalSpent`; totalBudget is a lifetime cap until the owner raises it.
+ *  - Spend signatures carry a session `epoch` that bumps on setPolicy/revokeSession, so revoking really
+ *    kills outstanding authorizations (SPEND_TYPEHASH changed: clients must sign the new format).
  *
  * Trust assumptions:
  *  - Relayers: any address may submit `spend()`. A malicious relayer can hold a
@@ -76,9 +87,17 @@ contract PolicyVaultUpgradeable is
     mapping(address => mapping(uint256 => uint256)) public dailySpent;
     mapping(address => uint256) public nonces;
 
-    // NOTE: Do NOT change SPEND_TYPEHASH — it invalidates all signed authorizations.
+    // ↑ Append new storage variables below this line only (preserve layout). Added in v2:
+    /// @notice Source of payment-verified provider scores. address(0) = unset.
+    address public reputationOracle;
+    /// @notice Per owner: refuse to pay recipients scoring below this (0-100). 0 = no minimum.
+    mapping(address => uint8) public minScoreOf;
+    /// @notice Per owner: bumped by setPolicy/revokeSession; signed into every spend authorization.
+    mapping(address => uint256) public sessionEpoch;
+
+    // v2 changed this (adds `epoch`): authorizations signed for v1 are no longer valid.
     bytes32 private constant SPEND_TYPEHASH =
-        keccak256("Spend(address owner,address to,uint256 amount,uint256 nonce,uint256 deadline)");
+        keccak256("Spend(address owner,address to,uint256 amount,uint256 nonce,uint256 deadline,uint256 epoch)");
 
     // ─── Errors ──────────────────────────────────────────────────────────────
 
@@ -101,6 +120,9 @@ contract PolicyVaultUpgradeable is
     error RecipientNotAllowlisted();
     error BadSessionSig();
     error CannotClearCurrentOrFutureDay();
+    error ProviderReputationTooLow();
+    error ReputationOracleNotSet();
+    error ScoreOutOfRange();
 
     // ─── Events ──────────────────────────────────────────────────────────────
 
@@ -109,6 +131,8 @@ contract PolicyVaultUpgradeable is
     event PolicySet(address indexed owner, address indexed sessionKey, uint256 maxPerCall, uint256 dailyCap, uint256 totalBudget, uint64 expiry, bool allowlistOnly);
     event AllowlistUpdated(address indexed owner, address indexed to, bool allowed);
     event SessionRevoked(address indexed owner, address indexed sessionKey);
+    event MinScoreSet(address indexed owner, uint8 minScore);
+    event ReputationOracleSet(address indexed oldOracle, address indexed newOracle);
     event Spent(address indexed owner, address indexed to, uint256 amount, address indexed relayer, uint256 nonce);
 
     // ─── Constructor / Initializer ───────────────────────────────────────────
@@ -141,6 +165,9 @@ contract PolicyVaultUpgradeable is
 
     // ─── Emergency controls ──────────────────────────────────────────────────
 
+    /// @notice Contract version (bumped for the payment-gated-reputation upgrade).
+    function getVersion() external pure returns (string memory) { return "2.0.0"; }
+
     function pause() external onlyOwner { _pause(); }
     function unpause() external onlyOwner { _unpause(); }
 
@@ -164,9 +191,27 @@ contract PolicyVaultUpgradeable is
 
     // ─── Policy management ───────────────────────────────────────────────────
 
+    /// @notice Owner of the vault (the proxy admin) points it at the reputation oracle.
+    function setReputationOracle(address oracle) external onlyOwner {
+        emit ReputationOracleSet(reputationOracle, oracle);
+        reputationOracle = oracle;
+    }
+
     /**
-     * @dev Resets `totalSpent` on each new session. `maxPerCall <= totalBudget`,
-     * `dailyCap > 0`, and `expiry > block.timestamp` are enforced.
+     * @notice Refuse to pay any recipient whose payment-verified score is below `minScore` (0-100; 0 disables).
+     *         Enforced in spend(), so it holds even if the agent is compromised. Fails closed: with a minimum set
+     *         and no oracle configured, spends revert.
+     */
+    function setMinScore(uint8 minScore) external {
+        if (minScore > 100) revert ScoreOutOfRange();
+        minScoreOf[msg.sender] = minScore;
+        emit MinScoreSet(msg.sender, minScore);
+    }
+
+    /**
+     * @dev Does NOT reset `totalSpent`: totalBudget is a lifetime cap, so re-setting the policy cannot erase what was
+     * already spent (raise totalBudget to allow more). Bumps `sessionEpoch`, invalidating authorizations signed for the
+     * previous session. `maxPerCall <= totalBudget`, `dailyCap > 0`, and `expiry > block.timestamp` are enforced.
      */
     function setPolicy(
         address sessionKey,
@@ -181,7 +226,7 @@ contract PolicyVaultUpgradeable is
         if (maxPerCall > totalBudget) revert MaxPerCallExceedsBudget();
         if (expiry <= block.timestamp) revert ExpiryInPast();
         policyOf[msg.sender] = Policy({ sessionKey: sessionKey, maxPerCall: maxPerCall, dailyCap: dailyCap, totalBudget: totalBudget, expiry: expiry, allowlistOnly: allowlistOnly, active: true });
-        totalSpent[msg.sender] = 0;
+        sessionEpoch[msg.sender] += 1;
         emit PolicySet(msg.sender, sessionKey, maxPerCall, dailyCap, totalBudget, expiry, allowlistOnly);
     }
 
@@ -193,6 +238,7 @@ contract PolicyVaultUpgradeable is
     function revokeSession() external {
         Policy storage p = policyOf[msg.sender];
         p.active = false;
+        sessionEpoch[msg.sender] += 1; // outstanding signed spends can never be replayed, even after a new setPolicy
         emit SessionRevoked(msg.sender, p.sessionKey);
     }
 
@@ -220,8 +266,17 @@ contract PolicyVaultUpgradeable is
 
         if (p.allowlistOnly && !allowlist[owner][to]) revert RecipientNotAllowlisted();
 
+        uint8 minScore = minScoreOf[owner];
+        if (minScore > 0) {
+            address oracle = reputationOracle;
+            if (oracle == address(0)) revert ReputationOracleNotSet();
+            if (IReputationOracle(oracle).score(to) < minScore) revert ProviderReputationTooLow();
+        }
+
         uint256 nonce = nonces[owner];
-        bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(SPEND_TYPEHASH, owner, to, amount, nonce, deadline)));
+        bytes32 digest = _hashTypedDataV4(
+            keccak256(abi.encode(SPEND_TYPEHASH, owner, to, amount, nonce, deadline, sessionEpoch[owner]))
+        );
         if (ECDSA.recover(digest, sessionSig) != p.sessionKey) revert BadSessionSig();
 
         nonces[owner] = nonce + 1;
@@ -258,6 +313,12 @@ contract PolicyVaultUpgradeable is
         uint256 day = block.timestamp / 1 days;
         if (dailySpent[owner][day] + amount > p.dailyCap) return (false, "over daily cap");
         if (p.allowlistOnly && !allowlist[owner][to]) return (false, "recipient not allowlisted");
+        uint8 minScore = minScoreOf[owner];
+        if (minScore > 0) {
+            address oracle = reputationOracle;
+            if (oracle == address(0)) return (false, "reputation oracle not set");
+            if (IReputationOracle(oracle).score(to) < minScore) return (false, "provider reputation too low");
+        }
         return (true, "");
     }
 

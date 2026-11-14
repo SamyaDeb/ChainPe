@@ -69,9 +69,11 @@ describe("PolicyVaultUpgradeable (UUPS proxy)", () => {
         { name: "amount", type: "uint256" },
         { name: "nonce", type: "uint256" },
         { name: "deadline", type: "uint256" },
+        { name: "epoch", type: "uint256" },
       ],
     };
-    return signer.signTypedData(domain, types, { owner, to, amount, nonce, deadline });
+    const epoch = await vault.sessionEpoch(owner);
+    return signer.signTypedData(domain, types, { owner, to, amount, nonce, deadline, epoch });
   }
 
   // ── Proxy basics ────────────────────────────────────────────────────────────
