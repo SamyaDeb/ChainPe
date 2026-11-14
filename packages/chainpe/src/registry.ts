@@ -151,8 +151,14 @@ function readAddressFromConfig(): string | undefined {
   }
 }
 
-export function resolveRegistryAddress(explicit?: string): `0x${string}` {
-  const candidate = explicit ?? process.env.CHAINPE_REGISTRY_ADDRESS ?? readAddressFromConfig();
+// Deployed ChainPeRegistry per network (override via config/env). Fuji has no default.
+const DEFAULT_REGISTRY: Partial<Record<ChainPeNetwork, string>> = {
+  avalanche: "0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E",
+};
+
+export function resolveRegistryAddress(network: ChainPeNetwork, explicit?: string): `0x${string}` {
+  const candidate =
+    explicit ?? process.env.CHAINPE_REGISTRY_ADDRESS ?? readAddressFromConfig() ?? DEFAULT_REGISTRY[network];
   if (!candidate) {
     throw new Error(
       "ChainPeRegistry address not set. Provide it via config (registryAddress), " +
@@ -232,7 +238,7 @@ export class ChainPeRegistryClient {
     this.network = network;
     const info = getNetwork(network);
     this.publicClient = createPublicClient({ chain: info.chain, transport: http(info.rpcUrl) });
-    this.address = resolveRegistryAddress(registryAddress);
+    this.address = resolveRegistryAddress(network, registryAddress);
   }
 
   getContractInfo(): { address: string; network: ChainPeNetwork } {

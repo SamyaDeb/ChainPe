@@ -1,6 +1,6 @@
 {
   "name": "@chainpeavax/cli",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "ChainPe Provider CLI — Monetize any API with x402 micropayments on Avalanche C-Chain",
   "type": "module",
   "bin": {
@@ -32,7 +32,8 @@
     "dev": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "vitest run"
   },
   "keywords": [
     "x402",
@@ -53,7 +54,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@chainpeavax/sdk": "^0.2.0",
+    "@chainpeavax/sdk": "^0.3.0",
     "@clack/prompts": "^0.9.1",
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
@@ -76,7 +77,8 @@
     "@types/node": "^22.15.21",
     "tsup": "^8.5.0",
     "tsx": "^4.19.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1"
   },
   "files": [
     "dist",

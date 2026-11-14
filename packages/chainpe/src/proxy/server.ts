@@ -13,6 +13,7 @@
  *      settles on-chain using a funded gas wallet. No external dependency.
  */
 
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import { createProxyMiddleware, type Options as ProxyOptions } from "http-proxy-middleware";
@@ -33,6 +34,14 @@ export interface ProxyServerOptions {
 }
 
 const LOCAL_FACILITATOR_PATH = "/chainpe-facilitator";
+const LOCAL_FACILITATOR_HEADER = "x-chainpe-facilitator-secret";
+
+/** Constant-time string compare (hashes first so differing lengths don't throw or leak). */
+function safeEqual(a: string, b: string): boolean {
+  const ha = createHash("sha256").update(a).digest();
+  const hb = createHash("sha256").update(b).digest();
+  return timingSafeEqual(ha, hb);
+}
 
 export function createProxyServer(options: ProxyServerOptions): Express {
   const { config, additionalRoutes, onPayment, facilitatorKey } = options;
@@ -53,19 +62,23 @@ export function createProxyServer(options: ProxyServerOptions): Express {
     res.json({ status: "ok", service: config.serviceName, uptime: process.uptime() });
   });
 
-  // Admin endpoints (JSON-parsed, optionally key-protected) — not gated.
+  // Admin endpoints (JSON-parsed) — not payment-gated, but only exist when an
+  // adminKey is configured (404 otherwise), and the key is accepted only in the
+  // `x-admin-key` header (never a query string, which ends up in logs).
   const adminRouter = express.Router();
   adminRouter.use(express.json());
-  if (config.adminKey) {
-    adminRouter.use((req: Request, res: Response, next: NextFunction) => {
-      const apiKey = req.headers["x-admin-key"] || req.query.adminKey;
-      if (apiKey !== config.adminKey) {
-        res.status(401).json({ error: "Unauthorized" });
-        return;
-      }
-      next();
-    });
-  }
+  adminRouter.use((req: Request, res: Response, next: NextFunction) => {
+    if (!config.adminKey) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    const supplied = req.headers["x-admin-key"];
+    if (typeof supplied !== "string" || !safeEqual(supplied, config.adminKey)) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    next();
+  });
   adminRouter.get("/stats", (_req: Request, res: Response) => {
     res.json({ ...analytics.getStats(), revenue: analytics.getRevenueSummary(), totalRevenue: undefined, revenueByToken: undefined });
   });
@@ -74,7 +87,6 @@ export function createProxyServer(options: ProxyServerOptions): Express {
     res.json({
       serviceName: config.serviceName,
       serviceDescription: config.serviceDescription,
-      targetUrl: config.targetUrl,
       pricePerRequest: config.pricePerRequest,
       paymentToken: config.paymentToken,
       walletAddress: config.walletAddress,
@@ -97,9 +109,24 @@ export function createProxyServer(options: ProxyServerOptions): Express {
 
   // Resolve the facilitator. Local mode mounts an in-process facilitator and
   // points x402 at it; otherwise use the configured external facilitator URL.
+  // The in-process facilitator spends the gas key, so its HTTP routes sit behind
+  // a per-process random secret that only our own x402 middleware knows — a
+  // request from the internet gets a 404.
   let facilitatorUrl = config.facilitatorUrl;
+  let facilitatorAuthHeaders: (() => Promise<{ verify: Record<string, string>; settle: Record<string, string>; supported: Record<string, string>; list: Record<string, string> }>) | undefined;
   if (facilitatorKey) {
+    const secret = randomBytes(32).toString("hex");
+    app.use(LOCAL_FACILITATOR_PATH, (req: Request, res: Response, next: NextFunction) => {
+      const supplied = req.headers[LOCAL_FACILITATOR_HEADER];
+      if (typeof supplied !== "string" || !safeEqual(supplied, secret)) {
+        res.status(404).json({ error: "Not found" });
+        return;
+      }
+      next();
+    });
     app.use(LOCAL_FACILITATOR_PATH, createLocalFacilitatorRouter(facilitatorKey, config.network));
+    const h = { [LOCAL_FACILITATOR_HEADER]: secret };
+    facilitatorAuthHeaders = async () => ({ verify: h, settle: h, supported: h, list: h });
     facilitatorUrl = `http://localhost:${config.proxyPort}${LOCAL_FACILITATOR_PATH}`;
     logger.info("Using in-process facilitator (settles on-chain with the provided gas key)");
   } else if (facilitatorUrl) {
@@ -153,7 +180,9 @@ export function createProxyServer(options: ProxyServerOptions): Express {
   }
 
   // Payment middleware (gates everything after it).
-  const facilitatorConfig = facilitatorUrl ? { url: facilitatorUrl as `${string}://${string}` } : undefined;
+  const facilitatorConfig = facilitatorUrl
+    ? { url: facilitatorUrl as `${string}://${string}`, createAuthHeaders: facilitatorAuthHeaders }
+    : undefined;
   app.use(
     paymentMiddleware(
       config.walletAddress as `0x${string}`,
@@ -200,7 +229,7 @@ export function createProxyServer(options: ProxyServerOptions): Express {
   const proxyOptions: ProxyOptions = {
     target: config.targetUrl,
     changeOrigin: true,
-    ws: true,
+    ws: false,
     on: {
       proxyReq: (_proxyReq, req) => logger.verbose(`Proxying ${req.method} ${req.url} → ${config.targetUrl}`),
       proxyRes: (proxyRes, req) => logger.verbose(`Response ${config.targetUrl}${req.url}: ${proxyRes.statusCode}`),

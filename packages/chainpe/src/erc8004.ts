@@ -48,6 +48,7 @@ export const IDENTITY_REGISTRY_ABI = [
 
 const KNOWN_IDENTITY_REGISTRY: Partial<Record<ChainPeNetwork, string>> = {
   fuji: "0x56FEc2359fcDfFa6FA1D3a8AB3b708Ff698161D5",
+  avalanche: "0xB1330d7B1b083ba689C7f56bDf667F1F528a3195",
 };
 
 export function resolveIdentityRegistry(
