@@ -16,8 +16,10 @@ import {
 } from './networks.js'
 import type { ChainPeNetwork, ReputationSummary } from './types.js'
 
-const ZERO_HASH: Hex =
+export const ZERO_HASH: Hex =
   '0x0000000000000000000000000000000000000000000000000000000000000000'
+
+export const isTxHash = (v: string): v is Hex => /^0x[0-9a-fA-F]{64}$/.test(v)
 
 const REPUTATION_ABI = [
   {
@@ -67,7 +69,8 @@ export function summaryToScore(summaryValue: bigint, decimals: number): number {
 }
 
 /**
- * Reads a provider agent's aggregate reputation. Returns null when the agent is
+ * Reads a provider agent's plain on-chain average over every rating. Anyone can post a rating, so the result is
+ * labelled `source: 'unverified'`; use chainpe-cloud's paid score (see `CloudClient`) as evidence. Returns null when the agent is
  * unlinked (`agentId` 0/empty) or no registry is configured; `count: 0` when the
  * agent exists but has no feedback yet.
  */
@@ -89,7 +92,7 @@ export async function getReputation(
       args: [id]
     })) as readonly `0x${string}`[]
 
-    if (clients.length === 0) return { count: 0, score: null }
+    if (clients.length === 0) return { count: 0, score: null, source: 'unverified' }
 
     const [count, summaryValue, decimals] = (await client.readContract({
       address: registry,
@@ -100,7 +103,8 @@ export async function getReputation(
 
     return {
       count: Number(count),
-      score: summaryToScore(summaryValue, Number(decimals))
+      score: summaryToScore(summaryValue, Number(decimals)),
+      source: 'unverified'
     }
   } catch {
     return null
@@ -113,6 +117,11 @@ export interface GiveFeedbackParams {
   value: number
   endpoint?: string
   tag?: string
+  /**
+   * The x402 settlement tx this rating is about, sent as `feedbackHash`. chainpe-cloud counts the rating as a paid
+   * review only if that tx really paid the rated service from this wallet. Omit it and the rating is unverified.
+   */
+  paymentTx?: string
   /** Await the receipt before returning. Defaults to false. */
   waitConfirm?: boolean
 }
@@ -126,6 +135,9 @@ export async function giveFeedback(
 ): Promise<string> {
   if (!registry) throw new Error('Reputation registry address not configured')
 
+  if (params.paymentTx !== undefined && !isTxHash(params.paymentTx)) {
+    throw new Error('paymentTx must be a 32-byte 0x-prefixed transaction hash')
+  }
   const account = privateKeyToAccount(normalizeKey(privateKey))
   const wallet: WalletClient = createWalletClient({
     account,
@@ -147,7 +159,7 @@ export async function giveFeedback(
       params.tag ?? 'paid-call',
       params.endpoint ?? '',
       '',
-      ZERO_HASH
+      params.paymentTx ?? ZERO_HASH
     ]
   })
 

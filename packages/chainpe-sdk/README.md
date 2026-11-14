@@ -83,7 +83,7 @@ and `ERC8004_REPUTATION_REGISTRY` env vars, then the built-in deployed defaults.
 
 Works out of the box against the deployed mainnet contracts (see `docs/DEPLOYMENTS.md`):
 ChainPeRegistry `0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E`, ERC-8004 Reputation
-`0xfe7Df66e6BFbd3A76B68dDF26b9312E6c85a38543`. USDC is available on major CEXes and bridges (e.g., [Stargate](https://stargate.finance)).
+`0xfe7Df66e6BFbd3A76B68dF26b9312E6c85a38543`. USDC is available on major CEXes and bridges (e.g., [Stargate](https://stargate.finance)).
 
 Run the example:
 

@@ -22,13 +22,14 @@ describe('PolicyVaultClient', () => {
     expect(cp.getAddress().toLowerCase()).toBe(SESSION_ADDR.toLowerCase())
   })
 
-  it('signs a spend that recovers to the session key with the contract typing', async () => {
+  it('signs a v1 spend that recovers to the session key with the v1 contract typing', async () => {
     const cp = new PolicyVaultClient({
       privateKey: KEY,
       network: 'fuji',
       vaultAddress: VAULT
     })
     vi.spyOn(cp, 'nonce').mockResolvedValue(3n)
+    vi.spyOn(cp, 'sessionEpoch').mockResolvedValue(undefined) // a v1 vault (Fuji) has no epoch
 
     const auth = await cp.signSpend({ owner: OWNER, to: TO, amount: '1.5' })
 
@@ -66,5 +67,44 @@ describe('PolicyVaultClient', () => {
       signature: auth.signature
     })
     expect(recovered.toLowerCase()).toBe(SESSION_ADDR.toLowerCase())
+  })
+
+  it('signs a v2 spend that includes the session epoch, and a different epoch gives a different signature', async () => {
+    const cp = new PolicyVaultClient({ privateKey: KEY, network: 'avalanche', vaultAddress: VAULT })
+    vi.spyOn(cp, 'nonce').mockResolvedValue(3n)
+    const epoch = vi.spyOn(cp, 'sessionEpoch').mockResolvedValue(2n)
+
+    const auth = await cp.signSpend({ owner: OWNER, to: TO, amount: '1.5' })
+    expect(auth.epoch).toBe('2')
+
+    const typed = (epochValue: bigint, signature: `0x${string}`) =>
+      recoverTypedDataAddress({
+        domain: { name: 'ChainPePolicyVault', version: '1', chainId: 43114, verifyingContract: VAULT },
+        types: {
+          Spend: [
+            { name: 'owner', type: 'address' },
+            { name: 'to', type: 'address' },
+            { name: 'amount', type: 'uint256' },
+            { name: 'nonce', type: 'uint256' },
+            { name: 'deadline', type: 'uint256' },
+            { name: 'epoch', type: 'uint256' }
+          ]
+        },
+        primaryType: 'Spend',
+        message: { owner: OWNER, to: TO, amount: 1_500_000n, nonce: 3n, deadline: BigInt(auth.deadline), epoch: epochValue },
+        signature
+      })
+    expect((await typed(2n, auth.signature)).toLowerCase()).toBe(SESSION_ADDR.toLowerCase())
+    // The vault rebuilds the digest with the CURRENT epoch; after a revoke (epoch 3) this signature no longer recovers
+    // to the session key, which is exactly why a revoked authorization is dead.
+    expect((await typed(3n, auth.signature)).toLowerCase()).not.toBe(SESSION_ADDR.toLowerCase())
+    epoch.mockRestore()
+  })
+
+  it('setMinScore rejects values outside 0-100 before sending anything', async () => {
+    const cp = new PolicyVaultClient({ privateKey: KEY, network: 'avalanche', vaultAddress: VAULT })
+    await expect(cp.setMinScore(101)).rejects.toThrow(/between 0 and 100/)
+    await expect(cp.setMinScore(-1)).rejects.toThrow(/between 0 and 100/)
+    await expect(cp.setMinScore(60.5)).rejects.toThrow(/between 0 and 100/)
   })
 })
