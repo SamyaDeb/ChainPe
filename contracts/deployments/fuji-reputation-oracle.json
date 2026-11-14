@@ -1,0 +1,8 @@
+{
+  "network": "fuji",
+  "oracle": "0x2193ED88f7e144D6679405CcBaFB0DDd4d545e84",
+  "owner": "0x88409A43B4Df744715a8a2baD213dC7B54B7e1B9",
+  "attester": "0x88409A43B4Df744715a8a2baD213dC7B54B7e1B9",
+  "deployTx": "0x8a652235ad8933433c4b1e2c9bed48993c9c8ca0d21096de366f04f846be6e81",
+  "deployedAt": "2026-11-14T13:13:33.191Z"
+}
