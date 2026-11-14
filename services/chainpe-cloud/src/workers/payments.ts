@@ -5,7 +5,10 @@
  * payment record. An x402 "exact" payment is one transferWithAuthorization from the buyer to
  * the service's payTo for exactly the listed price, so a transfer counts as a payment when:
  *
+ *   - its tx emitted USDC `AuthorizationUsed` from the payer (an EIP-3009 payment, not a plain transfer),
  *   - it lands on the payTo of a registered service that was active when the chunk was indexed,
+ *   - the payTo is attributed to its earliest registrant only (a later service that reuses the address is
+ *     "shared" and earns nothing, so nobody can claim another provider's revenue by copying its payTo),
  *   - and its amount equals that service's price, to the atomic unit.
  *
  * Anything else that reaches a payTo (an exchange withdrawal, a tip, a refund) is left out and
@@ -24,8 +27,24 @@ export const ONCHAIN_ID_PREFIX = 'onchain_'
 
 export const onchainEventId = (txHash: string, logIndex: number): string => `${ONCHAIN_ID_PREFIX}${txHash.slice(2)}_${logIndex}`
 
-export async function derivePayments(db: Db | Tx, transfers: TransferRow[], caip2: string): Promise<number> {
-  const priced = transfers.filter((t) => t.amountAtomic !== null)
+/** Key for the set of `AuthorizationUsed` logs seen in a chunk: the tx and the authorizer that signed. */
+export const authKey = (txHash: string, authorizer: string): string => `${txHash.toLowerCase()}:${authorizer.toLowerCase()}`
+
+/** A provider's own addresses: the registering wallet plus its declared my_wallets. Used for self-pay and self-rating. */
+export async function ownWallets(db: Db | Tx, providerAddresses: string[]): Promise<Map<string, Set<string>>> {
+  const own = new Map<string, Set<string>>(providerAddresses.map((p) => [p, new Set([p])]))
+  if (providerAddresses.length === 0) return own
+  const wallets = await db.select().from(myWallets).where(inArray(myWallets.provider, providerAddresses))
+  for (const w of wallets) own.get(w.provider)?.add(w.address)
+  return own
+}
+
+/**
+ * @param authorizations `authKey(tx, authorizer)` for every USDC `AuthorizationUsed` log in the same block range.
+ *        Read from the logs the indexer already fetches for the chunk, so this costs no call per transfer.
+ */
+export async function derivePayments(db: Db | Tx, transfers: TransferRow[], caip2: string, authorizations: ReadonlySet<string>): Promise<number> {
+  const priced = transfers.filter((t) => t.amountAtomic !== null && authorizations.has(authKey(t.txHash, t.from)))
   if (priced.length === 0) return 0
 
   const payees = [...new Set(priced.map((t) => t.to))]
@@ -35,18 +54,13 @@ export async function derivePayments(db: Db | Tx, transfers: TransferRow[], caip
     .where(and(inArray(services.payTo, payees), eq(services.active, true)))
     .orderBy(services.createdBlock, services.key)
 
-  const providers = [...new Set(candidates.map((c) => c.provider))]
-  const wallets = providers.length
-    ? await db.select().from(myWallets).where(inArray(myWallets.provider, providers))
-    : []
-  const own = new Map<string, Set<string>>(providers.map((p) => [p, new Set([p])]))
-  for (const w of wallets) own.get(w.provider)?.add(w.address)
+  const own = await ownWallets(db, [...new Set(candidates.map((c) => c.provider))])
 
   const rows = []
   for (const t of priced) {
-    // The oldest matching service wins, so the same transfer always lands on the same one.
-    const service = candidates.find((c) => c.payTo === t.to && priceToAtomic(c.price) === t.amountAtomic)
-    if (!service) continue
+    // Only the earliest registrant of a payTo is attributed; later services on the same address are shared and ignored.
+    const service = candidates.find((c) => c.payTo === t.to)
+    if (!service || priceToAtomic(service.price) !== t.amountAtomic) continue
     rows.push({
       provider: service.provider,
       id: onchainEventId(t.txHash, t.logIndex),

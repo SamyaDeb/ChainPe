@@ -2,7 +2,7 @@
 import request from 'supertest'
 import { feedback, onchainTransfers, services } from '../src/schema.js'
 import { upsertTransfers } from '../src/workers/indexer.js'
-import { derivePayments } from '../src/workers/payments.js'
+import { authKey, derivePayments } from '../src/workers/payments.js'
 import { createReconciler } from '../src/workers/reconciler.js'
 import { eq } from 'drizzle-orm'
 import { auth, BUYER, BUYER2, CAIP2, db, event, hex32, indexProvider, newAccount, newKey, signIn, USDC, type Harness } from './helpers.js'
@@ -60,7 +60,7 @@ export async function seedProvider(h: Harness, opts: { agentId?: bigint } = {}):
     { txHash: onchainTx, logIndex: 4, block: 88_300_200n, blockTs: new Date(Date.now() - 30_000), from: BUYER, to: address, valueRaw: '10000', amountAtomic: '10000' },
   ])
   await createReconciler({ db, usdc: USDC, log: () => {} }).run()
-  await derivePayments(db, await db.select().from(onchainTransfers).where(eq(onchainTransfers.txHash, onchainTx)), CAIP2)
+  await derivePayments(db, await db.select().from(onchainTransfers).where(eq(onchainTransfers.txHash, onchainTx)), CAIP2, new Set([authKey(onchainTx, BUYER)]))
 
   await request(h.app)
     .post('/v1/ingest/heartbeat')
@@ -88,6 +88,12 @@ export async function seedProvider(h: Harness, opts: { agentId?: bigint } = {}):
       block: 88_300_300n,
       blockTs: new Date(Date.now() - 10_000),
       txHash: hex32(id, 'e'),
+      // Its x402 payment was verified, so it counts in the paid score.
+      feedbackHash: onchainTx,
+      verified: true,
+      paymentTx: onchainTx,
+      paidAtomic: '10000',
+      paidTo: address,
     })
     // Unsolicited: BUYER2's only payment failed, so this must not count as a payer's rating.
     await db.insert(feedback).values({
@@ -103,6 +109,7 @@ export async function seedProvider(h: Harness, opts: { agentId?: bigint } = {}):
       block: 88_300_301n,
       blockTs: new Date(Date.now() - 5_000),
       txHash: hex32(id, 'f'),
+      verificationReason: 'no_proof',
     })
   }
   await request(h.app).put('/v1/me/wallets').set(...auth(token)).send({ wallets: [`0x${id.toString(16).padStart(40, 'f')}`] }).expect(200)

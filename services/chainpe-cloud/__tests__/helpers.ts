@@ -1,6 +1,6 @@
 /** Real Postgres, real signatures, real HTTP. Only the RPC is simulated. */
 import { sql } from 'drizzle-orm'
-import { encodeAbiParameters, encodeEventTopics, parseAbi, verifyMessage, type AbiEvent } from 'viem'
+import { encodeAbiParameters, encodeEventTopics, parseAbi, toEventSelector, verifyMessage, type AbiEvent } from 'viem'
 import { generatePrivateKey, privateKeyToAccount, type PrivateKeyAccount } from 'viem/accounts'
 import request from 'supertest'
 import { createApp, type Limits } from '../src/app.js'
@@ -190,6 +190,25 @@ export function transferLog(o: {
   }
 }
 
+const AUTH = parseAbi(['event AuthorizationUsed(address indexed authorizer, bytes32 indexed nonce)'])
+
+/** The USDC log FiatTokenV2 emits for every EIP-3009 transferWithAuthorization, which is what an x402 payment is. */
+export function authLog(o: { authorizer: string; txHash: string; logIndex?: number; block?: bigint; ts?: bigint; nonce?: string }): RawLog {
+  return {
+    address: USDC,
+    topics: encodeEventTopics({
+      abi: AUTH,
+      eventName: 'AuthorizationUsed',
+      args: { authorizer: o.authorizer as `0x${string}`, nonce: (o.nonce ?? hex32(7)) as `0x${string}` },
+    }) as string[],
+    data: '0x',
+    blockNumber: o.block ?? 100n,
+    logIndex: o.logIndex ?? 1,
+    transactionHash: o.txHash,
+    blockTimestamp: o.ts ?? 1_790_000_100n,
+  }
+}
+
 /** A chain in memory: answers getLogs by address, range and `to`, and enforces a range limit like the public RPC. */
 export class SimChain implements IndexerRpc {
   logs: RawLog[] = []
@@ -197,7 +216,7 @@ export class SimChain implements IndexerRpc {
   maxRange = 10_000n
   calls: { address: string | string[]; fromBlock: bigint; toBlock: bigint }[] = []
   failNext: Error | undefined
-  receipts = new Map<string, { blockNumber: bigint; logs: RawLog[] }>()
+  receipts = new Map<string, { blockNumber: bigint; status?: 'success' | 'reverted'; logs: RawLog[] }>()
   meta = { description: 'desc', tags: 'a,b', network: 'avalanche' }
 
   async getBlockNumber(): Promise<bigint> {
@@ -217,6 +236,8 @@ export class SimChain implements IndexerRpc {
       if (l.address.toLowerCase() !== String(p.address).toLowerCase()) return false
       if (l.blockNumber < p.fromBlock || l.blockNumber > p.toBlock) return false
       if (l.eventName && !names.has(l.eventName)) return false
+      // Raw logs match only the events asked for, as a node would by topic0.
+      if (!l.eventName && l.topics.length > 0 && !p.events.some((e) => toEventSelector(e as never) === l.topics[0])) return false
       if (to && !to.includes(`0x${l.topics[2].slice(-40)}`)) return false
       return true
     })

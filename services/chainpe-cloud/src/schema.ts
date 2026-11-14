@@ -41,6 +41,8 @@ export const services = pgTable(
     price: text('price').notNull(),
     network: text('network').notNull(),
     payTo: text('pay_to').notNull(),
+    // ERC-8004 agent this service is linked to (null = unlinked). The registry checks ownership on-chain from v2.
+    agentId: numeric('agent_id', { precision: 78, scale: 0 }),
     acceptsExact: boolean('accepts_exact').notNull(),
     acceptsGateway: boolean('accepts_gateway').notNull(),
     active: boolean('active').notNull().default(true),
@@ -186,8 +188,31 @@ export const feedback = pgTable(
     block: bigint('block', { mode: 'bigint' }).notNull(),
     blockTs: time('block_ts').notNull(),
     txHash: text('tx_hash').notNull(),
+    // Payment proof (Phase 3). feedbackHash is the x402 settlement tx the rater claims to have paid with.
+    feedbackHash: text('feedback_hash'),
+    verified: boolean('verified').notNull().default(false),
+    // Why a rating is not (yet) verified: no_proof, no_payment, wrong_payee, not_x402, reused, self_rating,
+    // payment_after_feedback, tx_failed (final) or receipt_not_found, service_unknown (retried, then final).
+    verificationReason: text('verification_reason'),
+    paidAtomic: atomic('paid_atomic'),
+    // payTo that received the payment, so a score belongs to one service even when an agent has several.
+    paidTo: text('paid_to'),
+    paymentTx: text('payment_tx'),
+    verifyAttempts: integer('verify_attempts').notNull().default(0),
+    // Null once the rating is settled (verified or finally rejected).
+    nextVerifyAt: time('next_verify_at'),
   },
-  (t) => [primaryKey({ columns: [t.agentId, t.client, t.feedbackIndex] }), index('feedback_agent').on(t.agentId)]
+  (t) => [
+    primaryKey({ columns: [t.agentId, t.client, t.feedbackIndex] }),
+    index('feedback_agent').on(t.agentId),
+    // One payment backs one verified rating.
+    uniqueIndex('feedback_payment_tx_verified')
+      .on(t.paymentTx)
+      .where(sql`${t.verified}`),
+    index('feedback_pending')
+      .on(t.nextVerifyAt)
+      .where(sql`${t.nextVerifyAt} IS NOT NULL`),
+  ]
 )
 
 export const heartbeats = pgTable(
