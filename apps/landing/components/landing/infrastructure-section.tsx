@@ -1,14 +1,17 @@
 "use client";
 
+import { SETTLEMENT_GAS_USD } from "@/lib/proof";
+
 import { useEffect, useState, useRef } from "react";
 
+// What actually runs where. No live latency numbers until there is a status API to back them.
 const locations = [
-  { city: "Avalanche C-Chain", region: "Primary Settlement", latency: "~1.2s" },
-  { city: "Mainnet", region: "Development", latency: "~1.5s" },
-  { city: "ICM Subnet A", region: "Cross-L1", latency: "~2.1s" },
-  { city: "ICM Subnet B", region: "Cross-L1", latency: "~2.3s" },
-  { city: "Railway (Facilitator)", region: "Settlement Service", latency: "<100ms" },
-  { city: "Railway (Indexer)", region: "Discovery API", latency: "<50ms" },
+  { city: "Avalanche C-Chain", region: "Settlement and on-chain registries", latency: "mainnet" },
+  { city: "Circle USDC", region: "EIP-3009 transferWithAuthorization", latency: "native" },
+  { city: "ERC-8004 registries", region: "Identity · Reputation · Validation", latency: "on-chain" },
+  { city: "x402 facilitator", region: "Verifies, settles, pays the gas", latency: "Railway" },
+  { city: "chainpe-cloud", region: "Indexer and provider dashboard", latency: "Railway" },
+  { city: "ICM / Teleporter", region: "Cross-L1 sender and receiver contracts", latency: "contracts" },
 ];
 
 export function InfrastructureSection() {
@@ -62,8 +65,8 @@ export function InfrastructureSection() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-8">
               <div>
-                <div className="text-4xl lg:text-5xl font-display mb-2">$0.003</div>
-                <div className="text-sm text-muted-foreground">Per settlement</div>
+                <div className="text-4xl lg:text-5xl font-display mb-2">{SETTLEMENT_GAS_USD}</div>
+                <div className="text-sm text-muted-foreground">Est. gas per settlement</div>
               </div>
               <div>
                 <div className="text-4xl lg:text-5xl font-display mb-2">~1–2s</div>
@@ -85,10 +88,10 @@ export function InfrastructureSection() {
             <div className="border border-foreground/10">
               {/* Header */}
               <div className="px-6 py-4 border-b border-foreground/10 flex items-center justify-between">
-                <span className="text-sm font-mono text-muted-foreground">Network Status</span>
+                <span className="text-sm font-mono text-muted-foreground">Stack</span>
                 <span className="flex items-center gap-2 text-xs font-mono text-green-600">
                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  All operational
+                  Avalanche mainnet
                 </span>
               </div>
 

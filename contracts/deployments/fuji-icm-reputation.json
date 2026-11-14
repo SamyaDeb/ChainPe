@@ -1,0 +1,49 @@
+{
+  "note": "Phase 5 portable reputation on testnet. Fuji C-Chain oracle -> ICM (Teleporter) -> L1 mirror.",
+  "teleporterMessenger": "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf",
+  "deployer": "0x88409A43B4Df744715a8a2baD213dC7B54B7e1B9",
+  "fuji": {
+    "chainId": 43113,
+    "blockchainID": "0x7fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d5",
+    "blockchainIDCb58": "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp",
+    "reputationOracle": "0x2193ED88f7e144D6679405CcBaFB0DDd4d545e84",
+    "reputationOracleDeployTx": "0x8a652235ad8933433c4b1e2c9bed48993c9c8ca0d21096de366f04f846be6e81",
+    "chainPeICMSender": "0xD2552df223d370056D6CA6d3a4a4aEDf855197CF",
+    "chainPeICMSenderDeployTx": "0xde2d060b0c30aa1b7e9dd5d33324dde4e1d6c6f90a021ac2e50afb6f84050239",
+    "registry": "0x0000000000000000000000000000000000000000"
+  },
+  "l1": {
+    "name": "chainpe-l1",
+    "chainId": 278944,
+    "rpcUrl": "https://managed-nodes.avax.network/ext/bc/2QyrGkChHLjbi76A5uzwF2XEbfN5f3Krovs1j4qPtwe1BUP7h4/rpc",
+    "explorer": "https://build.avax.network/explorer/fuji/2QyrGkChHLjbi76A5uzwF2XEbfN5f3Krovs1j4qPtwe1BUP7h4",
+    "blockchainID": "0xba255fac01c13b7b1ad8fe2e1321987e793f36f77ddee04e1947056087260a2b",
+    "blockchainIDCb58": "2QyrGkChHLjbi76A5uzwF2XEbfN5f3Krovs1j4qPtwe1BUP7h4",
+    "chainPeReputationMirror": "0x2193ED88f7e144D6679405CcBaFB0DDd4d545e84",
+    "chainPeReputationMirrorDeployTx": "0x27d7eec5f522fe19acb88841ad0ddcc7d842333885b98ad8edef01df7f6d9249",
+    "trustedSenderTx": "0x91052ac1caa6e048e5403a560acbb9582cd779f96dbeac6b057aec93d7aa1260",
+    "launchedVia": "Builder Console Quick L1, 2026-11-14 (managed validator NodeID-JVjfgeiDaNLN566HLWvPJik1kLX77WDHn; managed node expires after 3 days)",
+    "subnetID": "243imxPhCqNHPpoFpBz2FX12HXeBeqgqnZHQHEi8BNtYzsyXTg"
+  },
+  "deployedAt": "2026-11-14T13:13:45.467Z",
+  "demoSends": [
+    {
+      "payTo": "0xd096Cb77B04AADc533b1B69ef9A1CF52b488AD24",
+      "score": 87,
+      "paidReviews": 12,
+      "source": "demo score set by the attester on Fuji",
+      "seedTx": "0x241e69a56c91e2f2a85bf712cea1419f96e8b1f05875d8a1a38ada15dfd97523",
+      "sendTx": "0xcb7aa4411b8e176d17fb8b8f4767942498563a11223971e6fe8ba536c63fc658",
+      "messageID": "0xa657a4738aa4f7e40cdfaf544ba7d99313380c27af3df418a2c0e1c2cbb1e5b3",
+      "deliveryTx": "0x67f98802f8cc90aae98555bbf40bbb7607165795344d5890420eab5306d0fb2f",
+      "elapsedSec": 10.5,
+      "blockTimestampDeltaSec": 14,
+      "at": "2026-11-14T13:20:04.622Z"
+    }
+  ],
+  "relayer": {
+    "type": "self-hosted avaplatform/icm-relayer:v1.8.4 (docker, this machine)",
+    "address": "0x546bB1b62D54C377631F25c8dfc36F5fC1e3177D",
+    "allowedOriginSender": "0xD2552df223d370056D6CA6d3a4a4aEDf855197CF"
+  }
+}

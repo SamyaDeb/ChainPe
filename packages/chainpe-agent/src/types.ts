@@ -34,7 +34,7 @@ export interface WalletConfig {
 
 export interface PaymentConfig {
   preferredToken: PaymentToken;
-  maxPricePerRequest?: string; // Optional spending limit
+  maxPricePerRequest?: string; // Max USDC per payment (default 0.10)
 }
 
 // ============================================================================
@@ -49,6 +49,15 @@ export interface AgentConfig {
   network?: ChainPeNetwork;
   registryAddress?: string; // Deployed ChainPeRegistry contract address (0x)
   reputationRegistry?: string; // ERC-8004 Reputation Registry address (0x)
+  /**
+   * Refuse to pay (and never recommend) providers whose payment-verified score is below this (0-100). Checked before
+   * signing. Only ratings backed by a verified x402 payment count. 0 / unset = no minimum.
+   */
+  minReputation?: number;
+  /** Verified paid reviews a provider needs before minReputation is trusted. Default 3. */
+  minPaidReviews?: number;
+  /** chainpe-cloud base URL for payment-verified scores. false disables it. Default: the hosted service. */
+  cloudUrl?: string | false;
 }
 
 // ============================================================================

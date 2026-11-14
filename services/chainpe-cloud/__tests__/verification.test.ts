@@ -3,7 +3,7 @@ import request from 'supertest'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { onchainTransfers, paymentEvents, services } from '../src/schema.js'
 import { upsertTransfers } from '../src/workers/indexer.js'
-import { derivePayments, onchainEventId } from '../src/workers/payments.js'
+import { authKey, derivePayments, onchainEventId } from '../src/workers/payments.js'
 import { createReconciler } from '../src/workers/reconciler.js'
 import { auth, BUYER, BUYER2, CAIP2, db, event, harness, hex32, newAccount, newKey, resetDb, signIn, SimChain, transferLog, USDC, type Harness } from './helpers.js'
 
@@ -201,7 +201,7 @@ describe('Avalanche specifics', () => {
     const e = event(seller.address)
     await transfer(String(e.txHash))
     const [row] = await db.select().from(onchainTransfers)
-    expect(await derivePayments(db, [row], CAIP2)).toBe(1)
+    expect(await derivePayments(db, [row], CAIP2, new Set([authKey(row.txHash, row.from)]))).toBe(1)
     expect((await summary()).revenue.exactAtomic).toBe('10000')
 
     await ingest(e)

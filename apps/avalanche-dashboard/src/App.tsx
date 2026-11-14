@@ -1,17 +1,23 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import type { PublicService } from '@/api/schema'
 import { AuthProvider, useAuth } from '@/auth/AuthContext'
 import { WalletProviders } from '@/auth/WalletProviders'
 import { AppShell } from '@/components/AppShell'
+import { PublicShell } from '@/components/PublicShell'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/forms'
 import { ErrorState, Skeleton } from '@/components/ui/States'
 import { CONFIG_ERROR } from '@/lib/env'
 import { usePath } from '@/lib/router'
 import { Buyers } from '@/screens/Buyers'
+import { Explore } from '@/screens/explore/Explore'
+import { ServiceDetail } from '@/screens/explore/ServiceDetail'
+import { TryItButton } from '@/screens/explore/TryIt'
 import { Health } from '@/screens/Health'
 import { Overview } from '@/screens/Overview'
 import { Payments } from '@/screens/Payments'
 import { Reputation } from '@/screens/Reputation'
+import { SampleProvider } from '@/screens/SampleProvider'
 import { Services } from '@/screens/Services'
 import { SettingsScreen } from '@/screens/Settings'
 import { SignIn } from '@/screens/SignIn'
@@ -79,6 +85,40 @@ function Authenticated() {
   )
 }
 
+/** Pages anyone can open: no wallet, no session, no AuthProvider. They read only /v1/public. */
+export function publicRoute(path: string): { kind: 'explore' } | { kind: 'sample' } | { kind: 'service'; key: string } | null {
+  if (path === '/explore') return { kind: 'explore' }
+  if (path === '/sample') return { kind: 'sample' }
+  const m = /^\/explore\/([^/]+)$/.exec(path)
+  if (m) return { kind: 'service', key: decodeURIComponent(m[1] ?? '') }
+  return null
+}
+
+function PublicRoutes({ route }: { route: NonNullable<ReturnType<typeof publicRoute>> }) {
+  const tryIt = (s: PublicService) => <TryItButton s={s} />
+  return (
+    <PublicShell>
+      {route.kind === 'explore' ? (
+        <Explore cardActions={tryIt} />
+      ) : route.kind === 'sample' ? (
+        <SampleProvider />
+      ) : (
+        <ServiceDetail key={route.key} serviceKey={route.key} actions={tryIt} />
+      )}
+    </PublicShell>
+  )
+}
+
+function Root() {
+  const route = publicRoute(usePath())
+  if (route) return <PublicRoutes route={route} />
+  return (
+    <AuthProvider>
+      <Gate />
+    </AuthProvider>
+  )
+}
+
 function Gate() {
   const { session } = useAuth()
   return session ? <Authenticated key={session.token} /> : <SignIn />
@@ -100,9 +140,7 @@ export default function App() {
   return (
     <Boundary>
       <WalletProviders>
-        <AuthProvider>
-          <Gate />
-        </AuthProvider>
+        <Root />
       </WalletProviders>
     </Boundary>
   )

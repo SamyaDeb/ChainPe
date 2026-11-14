@@ -43,4 +43,15 @@ contract MockTeleporterMessenger is ITeleporterMessenger {
             input.message
         );
     }
+
+    /// @notice Test helper: deliver `message` to `destination` as if relayed from
+    /// `sourceBlockchainID` / `originSender`. Lets tests exercise untrusted chains and senders.
+    function deliver(
+        bytes32 sourceBlockchainID,
+        address originSender,
+        address destination,
+        bytes calldata message
+    ) external {
+        ITeleporterReceiver(destination).receiveTeleporterMessage(sourceBlockchainID, originSender, message);
+    }
 }

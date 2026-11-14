@@ -91,3 +91,19 @@ export function formatRate(rate: number | null): string {
   if (rate === null || !Number.isFinite(rate)) return '\u2014'
   return `${Math.round(rate * 100)}%`
 }
+
+/**
+ * A registry price ("0.01", "$0.01", "1") to atomic USDC, the same rule as chainpe-cloud's priceToAtomic: USDC with
+ * up to 6 decimals. The registry stores the price as text, so anything else is null, never a guess.
+ */
+export function priceToAtomic(price: string | null | undefined): string | null {
+  if (typeof price !== 'string') return null
+  const match = /^\$?(\d{1,20})(?:\.(\d{1,6}))?$/.exec(price.trim())
+  if (!match) return null
+  return (BigInt(match[1] ?? '0') * SCALE + BigInt((match[2] ?? '').padEnd(6, '0'))).toString()
+}
+
+/** A registry price for display, e.g. "0.01" → "$0.01". A dash when it is not a USDC amount. */
+export function formatPrice(price: string | null | undefined): string {
+  return formatUsdcExact(priceToAtomic(price))
+}

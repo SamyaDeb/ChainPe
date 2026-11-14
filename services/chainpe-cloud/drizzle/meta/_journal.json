@@ -15,6 +15,13 @@
       "when": 1793950029212,
       "tag": "0001_black_daredevil",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794652384893,
+      "tag": "0002_phase3_payment_gated_reputation",
+      "breakpoints": true
     }
   ]
 }

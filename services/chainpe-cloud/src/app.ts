@@ -10,6 +10,8 @@ import type { ProviderViews } from './plan.js'
 import { authRoutes } from './routes/auth.js'
 import { ingestRoutes } from './routes/ingest.js'
 import { meRoutes } from './routes/me.js'
+import { publicRoutes } from './routes/public.js'
+import { publicProviderRoutes } from './routes/publicProvider.js'
 import { requireIngestKey, type Sessions } from './session.js'
 import { HttpError, safeMessage } from './util.js'
 
@@ -19,9 +21,13 @@ export interface Limits {
   ingestKey: number
   ingestIp: number
   read: number
+  /** Per IP, for the unauthenticated /v1/public reads. */
+  public?: number
+  /** Per IP, for the sample provider summary, which runs heavier queries than the other public reads. */
+  sampleProvider?: number
 }
 
-export const DEFAULT_LIMITS: Limits = { nonce: 20, verify: 10, ingestKey: 600, ingestIp: 1200, read: 300 }
+export const DEFAULT_LIMITS: Limits = { nonce: 20, verify: 10, ingestKey: 600, ingestIp: 1200, read: 300, public: 120, sampleProvider: 30 }
 
 export interface AppOptions {
   db: Db
@@ -29,6 +35,10 @@ export interface AppOptions {
   sessions: Sessions
   views: ProviderViews
   corsOrigins: string[]
+  /** Extra origins allowed to read /v1/public (the landing site). chainpe.vercel.app is always allowed. */
+  publicCorsOrigins?: string[]
+  /** Providers whose aggregate summary is public (SAMPLE_PROVIDERS). Any other address gets a 404. */
+  sampleProviders?: string[]
   chainId: number
   dashboardDomain: string | string[]
   cliDomain: string
@@ -53,6 +63,9 @@ function limiter(limit: number, key: (req: Request) => string): RequestHandler {
   })
 }
 
+/** The landing site. Public reads are always open to it. */
+const PUBLIC_SITE_ORIGIN = 'https://chainpe.vercel.app'
+
 const byIp = (req: Request): string => ipKeyGenerator(req.ip ?? 'unknown')
 
 export function createApp(options: AppOptions): express.Express {
@@ -61,6 +74,22 @@ export function createApp(options: AppOptions): express.Express {
   // Railway terminates TLS one hop in front, so the client IP is the last forwarded one.
   app.set('trust proxy', 1)
   app.disable('x-powered-by')
+  // Public reputation reads: no session, their own rate limit and CORS. Mounted before the session-API CORS below,
+  // so the landing site (chainpe.vercel.app) and this service's own host can read them from a browser.
+  const dashboardHosts = (Array.isArray(options.dashboardDomain) ? options.dashboardDomain : [options.dashboardDomain]).map((d) => `https://${d}`)
+  const publicOrigins = [...new Set([PUBLIC_SITE_ORIGIN, ...dashboardHosts, ...options.corsOrigins, ...(options.publicCorsOrigins ?? [])])]
+  const publicCors = cors({ origin: publicOrigins, methods: ['GET', 'OPTIONS'], allowedHeaders: ['Content-Type'], credentials: false, maxAge: 600 })
+  app.use(
+    '/v1/public/providers',
+    publicCors,
+    publicProviderRoutes({ db, allowlist: options.sampleProviders ?? [], limit: limiter(limits.sampleProvider ?? DEFAULT_LIMITS.sampleProvider!, byIp), now })
+  )
+  app.use(
+    '/v1/public',
+    publicCors,
+    publicRoutes({ db, limit: limiter(limits.public ?? DEFAULT_LIMITS.public!, byIp) })
+  )
+
   app.use(
     cors({
       origin: options.corsOrigins,

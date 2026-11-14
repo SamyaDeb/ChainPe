@@ -23,6 +23,7 @@ import type {
 import { loadConfig, getWalletPrivateKey } from "./config.js";
 import { RegistryClient } from "./registry.js";
 import { PaymentClient } from "./payment.js";
+import { CloudClient, enforceMinimum } from "./cloud.js";
 import {
   createDiscoverServiceTool,
   createCallPaidApiTool,
@@ -73,7 +74,7 @@ export class ChainPeAgent {
       this.config = loaded;
     }
 
-    const network = this.config.network || "fuji";
+    const network = this.config.network || "avalanche";
 
     // Initialize registry client
     this.registryClient = new RegistryClient(network, this.config.registryAddress);
@@ -89,9 +90,25 @@ export class ChainPeAgent {
 
     // Initialize payment client with the key from keychain
     this.privateKey = privateKey;
-    this.paymentClient = new PaymentClient({ privateKey, network });
+    this.paymentClient = new PaymentClient({
+      privateKey,
+      network,
+      // Spending cap per payment (USDC); PaymentClient defaults to 0.10 when unset.
+      maxPerPayment: this.config.payment?.maxPricePerRequest,
+      // Reputation gate: refuse to sign for a provider below minReputation (payment-verified score).
+      gate: this.minimumGate(),
+    });
 
     this.initialized = true;
+  }
+
+  /** The payment gate for the configured minimum, or undefined when there is none. */
+  private minimumGate(): ((payTo: string, url: string) => Promise<void>) | undefined {
+    const min = this.config?.minReputation ?? 0;
+    if (!(min > 0)) return undefined;
+    const cloud = new CloudClient({ baseUrl: this.config?.cloudUrl });
+    const reviews = this.config?.minPaidReviews ?? 3;
+    return (payTo, url) => enforceMinimum(cloud, payTo, url, min, reviews);
   }
 
   /**
@@ -161,7 +178,7 @@ export class ChainPeAgent {
     }
 
     const { includeDiscover = true, includeFree = true, providerHint } = options;
-    const network = this.config?.network || "fuji";
+    const network = this.config?.network || "avalanche";
     const reputationRegistry = this.config?.reputationRegistry;
 
     const tools: any = {
@@ -180,6 +197,9 @@ export class ChainPeAgent {
         registryClient: this.registryClient,
         network,
         reputationRegistry,
+        minReputation: this.config?.minReputation,
+        minPaidReviews: this.config?.minPaidReviews,
+        cloudUrl: this.config?.cloudUrl,
       });
     }
 
@@ -228,7 +248,7 @@ export class ChainPeAgent {
                   pricePerRequest: config.pricePerRequest || "0.05",
                   paymentToken: "USDC" as const,
                   walletAddress: config.walletAddress,
-                  network: (config.network as "fuji" | "avalanche") || "fuji",
+                  network: (config.network as "fuji" | "avalanche") || "avalanche",
                 };
               }
             } catch {

@@ -10,6 +10,13 @@ import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/Pau
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
+/// @dev Minimal view of the ERC-8004 Identity Registry (declared locally because the
+///      erc8004 files each declare their own `IIdentityRegistry`, which would clash on import).
+interface IAgentIdentity {
+    /// @dev Reverts with ERC721NonexistentToken if the agent does not exist.
+    function isAuthorizedOrOwner(address spender, uint256 agentId) external view returns (bool);
+}
+
 /**
  * @title ChainPeRegistryUpgradeable
  * @notice UUPS-upgradeable version of ChainPeRegistry for mainnet deployment.
@@ -21,6 +28,9 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
  *   1. Deploy this implementation contract.
  *   2. Deploy ERC1967Proxy(impl, abi.encodeCall(initialize, (token, recipient, fee, identityReg, owner))).
  *   3. Interact with the proxy address only.
+ *
+ * v2.0.0 (Phase 3): register()/update() require the caller to own `agentId` in the
+ * Identity Registry; deregister() works while paused. No storage changes.
  *
  * Storage layout (do NOT reorder when releasing upgrades; append only):
  *   feeToken / feeRecipient / registrationFee / identityRegistry
@@ -109,6 +119,9 @@ contract ChainPeRegistryUpgradeable is
     error EmptyName();
     error StringTooLong(string field);
     error InvalidPagination(uint256 offset, uint256 limit);
+    /// @notice The caller is neither owner nor approved operator of `agentId` in the ERC-8004
+    ///         Identity Registry (or no Identity Registry is configured).
+    error NotAgentOwner(uint256 agentId);
 
     // ─── Constructor / Initializer ───────────────────────────────────────────
 
@@ -166,6 +179,7 @@ contract ChainPeRegistryUpgradeable is
         if (bytes(input.name).length == 0) revert EmptyName();
         if (input.payTo == address(0)) revert ZeroAddress();
         _validateInput(input);
+        _requireAgentOwner(input.agentId);
 
         key = computeKey(msg.sender, input.name);
         if (_services[key].exists) revert ServiceAlreadyExists(key);
@@ -185,6 +199,7 @@ contract ChainPeRegistryUpgradeable is
     function update(ServiceInput calldata input) external nonReentrant whenNotPaused returns (bytes32 key) {
         if (input.payTo == address(0)) revert ZeroAddress();
         _validateInput(input);
+        _requireAgentOwner(input.agentId);
 
         key = computeKey(msg.sender, input.name);
         Service storage svc = _services[key];
@@ -204,7 +219,8 @@ contract ChainPeRegistryUpgradeable is
         emit ServiceUpdated(key, msg.sender, input.name, input.endpoint, input.pricePerRequest, input.paymentToken, input.payTo, input.agentId);
     }
 
-    function deregister(string calldata name) external nonReentrant whenNotPaused {
+    /// @dev Intentionally NOT `whenNotPaused`: a developer must always be able to delist.
+    function deregister(string calldata name) external nonReentrant {
         bytes32 key = computeKey(msg.sender, name);
         Service storage svc = _services[key];
         if (!svc.exists) revert ServiceNotFound(key);
@@ -215,6 +231,9 @@ contract ChainPeRegistryUpgradeable is
     }
 
     // ─── Read ────────────────────────────────────────────────────────────────
+
+    /// @notice Contract version (bumped for the payment-gated-reputation upgrade).
+    function getVersion() external pure returns (string memory) { return "2.0.0"; }
 
     function getService(address developer, string calldata name) external view returns (Service memory) {
         bytes32 key = computeKey(developer, name);
@@ -282,6 +301,16 @@ contract ChainPeRegistryUpgradeable is
     }
 
     // ─── Internal ────────────────────────────────────────────────────────────
+
+    /// @dev agentId 0 means "unlinked" and is always allowed. Otherwise the caller must own (or be
+    ///      approved for) that agent in the Identity Registry. Fails closed if no registry is set.
+    function _requireAgentOwner(uint256 agentId) private view {
+        if (agentId == 0) return;
+        address reg = identityRegistry;
+        if (reg == address(0) || !IAgentIdentity(reg).isAuthorizedOrOwner(msg.sender, agentId)) {
+            revert NotAgentOwner(agentId);
+        }
+    }
 
     function _collectFee() private {
         uint256 fee = registrationFee;

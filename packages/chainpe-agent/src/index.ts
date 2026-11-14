@@ -73,6 +73,11 @@ export {
 // Payment
 export { PaymentClient, createPaymentClient, type PaymentClientOptions } from "./payment.js";
 
+// Payment-verified reputation (chainpe-cloud) and the spend gate
+export { CloudClient, DEFAULT_CLOUD_URL, ReputationTooLow, enforceMinimum, checkMinimum, toPaidSummary } from "./cloud.js";
+export type { CloudService } from "./cloud.js";
+export { planCheapestEligible } from "./planner.js";
+
 // Reputation (ERC-8004, on-chain)
 export {
   getReputation,

@@ -34,6 +34,8 @@ tags:
     description: Called by the CLI proxy, not by the dashboard.
   - name: me
     description: Scoped to the signed-in provider. Limits on Free are noted per endpoint.
+  - name: public
+    description: No session. Read-only reputation and settlement data for agents and the explorer.
 paths:
   /health:
     get:
@@ -334,6 +336,90 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Reputation' }
         '401': { $ref: '#/components/responses/Error' }
+  /v1/public/services:
+    get:
+      tags: [public]
+      summary: Every active service with its payment-gated reputation
+      description: |
+        No session. `paidScore` counts only ratings whose x402 payment was verified on-chain, weighted by USDC paid
+        (each payment capped at 1 USDC). It is null until a service has a verified rating; never substitute `rawScore`.
+        `payToShared` is true when an earlier service already uses this payTo, so this one is not credited with its payments.
+      security: []
+      responses:
+        '200':
+          description: Services
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicServices' }
+        '429': { $ref: '#/components/responses/Error' }
+  /v1/public/services/{key}/reviews:
+    get:
+      tags: [public]
+      summary: Ratings of one service, each with its verification status
+      security: []
+      parameters:
+        - { name: key, in: path, required: true, schema: { type: string, pattern: '^0x[0-9a-fA-F]{64}$' } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '200':
+          description: A page of reviews, newest first
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicReviews' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /v1/public/feed:
+    get:
+      tags: [public]
+      summary: Latest verified settlements
+      description: Verified x402 payments, newest first. Payments from a provider's own wallets are excluded.
+      security: []
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+      responses:
+        '200':
+          description: Settlements
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicFeed' }
+        '400': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /v1/public/stats:
+    get:
+      tags: [public]
+      summary: Network totals
+      security: []
+      responses:
+        '200':
+          description: Totals
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicStats' }
+        '429': { $ref: '#/components/responses/Error' }
+  /v1/public/providers/{address}/summary:
+    get:
+      tags: [public]
+      summary: Read-only aggregates for one sample provider
+      description: |
+        No session. Served only for addresses in the `SAMPLE_PROVIDERS` allowlist; any other valid address is a 404.
+        Aggregates only: verified revenue (self-pay excluded), call counts, a revenue series, the provider's active
+        services with their public reputation, and one combined score. No buyer list, per-buyer figures, keys or wallets.
+        A mixed-case address must carry a valid EIP-55 checksum. Rate limited per IP, separately from the other public reads.
+      security: []
+      parameters:
+        - { name: address, in: path, required: true, schema: { type: string, pattern: '^0x[0-9a-fA-F]{40}$' } }
+        - { $ref: '#/components/parameters/Range' }
+      responses:
+        '200':
+          description: Aggregates
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicProviderSummary' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
   /v1/me/health:
     get:
       tags: [me]
@@ -803,10 +889,145 @@ components:
               calls: { type: integer }
               firstSeen: { $ref: '#/components/schemas/DateTime' }
               lastSeen: { $ref: '#/components/schemas/DateTime' }
+    PublicServices:
+      type: object
+      additionalProperties: false
+      required: [services]
+      properties:
+        services:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [key, name, description, tags, endpoint, price, payTo, provider, agentId, paidScore, paidReviews, rawScore, rawReviews, totalSettledAtomic, paidCalls, payToShared]
+            properties:
+              key: { type: string }
+              name: { type: string }
+              description: { type: string }
+              tags: { type: string }
+              endpoint: { type: string }
+              price: { type: string }
+              payTo: { $ref: '#/components/schemas/Address' }
+              provider: { $ref: '#/components/schemas/Address' }
+              agentId: { type: [string, 'null'] }
+              paidScore: { type: [number, 'null'] }
+              paidReviews: { type: integer }
+              rawScore: { type: [number, 'null'] }
+              rawReviews: { type: integer }
+              totalSettledAtomic: { type: string }
+              paidCalls: { type: integer }
+              payToShared: { type: boolean }
+    PublicReviews:
+      type: object
+      additionalProperties: false
+      required: [reviews, total, limit, offset]
+      properties:
+        total: { type: integer }
+        limit: { type: integer }
+        offset: { type: integer }
+        reviews:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [client, feedbackIndex, score, tag1, endpoint, status, verified, verificationReason, paymentTx, paidAtomic, revoked, blockTs, txHash]
+            properties:
+              client: { $ref: '#/components/schemas/Address' }
+              feedbackIndex: { type: string }
+              score: { type: number }
+              tag1: { type: [string, 'null'], description: Untrusted on-chain text. }
+              endpoint: { type: [string, 'null'], description: Untrusted. Do not link this. }
+              status: { type: string, enum: [verified, pending, unverified] }
+              verified: { type: boolean }
+              verificationReason: { type: [string, 'null'] }
+              paymentTx: { type: [string, 'null'] }
+              paidAtomic: { type: [string, 'null'] }
+              revoked: { type: boolean }
+              blockTs: { $ref: '#/components/schemas/DateTime' }
+              txHash: { type: string }
+    PublicFeed:
+      type: object
+      additionalProperties: false
+      required: [settlements]
+      properties:
+        settlements:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [txHash, serviceKey, service, amountAtomic, payer, ts]
+            properties:
+              txHash: { type: string }
+              serviceKey: { type: string }
+              service: { type: string }
+              amountAtomic: { type: string }
+              payer: { $ref: '#/components/schemas/Address' }
+              ts: { $ref: '#/components/schemas/DateTime' }
+    PublicStats:
+      type: object
+      additionalProperties: false
+      required: [totalSettledAtomic, paidCalls, services, verifiedReviews, totalReviews]
+      properties:
+        totalSettledAtomic: { type: string }
+        paidCalls: { type: integer }
+        services: { type: integer }
+        verifiedReviews: { type: integer }
+        totalReviews: { type: integer }
+    PublicProviderSummary:
+      type: object
+      additionalProperties: false
+      required: [address, range, since, revenue, calls, uniqueBuyers, series, services, reputation]
+      properties:
+        address: { $ref: '#/components/schemas/Address' }
+        range: { $ref: '#/components/schemas/Range' }
+        since: { type: [string, 'null'], format: date-time }
+        revenue:
+          type: object
+          additionalProperties: false
+          description: Verified only, excluding self-pay.
+          required: [totalVerifiedAtomic]
+          properties:
+            totalVerifiedAtomic: { $ref: '#/components/schemas/Atomic' }
+        calls:
+          type: object
+          additionalProperties: false
+          required: [completed, failed, verified, successRate]
+          properties:
+            completed: { type: integer }
+            failed: { type: integer }
+            verified: { type: integer }
+            successRate: { type: [number, 'null'] }
+        uniqueBuyers: { type: integer, description: A count only. Buyers are never listed. }
+        series:
+          type: object
+          additionalProperties: false
+          required: [unit, points]
+          properties:
+            unit: { type: string, enum: [hour, day] }
+            points:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                required: [t, revenueAtomic, calls]
+                properties:
+                  t: { $ref: '#/components/schemas/DateTime' }
+                  revenueAtomic: { $ref: '#/components/schemas/Atomic' }
+                  calls: { type: integer }
+        services: { $ref: '#/components/schemas/PublicServices/properties/services' }
+        reputation:
+          type: object
+          additionalProperties: false
+          required: [paidScore, paidReviews, rawScore, rawReviews]
+          properties:
+            paidScore: { type: [number, 'null'] }
+            paidReviews: { type: integer }
+            rawScore: { type: [number, 'null'] }
+            rawReviews: { type: integer }
     Reputation:
       type: object
       additionalProperties: false
-      required: [agentId, agentIdStatus, payerAverage, payerCount, allAverage, allCount, items]
+      required: [agentId, agentIdStatus, payerAverage, payerCount, allAverage, allCount, paidScore, paidReviews, rawScore, rawReviews, items]
       properties:
         agentId: { type: [string, 'null'] }
         agentIdStatus: { $ref: '#/components/schemas/AgentIdStatus' }
@@ -814,13 +1035,17 @@ components:
         payerCount: { type: integer }
         allAverage: { type: [string, 'null'], description: 'Every rating, including from wallets that never paid. Two decimals, as a string. Null with none, or when not attributed.' }
         allCount: { type: integer }
+        paidScore: { type: [string, 'null'], description: 'Payment-gated score: ratings whose x402 payment (the feedbackHash of the rating) the indexer verified on-chain, weighted by USDC paid, each payment capped at 1 USDC. Two decimals, as a string. Null with none. Lead with this.' }
+        paidReviews: { type: integer }
+        rawScore: { type: [string, 'null'], description: 'Plain average of every non-revoked rating, paid or not. Shown for contrast with paidScore.' }
+        rawReviews: { type: integer }
         items:
           type: [array, 'null']
           description: Null on Free.
           items:
             type: object
             additionalProperties: false
-            required: [client, feedbackIndex, value, valueDecimals, tag1, tag2, endpoint, feedbackUri, blockTs, txHash, fromPayer]
+            required: [client, feedbackIndex, value, valueDecimals, tag1, tag2, endpoint, feedbackUri, blockTs, txHash, fromPayer, verified, verificationReason, paymentTx, paidAtomic]
             properties:
               client: { $ref: '#/components/schemas/Address' }
               feedbackIndex: { type: string }
@@ -833,6 +1058,10 @@ components:
               blockTs: { $ref: '#/components/schemas/DateTime' }
               txHash: { type: string }
               fromPayer: { type: boolean, description: 'True if this client has a verified, non-self-pay payment to this provider.' }
+              verified: { type: boolean, description: 'The rating names an x402 payment tx the indexer verified. Only these count in paidScore.' }
+              verificationReason: { type: [string, 'null'], description: 'Why it is not verified: no_proof, no_payment, wrong_payee, not_x402, reused, self_rating, payment_after_feedback, tx_failed, receipt_not_found, service_unknown.' }
+              paymentTx: { type: [string, 'null'] }
+              paidAtomic: { type: [string, 'null'] }
     Health_:
       type: object
       additionalProperties: false

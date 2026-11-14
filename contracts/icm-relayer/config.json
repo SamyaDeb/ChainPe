@@ -1,0 +1,51 @@
+{
+  "log-level": "info",
+  "storage-location": "/tmp/icm-relayer-storage",
+  "process-missed-blocks": false,
+  "info-api": {
+    "base-url": "https://api.avax-test.network"
+  },
+  "p-chain-api": {
+    "base-url": "https://api.avax-test.network"
+  },
+  "source-blockchains": [
+    {
+      "subnet-id": "11111111111111111111111111111111LpoYY",
+      "blockchain-id": "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp",
+      "rpc-endpoint": {
+        "base-url": "https://api.avax-test.network/ext/bc/C/rpc"
+      },
+      "ws-endpoint": {
+        "base-url": "wss://api.avax-test.network/ext/bc/C/ws"
+      },
+      "allowed-origin-sender-addresses": [
+        "0xD2552df223d370056D6CA6d3a4a4aEDf855197CF"
+      ],
+      "supported-destinations": [
+        {
+          "blockchain-id": "2QyrGkChHLjbi76A5uzwF2XEbfN5f3Krovs1j4qPtwe1BUP7h4",
+          "addresses": [
+            "0x2193ED88f7e144D6679405CcBaFB0DDd4d545e84"
+          ]
+        }
+      ],
+      "message-contracts": {
+        "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf": {
+          "message-format": "teleporter",
+          "settings": {
+            "reward-address": "0x546bB1b62D54C377631F25c8dfc36F5fC1e3177D"
+          }
+        }
+      }
+    }
+  ],
+  "destination-blockchains": [
+    {
+      "subnet-id": "243imxPhCqNHPpoFpBz2FX12HXeBeqgqnZHQHEi8BNtYzsyXTg",
+      "blockchain-id": "2QyrGkChHLjbi76A5uzwF2XEbfN5f3Krovs1j4qPtwe1BUP7h4",
+      "rpc-endpoint": {
+        "base-url": "https://managed-nodes.avax.network/ext/bc/2QyrGkChHLjbi76A5uzwF2XEbfN5f3Krovs1j4qPtwe1BUP7h4/rpc"
+      }
+    }
+  ]
+}

@@ -125,7 +125,7 @@ The `402` response body and the `X-CHAINPE-AGENT-ID` response header carry the p
 
 ### 2. Multi-network selection
 
-The SDK's `ChainPe` class is constructed with a `network` parameter (`'avalanche'` for mainnet or `'avalanche-fuji'` for testnet). When multiple offers are present in the `accepts` array, the SDK selects only the offer matching its network. This enables providers to advertise on multiple networks simultaneously.
+The SDK's `ChainPe` class is constructed with a `network` parameter (`'avalanche'` for mainnet or `'fuji'` for testnet; the SDK maps these to the x402 network ids `avalanche` / `avalanche-fuji`). When multiple offers are present in the `accepts` array, the SDK selects only the offer matching its network. This enables providers to advertise on multiple networks simultaneously.
 
 ## How ChainPe implements x402
 

@@ -169,8 +169,8 @@ async function runInit(): Promise<void> {
     p.select({
       message: "Avalanche network",
       options: [
-        { value: "fuji", label: "Fuji (testnet)", hint: "recommended" },
         { value: "avalanche", label: "Avalanche (mainnet)" },
+        { value: "fuji", label: "Fuji (testnet)", hint: "for testing" },
       ],
     })
   )) as ChainPeNetwork;
@@ -309,7 +309,7 @@ async function runStatus(): Promise<void> {
 
   console.log(chalk.gray("  Wallet:"));
   console.log(chalk.gray(`    Address:  ${chalk.cyan(config.wallet.address || "unknown")}`));
-  console.log(chalk.gray(`    Network:  ${chalk.yellow(config.network || "fuji")}`));
+  console.log(chalk.gray(`    Network:  ${chalk.yellow(config.network || "avalanche")}`));
 
   if (config.wallet.address) {
     const inKeychain = await hasPrivateKey(config.wallet.address);
@@ -321,7 +321,7 @@ async function runStatus(): Promise<void> {
 
     const spinner = ora("Checking balance…").start();
     try {
-      const balance = await getWalletBalance(config.wallet.address, config.network || "fuji");
+      const balance = await getWalletBalance(config.wallet.address, config.network || "avalanche");
       const fmt = formatBalance(balance);
       spinner.stop();
       console.log(chalk.gray(`    AVAX:     ${chalk.green(fmt.avax)}`));
@@ -372,7 +372,7 @@ async function runServices(): Promise<void> {
 
   const spinner = ora("Fetching services from the on-chain registry…").start();
   try {
-    const client = new RegistryClient(config.network || "fuji", registryAddr);
+    const client = new RegistryClient(config.network || "avalanche", registryAddr);
     const services = await client.listAllServices();
     spinner.stop();
     if (services.length === 0) {

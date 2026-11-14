@@ -224,7 +224,7 @@ await walletClient.writeContract({
   address: USDC,
   abi: [{ type: 'function', name: 'approve', inputs: [{ type: 'address' }, { type: 'uint256' }], outputs: [{ type: 'bool' }], stateMutability: 'nonpayable' }],
   functionName: 'approve',
-  args: [REGISTRY, parseUnits('0.1', 6)]
+  args: [REGISTRY, parseUnits('1', 6)]
 })
 
 // Step 2: Register

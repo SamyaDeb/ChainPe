@@ -49,6 +49,7 @@ npm run fixtures    # after changing a response; regenerates fixtures/ from real
 | `GETLOGS_MAX_BLOCKS` | `2000` (default). Set `100` on the public RPC, which refuses larger `eth_getLogs` ranges |
 | `GETLOGS_GAP_MS` | `400` (default). Set `1000` on the public RPC, whose Cloudflare limit answers error 1015 |
 | `CORS_ORIGIN` | The dashboard's origin. Comma-separated for several |
+| `PUBLIC_CORS_ORIGIN` | Optional extra origins allowed to read `/v1/public/*`. `https://chainpe.vercel.app` and the `SIWE_DOMAIN` hosts are always allowed |
 | `SIWE_DOMAIN` | The dashboard's host, or several comma-separated (live: `chainpe.vercel.app,chainpe-cloud-production-1d71cb77.up.railway.app`). Sign-in names the one the browser's `Origin` matches, so it works both proxied and direct |
 | `SIWE_CLI_DOMAIN` | This API's host |
 | `WORKERS_ENABLED` | `true` (default). `false` runs the API alone |

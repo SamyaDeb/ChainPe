@@ -20,7 +20,6 @@ export type VerificationReason =
   | 'gateway_failed'
   | null
 export type AgentIdStatus = 'owned' | 'not_owner' | 'none' | 'unknown'
-export type PlanName = 'free' | 'pro'
 
 export interface ApiErrorBody {
   error: string
@@ -54,8 +53,9 @@ export interface Me {
   address: string
   agentId: string | null
   agentIdStatus: AgentIdStatus
-  plan: PlanName
-  paidUntil: string | null
+  /** Still sent by the API (always "pro" on Avalanche). Nothing in the dashboard depends on it. */
+  plan?: string
+  paidUntil?: string | null
   createdAt: string | null
 }
 
@@ -183,6 +183,10 @@ export interface ReputationItem {
   blockTs: string
   txHash: string
   fromPayer: boolean
+  verified: boolean
+  verificationReason: string | null
+  paymentTx: string | null
+  paidAtomic: string | null
 }
 export interface Reputation {
   agentId: string | null
@@ -191,7 +195,91 @@ export interface Reputation {
   payerCount: number
   allAverage: string | null
   allCount: number
+  /** Payment-gated: only ratings whose x402 payment was verified on-chain, weighted by USDC paid. Lead with this. */
+  paidScore: string | null
+  paidReviews: number
+  /** Every rating, paid or not. Shown for contrast. */
+  rawScore: string | null
+  rawReviews: number
   items: ReputationItem[] | null
+}
+
+export interface PublicService {
+  key: string
+  name: string
+  description: string
+  tags: string
+  endpoint: string
+  price: string
+  payTo: string
+  provider: string
+  agentId: string | null
+  paidScore: number | null
+  paidReviews: number
+  rawScore: number | null
+  rawReviews: number
+  totalSettledAtomic: string
+  paidCalls: number
+  payToShared: boolean
+}
+export interface PublicServices {
+  services: PublicService[]
+}
+export type ReviewStatus = 'verified' | 'pending' | 'unverified'
+export interface PublicReview {
+  client: string
+  feedbackIndex: string
+  score: number
+  tag1: string | null
+  endpoint: string | null
+  status: ReviewStatus
+  verified: boolean
+  verificationReason: string | null
+  paymentTx: string | null
+  paidAtomic: string | null
+  revoked: boolean
+  blockTs: string
+  txHash: string
+}
+export interface PublicReviews {
+  reviews: PublicReview[]
+  total: number
+  limit: number
+  offset: number
+}
+export interface PublicSettlement {
+  txHash: string
+  serviceKey: string
+  service: string
+  amountAtomic: string
+  payer: string
+  ts: string
+}
+export interface PublicFeed {
+  settlements: PublicSettlement[]
+}
+export interface PublicStats {
+  totalSettledAtomic: string
+  paidCalls: number
+  services: number
+  verifiedReviews: number
+  totalReviews: number
+}
+
+/**
+ * GET /v1/public/providers/:address/summary. Aggregates only, for the read-only sample provider page:
+ * no buyer list, no per-buyer figures, no keys.
+ */
+export interface ProviderSummary {
+  address: string
+  range: Range
+  since: string | null
+  revenue: { totalVerifiedAtomic: Atomic }
+  calls: { completed: number; failed: number; verified: number; successRate: number | null }
+  uniqueBuyers: number
+  series: { unit: 'hour' | 'day'; points: SummaryPoint[] }
+  services: PublicService[]
+  reputation: { paidScore: number | null; paidReviews: number; rawScore: number | null; rawReviews: number }
 }
 
 export interface HealthEntry {
@@ -211,31 +299,6 @@ export interface Health {
 
 export interface Wallets {
   wallets: string[]
-}
-
-export interface FeeBatch {
-  id: string
-  revenueAtomic: Atomic
-  feeAtomic: Atomic
-  status: 'pending' | 'collected' | 'failed'
-  txHash: string | null
-  createdAt: string
-}
-export interface Fees {
-  enabled: boolean
-  /** Compared with this build's own address before anything is approved. */
-  contract: string | null
-  status: 'not_enrolled' | 'active'
-  enrolledAt: string | null
-  rateBps: number
-  rates: { freeBps: number; proBps: number }
-  owedAtomic: Atomic
-  collectedAtomic: Atomic
-  /** Null when Arc could not be read. */
-  allowanceAtomic: Atomic | null
-  lockAtAtomic: Atomic
-  locked: boolean
-  batches: FeeBatch[]
 }
 
 export interface CreatedKey {

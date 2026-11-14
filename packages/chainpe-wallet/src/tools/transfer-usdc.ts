@@ -40,7 +40,7 @@ export function registerTransferUsdc(
       amount: z.string().describe('USDC amount as decimal string, e.g. "1.50"'),
       network: z
         .enum(['fuji', 'avalanche'])
-        .default('fuji')
+        .default(config.network)
         .describe('Avalanche network (default: fuji)')
     },
     async ({ to, amount, network }) => {

@@ -3,7 +3,7 @@ import { feedback, indexerState, myWallets, onchainTransfers, paymentEvents, pro
 import { createPublicClient, custom, type AbiEvent, type PublicClient } from 'viem'
 import { createIndexer, REPUTATION_EVENTS, TAIL_BLOCKS, TRANSFER_EVENT, viemRpc } from '../src/workers/indexer.js'
 import { onchainEventId } from '../src/workers/payments.js'
-import { BUYER, CAIP2, db, eventLog, hex32, REGISTRY, REPUTATION, resetDb, SimChain, transferLog, USDC } from './helpers.js'
+import { authLog, BUYER, CAIP2, db, eventLog, hex32, REGISTRY, REPUTATION, resetDb, SimChain, transferLog, USDC } from './helpers.js'
 
 const SELLER = '0x261f058496d81703c858ddfed201834f0b5f2e73'
 const PAYOUT = '0x4444444444444444444444444444444444444444'
@@ -15,6 +15,9 @@ const PRICE = 10_000n
 let sim: SimChain
 const indexer = (opts: Partial<Parameters<typeof createIndexer>[0]> = {}) =>
   createIndexer({ db, rpc: sim, registry: REGISTRY, reputation: REPUTATION, usdc: USDC, caip2: CAIP2, startBlock: START, log: () => {}, ...opts })
+
+/** A transfer plus the AuthorizationUsed log an x402 (EIP-3009) payment carries. */
+const paid = (o: Parameters<typeof transferLog>[0]) => [transferLog(o), authLog({ authorizer: o.from, txHash: o.txHash, block: o.block })]
 
 const service = (name: string, extra: Record<string, unknown> = {}) => ({
   key: hex32(1),
@@ -136,7 +139,7 @@ describe('restart', () => {
   })
 
   it('stores nothing and keeps the cursor if a read fails mid-chunk', async () => {
-    sim.logs = [registered(), transferLog({ from: BUYER, to: SELLER, atomic: PRICE, txHash: hex32(1), block: START + 1n })]
+    sim.logs = [registered(), ...paid({ from: BUYER, to: SELLER, atomic: PRICE, txHash: hex32(1), block: START + 1n })]
     const i = indexer()
     const realGetLogs = sim.getLogs.bind(sim)
     let seen = 0
@@ -156,7 +159,7 @@ describe('restart', () => {
   })
 
   it('reprocessing the same range adds no rows', async () => {
-    sim.logs = [registered(), transferLog({ from: BUYER, to: SELLER, atomic: PRICE, txHash: hex32(1), block: START + 1n })]
+    sim.logs = [registered(), ...paid({ from: BUYER, to: SELLER, atomic: PRICE, txHash: hex32(1), block: START + 1n })]
     const i = indexer()
     await i.processRange(START, START + 5n)
     await i.processRange(START, START + 5n)
@@ -168,7 +171,7 @@ describe('restart', () => {
 
 describe('USDC transfers', () => {
   it('reads the USDC contract, whose 6-decimal value is already atomic', async () => {
-    sim.logs = [registered(), transferLog({ from: BUYER, to: SELLER, atomic: 10000n, txHash: hex32(1), logIndex: 2, block: START + 1n })]
+    sim.logs = [registered(), ...paid({ from: BUYER, to: SELLER, atomic: 10000n, txHash: hex32(1), logIndex: 2, block: START + 1n })]
     await drain(indexer())
     const rows = await db.select().from(onchainTransfers)
     expect(rows).toHaveLength(1)
@@ -202,7 +205,7 @@ describe('USDC transfers', () => {
   })
 
   it('watches a payTo that differs from the developer wallet', async () => {
-    sim.logs = [registered(START, { payTo: PAYOUT }), transferLog({ from: BUYER, to: PAYOUT, atomic: PRICE, txHash: hex32(1), block: START + 1n })]
+    sim.logs = [registered(START, { payTo: PAYOUT }), ...paid({ from: BUYER, to: PAYOUT, atomic: PRICE, txHash: hex32(1), block: START + 1n })]
     await drain(indexer())
     expect((await db.select().from(onchainTransfers)).map((r) => r.to)).toEqual([PAYOUT])
     const [payment] = await db.select().from(paymentEvents)
@@ -239,7 +242,7 @@ describe('USDC transfers', () => {
 
 describe('payments read from transfers', () => {
   it('records a transfer of exactly the price as a verified payment to that service', async () => {
-    sim.logs = [registered(), transferLog({ from: BUYER, to: SELLER, atomic: PRICE, txHash: hex32(1), logIndex: 3, block: START + 1n })]
+    sim.logs = [registered(), ...paid({ from: BUYER, to: SELLER, atomic: PRICE, txHash: hex32(1), logIndex: 3, block: START + 1n })]
     await drain(indexer())
     const [p] = await db.select().from(paymentEvents)
     expect(p).toMatchObject({
@@ -270,7 +273,7 @@ describe('payments read from transfers', () => {
     sim.logs = [
       registered(),
       eventLog(REGISTRY, 'ServiceDeregistered', { key: hex32(1), developer: SELLER, name: 'one' }, START + 1n),
-      transferLog({ from: BUYER, to: SELLER, atomic: PRICE, txHash: hex32(1), block: START + 2n }),
+      ...paid({ from: BUYER, to: SELLER, atomic: PRICE, txHash: hex32(1), block: START + 2n }),
     ]
     await drain(indexer())
     expect(await db.select().from(paymentEvents)).toEqual([])
@@ -279,13 +282,13 @@ describe('payments read from transfers', () => {
   it('marks a payment from one of the provider\'s own wallets as self-pay', async () => {
     const mine = '0x5555555555555555555555555555555555555555'
     await db.insert(myWallets).values({ provider: SELLER, address: mine })
-    sim.logs = [registered(), transferLog({ from: mine, to: SELLER, atomic: PRICE, txHash: hex32(1), block: START + 1n })]
+    sim.logs = [registered(), ...paid({ from: mine, to: SELLER, atomic: PRICE, txHash: hex32(1), block: START + 1n })]
     await drain(indexer())
     expect((await db.select().from(paymentEvents))[0].selfPay).toBe(true)
   })
 
   it('matches a "$0.25" price as 250000 atomic', async () => {
-    sim.logs = [registered(START, { pricePerRequest: '$0.25' }), transferLog({ from: BUYER, to: SELLER, atomic: 250_000n, txHash: hex32(1), block: START + 1n })]
+    sim.logs = [registered(START, { pricePerRequest: '$0.25' }), ...paid({ from: BUYER, to: SELLER, atomic: 250_000n, txHash: hex32(1), block: START + 1n })]
     await drain(indexer())
     expect(await db.select().from(paymentEvents)).toHaveLength(1)
   })

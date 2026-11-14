@@ -13,7 +13,7 @@ graph TB
     subgraph "Client Layer"
         AI["AI Agent\n(Node.js / Python / Claude)"]
         DEV["Developer App\n(@chainpeavax/sdk)"]
-        DASH["Dashboard\napps/dashboard\n(Next.js / Vercel)"]
+        DASH["Dashboard\napps/avalanche-dashboard\n(served by chainpe-cloud)"]
     end
 
     subgraph "ChainPe NPM Packages"

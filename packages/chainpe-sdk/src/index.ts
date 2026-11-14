@@ -45,7 +45,9 @@ export {
   USDC_DECIMALS
 } from './networks.js'
 
-export { ChainPePaymentError } from './types.js'
+export { ChainPePaymentError, ReputationTooLow } from './types.js'
+export { CloudClient, DEFAULT_CLOUD_URL, checkMinimum, toPaidSummary } from './cloud.js'
+export type { CloudService, CloudClientOptions } from './cloud.js'
 export type {
   ChainPeNetwork,
   ChainPeOptions,
@@ -53,6 +55,7 @@ export type {
   ChainPeService,
   DiscoverOptions,
   ReputationSummary,
+  ReputationRefusal,
   RankedService,
   PaymentInfo,
   PaidResult,

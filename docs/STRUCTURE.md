@@ -7,10 +7,13 @@ chainpe/
 │   │   ├── ChainPeRegistry.sol        Service registry (UUPS proxy)
 │   │   ├── PolicyVault.sol            Gasless agent spending vault (UUPS proxy)
 │   │   ├── erc8004/                   ERC-8004 identity + reputation registries
-│   │   ├── icm/                       Avalanche ICM cross-L1 contracts
+│   │   ├── ChainPeReputationOracle.sol Attester-published payment-verified scores
+│   │   ├── icm/                       ICM sender, fail-closed receivers, ChainPeReputationMirror
+│   │   ├── legacy/                    Frozen v1 sources for upgrade validation
 │   │   └── mocks/                     Test-only mocks
 │   ├── scripts/                       Deploy + verify scripts
-│   ├── test/                          30 tests, 100% line coverage on registry
+│   ├── test/                          Hardhat tests (live tests gated by RUN_LIVE_E2E)
+│   ├── icm-relayer/                   icm-relayer config for the Fuji L1 demo
 │   └── deployments/                   Deployed addresses per network
 │
 ├── packages/
@@ -33,11 +36,12 @@ chainpe/
 │
 ├── services/
 │   ├── chainpe-facilitator/  Non-custodial x402 settlement (Railway-deployable)
-│   └── chainpe-indexer/      Event indexer + REST API (Postgres)
+│   ├── chainpe-indexer/      Legacy discovery indexer + REST API (Postgres)
+│   └── chainpe-cloud/        Indexer, rating verifier, public + provider API, serves the dashboard
 │
 ├── apps/
-│   ├── dashboard/            Next.js marketplace dashboard
-│   └── landing/              Static landing page
+│   ├── landing/              Next.js landing + fumadocs docs (chainpe.vercel.app)
+│   └── avalanche-dashboard/  Vite app: public explorer, sample provider, provider dashboard (/dashboard)
 │
 ├── examples/
 │   ├── weather-api/          Zero-dependency weather backend

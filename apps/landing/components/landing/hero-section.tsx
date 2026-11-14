@@ -4,22 +4,13 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { AnimatedSphere } from "./animated-sphere";
-
-const words = ["pay", "discover", "rate", "settle"];
+import { ProofStrip } from "./proof-strip";
 
 export function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
-  const [wordIndex, setWordIndex] = useState(0);
 
   useEffect(() => {
     setIsVisible(true);
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setWordIndex((prev) => (prev + 1) % words.length);
-    }, 2500);
-    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -55,7 +46,7 @@ export function HeroSection() {
         ))}
       </div>
       
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12 py-32 lg:py-40">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12 pt-32 pb-16 lg:pt-40 lg:pb-20">
         {/* Eyebrow */}
         <div 
           className={`mb-8 transition-all duration-700 ${
@@ -75,22 +66,13 @@ export function HeroSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
-            <span className="block">The layer to</span>
+            <span className="block">Reputation</span>
             <span className="block">
-              {" "}
+              you can&apos;t{" "}
               <span className="relative inline-block">
-                <span 
-                  key={wordIndex}
-                  className="inline-flex"
-                >
-                  {words[wordIndex].split("").map((char, i) => (
-                    <span
-                      key={`${wordIndex}-${i}`}
-                      className="inline-block animate-char-in"
-                      style={{
-                        animationDelay: `${i * 50}ms`,
-                      }}
-                    >
+                <span className="inline-flex">
+                  {"fake.".split("").map((char, i) => (
+                    <span key={i} className="inline-block animate-char-in" style={{ animationDelay: `${300 + i * 50}ms` }}>
                       {char}
                     </span>
                   ))}
@@ -104,12 +86,13 @@ export function HeroSection() {
         {/* Description */}
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-end">
           <p 
-            className={`text-xl lg:text-2xl text-muted-foreground leading-relaxed max-w-xl transition-all duration-700 delay-200 ${
+            className={`text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-xl transition-all duration-700 delay-200 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            Pay any API in USDC, rate any agent on‑chain, 
-            settle on Avalanche in ~1–2 seconds. All in 3 lines of code.
+            Only agents that actually paid for a service can rate it, and an agent&apos;s on&#8209;chain budget refuses to pay
+            providers with a bad record. x402 payments, ERC&#8209;8004 reputation and PolicyVault caps in one loop, live on
+            Avalanche mainnet.
           </p>
           
           {/* CTAs */}
@@ -118,52 +101,34 @@ export function HeroSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            <Button 
-              size="lg" 
+            <Button
+              asChild
+              size="lg"
               className="bg-foreground hover:bg-foreground/90 text-background px-8 h-14 text-base rounded-full group"
-              onClick={() => window.location.href = '/dashboard'}
             >
-              Open the dashboard
-              <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+              <a href="/dashboard/explore">
+                Explore live payments
+                <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+              </a>
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
               className="h-14 px-8 text-base rounded-full border-foreground/20 hover:bg-foreground/5"
-              onClick={() => window.location.href = '/docs'}
             >
-              Read the docs
+              <a href="/docs">Read the docs</a>
             </Button>
           </div>
         </div>
-        
-      </div>
-      
-      {/* Stats marquee - full width outside container */}
-      <div 
-        className={`absolute bottom-24 left-0 right-0 transition-all duration-700 delay-500 ${
-          isVisible ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        <div className="flex gap-16 marquee whitespace-nowrap">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="flex gap-16">
-              {[
-                { value: "~1–2s", label: "settlement finality", company: "AVALANCHE" },
-                { value: "$0.0003", label: "cost per transaction", company: "C-CHAIN" },
-                { value: "44", label: "contract tests passing", company: "HARDHAT" },
-                { value: "3 lines", label: "to integrate payments", company: "SDK" },
-              ].map((stat) => (
-                <div key={`${stat.company}-${i}`} className="flex items-baseline gap-4">
-                  <span className="text-4xl lg:text-5xl font-display">{stat.value}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {stat.label}
-                    <span className="block font-mono text-xs mt-1">{stat.company}</span>
-                  </span>
-                </div>
-              ))}
-            </div>
-          ))}
+
+        {/* Proof strip: verifiable on-chain facts */}
+        <div
+          className={`mt-20 transition-all duration-700 delay-500 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          }`}
+        >
+          <ProofStrip />
         </div>
       </div>
       

@@ -11,7 +11,7 @@ Registering your service on `ChainPeRegistry` makes it discoverable by agents th
 ## Prerequisites
 
 - A funded Avalanche C-Chain wallet — receives USDC payments
-- 0.1 USDC (the registration fee; current fee is 0.1 USDC on mainnet)
+- 1 USDC (the registration fee; current fee is 1 USDC on mainnet) plus a little AVAX for gas
 - Your service running and accessible at a public URL (or `localhost` for testing)
 
 ## Option A: CLI (recommended)
@@ -131,14 +131,14 @@ const ERC20_ABI = [
 const account = privateKeyToAccount('0xYOUR_PRIVATE_KEY')
 const wallet = createWalletClient({ account, chain: avalanche, transport: http() })
 
-// Step 1: Approve 0.1 USDC registration fee
+// Step 1: Approve the 1 USDC registration fee
 await wallet.writeContract({
   account,
   chain: avalanche,
   address: USDC_MAINNET,
   abi: ERC20_ABI,
   functionName: 'approve',
-  args: [REGISTRY_ADDRESS, parseUnits('0.1', 6)]  // 0.1 USDC
+  args: [REGISTRY_ADDRESS, parseUnits('1', 6)]  // 1 USDC
 })
 
 // Step 2: Register the service

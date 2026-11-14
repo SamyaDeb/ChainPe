@@ -34,7 +34,7 @@ export function registerRequestFunding(
       amount: z.string().describe('Amount to request as decimal, e.g. "5.00"'),
       network: z
         .enum(['fuji', 'avalanche'])
-        .default('fuji')
+        .default(config.network)
         .describe('Network (default: fuji)')
     },
     async ({ currency, amount, network }) => {

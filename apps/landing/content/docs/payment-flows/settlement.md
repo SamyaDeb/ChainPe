@@ -11,7 +11,7 @@ Settlement is the on-chain phase where USDC moves from the agent's wallet to the
 ## Settle endpoint
 
 ```
-POST https://chainpe-facilitator-production.up.railway.app/settle
+POST https://chainpe-facilitator-production-000a.up.railway.app/settle
 Content-Type: application/json
 
 {

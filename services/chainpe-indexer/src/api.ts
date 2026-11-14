@@ -91,6 +91,9 @@ const apiLimiter = rateLimit({
 
 export function createApi(db: Db) {
   const app = express()
+  // Railway puts exactly one proxy in front; without this every client shares one IP
+  // and the rate limiter either blocks everyone or nobody.
+  app.set('trust proxy', 1)
   app.use(cors())
   app.use(apiLimiter)
 

@@ -16,7 +16,9 @@ export function registerGiveFeedback(
     'give_feedback',
     'Leave on-chain reputation feedback for a service provider (ERC-8004). Submits a real ' +
       'transaction to the Reputation Registry with a 0–100 score. Use after calling a paid service; ' +
-      'pass the agentId shown by search_bazaar.',
+      'pass the agentId shown by search_bazaar and the settlement tx hash of the payment (shown by x402_fetch) as ' +
+      'paymentTx. Only ratings backed by a verified payment count toward a provider\'s score; without paymentTx ' +
+      'the rating is recorded but shows as unverified.',
     {
       agentId: z
         .string()
@@ -35,9 +37,16 @@ export function registerGiveFeedback(
       tag: z
         .string()
         .optional()
-        .describe('Optional short tag, e.g. "weather" or "accuracy"')
+        .describe('Optional short tag, e.g. "weather" or "accuracy"'),
+      paymentTx: z
+        .string()
+        .regex(/^0x[0-9a-fA-F]{64}$/, 'must be a 32-byte 0x transaction hash')
+        .optional()
+        .describe(
+          'The x402 settlement transaction hash of the payment this rating is about. Makes it a verified paid review.'
+        )
     },
-    async ({ agentId, score, endpoint, tag }) => {
+    async ({ agentId, score, endpoint, tag, paymentTx }) => {
       if (!config.canPay) {
         return {
           content: [
@@ -78,6 +87,7 @@ export function registerGiveFeedback(
           value: score,
           endpoint,
           tag,
+          paymentTx,
           waitConfirm: true
         })
         const explorer =
@@ -95,7 +105,10 @@ export function registerGiveFeedback(
                   score,
                   txHash,
                   explorer,
-                  note: 'Feedback recorded on-chain in the ERC-8004 Reputation Registry.'
+                  paymentTx: paymentTx ?? null,
+                  note: paymentTx
+                    ? 'Recorded on-chain with payment proof; counts as a paid review once the indexer verifies the payment.'
+                    : 'Recorded on-chain WITHOUT payment proof, so it will show as unverified and not count toward the paid score.'
                 },
                 null,
                 2

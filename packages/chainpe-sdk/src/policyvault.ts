@@ -91,6 +91,34 @@ const VAULT_ABI = [
   },
   {
     type: 'function',
+    name: 'setMinScore',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'minScore', type: 'uint8' }],
+    outputs: []
+  },
+  {
+    type: 'function',
+    name: 'minScoreOf',
+    stateMutability: 'view',
+    inputs: [{ name: 'owner', type: 'address' }],
+    outputs: [{ name: '', type: 'uint8' }]
+  },
+  {
+    type: 'function',
+    name: 'reputationOracle',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'address' }]
+  },
+  {
+    type: 'function',
+    name: 'sessionEpoch',
+    stateMutability: 'view',
+    inputs: [{ name: 'owner', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }]
+  },
+  {
+    type: 'function',
     name: 'balanceOf',
     stateMutability: 'view',
     inputs: [{ name: 'owner', type: 'address' }],
@@ -119,14 +147,20 @@ const VAULT_ABI = [
   }
 ] as const
 
-const SPEND_TYPES = {
-  Spend: [
-    { name: 'owner', type: 'address' },
-    { name: 'to', type: 'address' },
-    { name: 'amount', type: 'uint256' },
-    { name: 'nonce', type: 'uint256' },
-    { name: 'deadline', type: 'uint256' }
-  ]
+const SPEND_FIELDS = [
+  { name: 'owner', type: 'address' },
+  { name: 'to', type: 'address' },
+  { name: 'amount', type: 'uint256' },
+  { name: 'nonce', type: 'uint256' },
+  { name: 'deadline', type: 'uint256' }
+] as const
+
+/** PolicyVault v1 (Fuji, and mainnet before the Phase 3 upgrade). */
+const SPEND_TYPES_V1 = { Spend: SPEND_FIELDS } as const
+
+/** PolicyVault v2 adds the owner's session epoch, so revokeSession kills outstanding signatures. */
+const SPEND_TYPES_V2 = {
+  Spend: [...SPEND_FIELDS, { name: 'epoch', type: 'uint256' }]
 } as const
 
 export interface PolicyVaultOptions {
@@ -156,6 +190,8 @@ export interface SpendAuthorization {
   nonce: string
   deadline: number
   signature: Hex
+  /** Session epoch signed into the authorization. Absent for a v1 vault. */
+  epoch?: string
 }
 
 export class PolicyVaultClient {
@@ -228,6 +264,44 @@ export class PolicyVaultClient {
     })) as bigint
   }
 
+  /**
+   * The owner's session epoch (v2 vaults), or undefined for a v1 vault that has none. It is signed into every
+   * authorization, so a `setPolicy` / `revokeSession` invalidates all outstanding ones.
+   */
+  async sessionEpoch(owner: string): Promise<bigint | undefined> {
+    try {
+      return (await publicClientFor(this.network).readContract({
+        address: this.vault,
+        abi: VAULT_ABI,
+        functionName: 'sessionEpoch',
+        args: [getAddress(owner)]
+      })) as bigint
+    } catch (err) {
+      // Only a v1 vault (no sessionEpoch function) falls back to the v1 signature. A network error must not
+      // silently produce a signature the v2 vault will reject.
+      if (isMissingFunction(err)) return undefined
+      throw err
+    }
+  }
+
+  /** The owner's minimum provider reputation (0-100; 0 = none). Enforced in `spend()` on a v2 vault. */
+  async minScore(owner: string): Promise<number> {
+    try {
+      return Number(
+        (await publicClientFor(this.network).readContract({
+          address: this.vault,
+          abi: VAULT_ABI,
+          functionName: 'minScoreOf',
+          args: [getAddress(owner)]
+        })) as number
+      )
+    } catch (err) {
+      // A v1 vault has no reputation gate.
+      if (isMissingFunction(err)) return 0
+      throw err
+    }
+  }
+
   // ─── owner ops (this key is the owner) ──────────────────────────────────────
 
   async deposit(human: string): Promise<Hex> {
@@ -270,6 +344,24 @@ export class PolicyVaultClient {
     })
   }
 
+  /**
+   * Refuses, on-chain, to pay any recipient whose payment-verified score (ChainPeReputationOracle) is below
+   * `minScore` (0-100; 0 turns it off). Holds even if the agent is compromised. v2 vaults only.
+   */
+  async setMinScore(minScore: number): Promise<Hex> {
+    if (!Number.isInteger(minScore) || minScore < 0 || minScore > 100) {
+      throw new Error('setMinScore: minScore must be an integer between 0 and 100')
+    }
+    return this.wallet().writeContract({
+      account: this.account,
+      chain: chainFor(this.network),
+      address: this.vault,
+      abi: VAULT_ABI,
+      functionName: 'setMinScore',
+      args: [minScore]
+    })
+  }
+
   async setAllowlist(to: string, allowed: boolean): Promise<Hex> {
     return this.wallet().writeContract({
       account: this.account,
@@ -309,25 +401,30 @@ export class PolicyVaultClient {
     const to = getAddress(params.to)
     const amountAtomic = this.usdc(params.amount)
     const nonce = await this.nonce(owner)
+    // A v2 vault signs the owner's session epoch; a v1 vault has none and uses the original typing.
+    const epoch = await this.sessionEpoch(owner)
     const deadline = Math.floor(Date.now() / 1000) + (params.ttlSeconds ?? 300)
 
-    const signature = await this.account.signTypedData({
-      domain: {
-        name: 'ChainPePolicyVault',
-        version: '1',
-        chainId: chainFor(this.network).id,
-        verifyingContract: this.vault
-      },
-      types: SPEND_TYPES,
-      primaryType: 'Spend',
-      message: {
-        owner,
-        to,
-        amount: amountAtomic,
-        nonce,
-        deadline: BigInt(deadline)
-      }
-    })
+    const domain = {
+      name: 'ChainPePolicyVault',
+      version: '1',
+      chainId: chainFor(this.network).id,
+      verifyingContract: this.vault
+    } as const
+    const signature =
+      epoch === undefined
+        ? await this.account.signTypedData({
+            domain,
+            types: SPEND_TYPES_V1,
+            primaryType: 'Spend',
+            message: { owner, to, amount: amountAtomic, nonce, deadline: BigInt(deadline) }
+          })
+        : await this.account.signTypedData({
+            domain,
+            types: SPEND_TYPES_V2,
+            primaryType: 'Spend',
+            message: { owner, to, amount: amountAtomic, nonce, deadline: BigInt(deadline), epoch }
+          })
 
     return {
       owner,
@@ -336,7 +433,8 @@ export class PolicyVaultClient {
       amountAtomic: amountAtomic.toString(),
       nonce: nonce.toString(),
       deadline,
-      signature
+      signature,
+      ...(epoch === undefined ? {} : { epoch: epoch.toString() })
     }
   }
 
@@ -363,3 +461,13 @@ export class PolicyVaultClient {
     })
   }
 }
+
+/** True when a view call reverted because the contract has no such function (a v1 vault), not on RPC failure. */
+function isMissingFunction(err: unknown): boolean {
+  const e = err as { name?: string; shortMessage?: string; message?: string; walk?: (fn: (e: unknown) => boolean) => unknown }
+  const inner = typeof e?.walk === 'function' ? (e.walk((x) => (x as { name?: string })?.name === 'ContractFunctionRevertedError') as { data?: unknown } | null) : null
+  if (inner) return true
+  const text = `${e?.shortMessage ?? ''} ${e?.message ?? ''}`
+  return /reverted|returned no data|ContractFunctionZeroDataError/i.test(text) && !/fetch failed|timeout|ECONN|429|HTTP request failed/i.test(text)
+}
+

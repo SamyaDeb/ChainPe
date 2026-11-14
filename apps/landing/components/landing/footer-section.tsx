@@ -12,28 +12,21 @@ const footerLinks = {
     { name: "Security", href: "#security" },
   ],
   Developers: [
-    { name: "Documentation", href: "https://chainpe.xyz/docs" },
+    { name: "Documentation", href: "/docs" },
     { name: "GitHub", href: "https://github.com/SamyaDeb/ChainPe" },
     { name: "SDK Packages", href: "https://www.npmjs.com/org/chainpeavax" },
-    { name: "Mainnet", href: "#" },
+    { name: "Mainnet contracts", href: "/docs/smart-contracts/overview" },
   ],
   Ecosystem: [
-    { name: "Avalanche C-Chain", href: "#" },
-    { name: "Circle USDC", href: "#" },
-    { name: "Teleporter", href: "#" },
-    { name: "Vercel AI SDK", href: "#" },
-  ],
-  Legal: [
-    { name: "Privacy Policy", href: "#" },
-    { name: "Terms of Service", href: "#" },
-    { name: "Smart Contract Audit", href: "#security" },
+    { name: "Avalanche C-Chain", href: "https://build.avax.network/docs/primary-network" },
+    { name: "Circle USDC", href: "https://www.circle.com/usdc" },
+    { name: "Avalanche ICM", href: "https://build.avax.network/docs/cross-chain/avalanche-warp-messaging/overview" },
+    { name: "Vercel AI SDK", href: "https://ai-sdk.dev" },
   ],
 };
 
 const socialLinks = [
-  { name: "X (Twitter)", href: "#" },
   { name: "GitHub", href: "https://github.com/SamyaDeb/ChainPe" },
-  { name: "Discord", href: "#" },
 ];
 
 export function FooterSection() {
@@ -47,10 +40,10 @@ export function FooterSection() {
       <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12">
         {/* Main Footer */}
         <div className="py-16 lg:py-24">
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-12 lg:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-12 lg:gap-8">
             {/* Brand Column */}
             <div className="col-span-2">
-              <a href="#" className="inline-flex items-center gap-2 mb-6">
+              <a href="/" className="inline-flex items-center gap-2 mb-6">
                 <span className="text-2xl font-display font-bold">ChainPe</span>
               </a>
 
@@ -100,7 +93,7 @@ export function FooterSection() {
         {/* Bottom Bar */}
         <div className="py-8 border-t border-foreground/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            2025 ChainPe. Built for the Avalanche ecosystem.
+            2026 ChainPe. Built for the Avalanche ecosystem.
           </p>
 
           <div className="flex items-center gap-4 text-sm text-muted-foreground">

@@ -13,6 +13,7 @@
  *
  * Run:
  *   cd contracts && npx hardhat test test/E2E.mainnet-fork.test.ts
+ *   Steps 5-7 hit live services/RPC and only run with RUN_LIVE_E2E=1.
  */
 import { expect } from "chai";
 import { ethers } from "hardhat";
@@ -211,7 +212,9 @@ describe("ChainPe E2E — Mainnet Integration", function () {
 
   // ── Track 5-6: live hosted services ──────────────────────────────────────
 
-  it("Step 5 — Hosted facilitator health and supported endpoints (live Railway)", async () => {
+  const live = process.env.RUN_LIVE_E2E === "1" ? it : it.skip; // hits live Railway services
+
+  live("Step 5 — Hosted facilitator health and supported endpoints (live Railway)", async () => {
     const health    = await fetch(`${FACILITATOR_URL}/health`).then(r => r.json());
     const supported = await fetch(`${FACILITATOR_URL}/supported`).then(r => r.json());
 
@@ -225,7 +228,7 @@ describe("ChainPe E2E — Mainnet Integration", function () {
     console.log(`  Hosted facilitator reachable: PASS`);
   });
 
-  it("Step 6 — Indexer API returning live mainnet data", async () => {
+  live("Step 6 — Indexer API returning live mainnet data", async () => {
     const health = await fetch(`${INDEXER_URL}/health`).then(r => r.json());
     const stats  = await fetch(`${INDEXER_URL}/stats`).then(r => r.json());
 
@@ -240,7 +243,7 @@ describe("ChainPe E2E — Mainnet Integration", function () {
 
   // ── Track 7: direct mainnet RPC read — proves deployed contracts are live ─
 
-  it("Step 7 — Deployed ChainPeRegistry live on Avalanche mainnet", async () => {
+  live("Step 7 — Deployed ChainPeRegistry live on Avalanche mainnet", async () => {
     // Use the public Avalanche RPC directly — no Hardhat involvement.
     const REGISTRY_ABI = [
       "function registrationFee() external view returns (uint256)",

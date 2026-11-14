@@ -108,14 +108,12 @@ describe("ChainPeRegistryUpgradeable (UUPS proxy)", () => {
     ).to.be.revertedWithCustomError(registry, "OwnableUnauthorizedAccount");
   });
 
-  it("pause blocks register / update / deregister", async () => {
+  it("pause blocks register / update; deregister still works (Phase 3.3)", async () => {
     const { registry, dev, owner } = await loadFixture(deployFixture);
     await registry.connect(dev).register(input());
     await registry.connect(owner).pause();
     await expect(registry.connect(dev).register(input({ name: "X" }))).to.be.revertedWithCustomError(registry, "EnforcedPause");
     await expect(registry.connect(dev).update(input({ description: "X" }))).to.be.revertedWithCustomError(registry, "EnforcedPause");
-    await expect(registry.connect(dev).deregister("Weather API")).to.be.revertedWithCustomError(registry, "EnforcedPause");
-    await registry.connect(owner).unpause();
     await expect(registry.connect(dev).deregister("Weather API")).to.emit(registry, "ServiceDeregistered");
   });
 

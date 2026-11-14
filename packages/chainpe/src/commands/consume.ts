@@ -21,7 +21,7 @@ import type { ChainPeNetwork } from "../types.js";
 import { explorerTxUrl } from "../chains.js";
 
 function resolveNetwork(explicit?: string): ChainPeNetwork {
-  const n = explicit ?? process.env.CHAINPE_NETWORK ?? "fuji";
+  const n = explicit ?? process.env.CHAINPE_NETWORK ?? "avalanche";
   if (n !== "fuji" && n !== "avalanche") {
     throw new Error(`Invalid network "${n}" (expected "fuji" or "avalanche").`);
   }

@@ -10,6 +10,7 @@ import { avalanche, avalancheFuji } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { AppConfig, PaymentNetwork } from '@/types.js'
+import type { SpendingTracker } from '@/spending.js'
 import { rpcUrlFor, publicClientFor } from '@/clients.js'
 
 const CHAINS = { fuji: avalancheFuji, avalanche }
@@ -22,7 +23,8 @@ function explorerTx(network: PaymentNetwork, hash: string): string {
 
 export function registerTransferAvax(
   server: McpServer,
-  config: AppConfig
+  config: AppConfig,
+  spending: SpendingTracker
 ): void {
   server.tool(
     'transfer_avax',
@@ -35,7 +37,7 @@ export function registerTransferAvax(
         .describe('Amount of AVAX as decimal string, e.g. "1.5"'),
       network: z
         .enum(['fuji', 'avalanche'])
-        .default('fuji')
+        .default(config.network)
         .describe('Avalanche network (default: fuji)')
     },
     async ({ to, amount, network }) => {
@@ -70,11 +72,15 @@ export function registerTransferAvax(
           }
         }
 
+        // Per-transfer + daily AVAX caps (MAX_AVAX_PER_TRANSFER / MAX_AVAX_PER_DAY).
+        spending.checkAvax(amount)
+
         const recipient = getAddress(to)
         const hash = await walletClient.sendTransaction({
           to: recipient,
           value
         })
+        spending.recordAvax(amount)
         const receipt = await publicClientFor(net).waitForTransactionReceipt({
           hash
         })

@@ -79,7 +79,10 @@ async function loadConfig(): Promise<ChainPeConfig | null> {
 
 async function saveConfig(config: ChainPeConfig): Promise<void> {
   await ensureConfigDir();
-  await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2));
+  // Owner-only: the file can hold the admin key / facilitator settings. `mode` only
+  // applies when the file is created, so chmod covers files from older versions.
+  await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2), { mode: 0o600 });
+  await fs.chmod(CONFIG_FILE, 0o600).catch(() => {});
 }
 
 // ============================================================================
@@ -158,8 +161,8 @@ async function runInit(): Promise<void> {
     p.select({
       message: "Avalanche network",
       options: [
-        { value: "fuji", label: "Fuji (testnet)", hint: "recommended for testing" },
         { value: "avalanche", label: "Avalanche (mainnet)" },
+        { value: "fuji", label: "Fuji (testnet)", hint: "for testing" },
       ],
     })
   )) as ChainPeNetwork;
@@ -615,7 +618,7 @@ program
   .option("-H, --header <header...>", "Request header as \"Key: Value\" (repeatable)")
   .option("-d, --data <body>", "Request body")
   .option("-k, --key <privateKey>", "Consumer wallet key (default: $CHAINPE_PRIVATE_KEY)")
-  .option("-n, --network <network>", "fuji | avalanche (default: $CHAINPE_NETWORK or fuji)")
+  .option("-n, --network <network>", "fuji | avalanche (default: $CHAINPE_NETWORK or avalanche)")
   .option("--max <usdc>", "Max USDC to auto-pay for one call (default 1)")
   .option("--feedback", "Post positive ERC-8004 reputation after a paid call")
   .option("--raw", "Print only the response body (for piping)")
@@ -624,7 +627,7 @@ program
 program
   .command("discover [query]")
   .description("Discover on-chain services ranked by ERC-8004 reputation")
-  .option("-n, --network <network>", "fuji | avalanche (default: $CHAINPE_NETWORK or fuji)")
+  .option("-n, --network <network>", "fuji | avalanche (default: $CHAINPE_NETWORK or avalanche)")
   .option("--tag <tag...>", "Filter by tag (repeatable)")
   .option("--max-price <usdc>", "Maximum price per request in USDC")
   .option("--json", "Output raw JSON")

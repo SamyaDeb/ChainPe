@@ -1,37 +1,41 @@
 "use client";
 
 import { ArrowRight, Check } from "lucide-react";
+import { REGISTRATION_FEE_USDC, SETTLEMENT_GAS_USD } from "@/lib/proof";
 
+// Real costs only. ChainPe charges no per-request platform fee: agents pay the provider's listed
+// price in USDC, providers pay a one-time registry fee, and the hosted facilitator pays settlement gas.
 const plans = [
   {
-    name: "Mainnet",
-    description: "For development and testing",
-    price: "Free",
-    period: "forever",
+    name: "Agents",
+    description: "For anyone calling paid APIs",
+    price: "$0",
+    period: "platform fee",
     features: [
-      "Mainnet support",
-      "Unlimited mainnet transactions",
-      "Mock facilitator for local dev",
-      "Community Discord support",
-      "Full API access",
+      "Pay only the listed price, in USDC",
+      "Settlement gas paid by the facilitator",
+      "No AVAX needed to pay",
+      "Spending caps in the SDK, MCP wallet and PolicyVault",
+      "Rate services on-chain (ERC-8004)",
     ],
-    cta: "Start building",
+    cta: "Read the docs",
+    href: "/docs",
     popular: false,
   },
   {
-    name: "Production",
-    description: "Pay-as-you-go on mainnet",
-    price: "$0.003",
-    period: "per settlement",
+    name: "Providers",
+    description: "List an API on Avalanche mainnet",
+    price: `${REGISTRATION_FEE_USDC} USDC`,
+    period: "one-time",
     features: [
-      "Avalanche C-Chain",
-      "Native USDC settlement",
-      "Non-custodial processing",
-      "On-chain reputation (ERC-8004)",
-      "High-availability facilitator RPC",
-      "Sub-second discovery API",
+      "Listed in the on-chain ChainPeRegistry",
+      "ERC-8004 identity for your service",
+      "USDC paid straight to your wallet",
+      "Hosted facilitator settles each call",
+      "Provider dashboard for revenue and reputation",
     ],
-    cta: "Deploy to Mainnet",
+    cta: "Open the dashboard",
+    href: "/dashboard",
     popular: true,
   },
   {
@@ -40,14 +44,13 @@ const plans = [
     price: "Open",
     period: "source",
     features: [
-      "Everything in Production",
-      "Zero facilitator fees",
+      "Run your own x402 facilitator",
       "Host your own indexer",
-      "Custom ERC-20 token support",
       "Direct smart contract access",
       "Self-managed RPC endpoints",
     ],
     cta: "View GitHub",
+    href: "https://github.com/SamyaDeb/ChainPe",
     popular: false,
   },
 ];
@@ -67,7 +70,7 @@ export function PricingSection() {
             <span className="text-stroke">No subscriptions.</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl">
-            A sustainable model for the agent economy. Only pay when your agents successfully transact.
+            No subscriptions and no per-request platform fee. Agents pay providers directly in USDC.
           </p>
         </div>
 
@@ -82,7 +85,7 @@ export function PricingSection() {
             >
               {plan.popular && (
                 <span className="absolute -top-3 left-8 px-3 py-1 bg-foreground text-primary-foreground text-xs font-mono uppercase tracking-widest">
-                  Mainnet Default
+                  Live on mainnet
                 </span>
               )}
 
@@ -116,7 +119,9 @@ export function PricingSection() {
               </ul>
 
               {/* CTA */}
-              <button
+              <a
+                href={plan.href}
+                {...(plan.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                 className={`w-full py-4 flex items-center justify-center gap-2 text-sm font-medium transition-all group ${
                   plan.popular
                     ? "bg-foreground text-primary-foreground hover:bg-foreground/90"
@@ -125,16 +130,17 @@ export function PricingSection() {
               >
                 {plan.cta}
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </button>
+              </a>
             </div>
           ))}
         </div>
 
         {/* Bottom Note */}
         <p className="mt-12 text-center text-sm text-muted-foreground">
-          Note: Network gas fees on Avalanche C-Chain still apply.{" "}
-          <a href="#" className="underline underline-offset-4 hover:text-foreground transition-colors">
-            Read fee mechanics
+          Settlement gas ({SETTLEMENT_GAS_USD} per settlement, estimated at 1 gwei) is paid by the hosted
+          facilitator. Registering or updating a service costs a little AVAX gas.{" "}
+          <a href="/docs/faq" className="underline underline-offset-4 hover:text-foreground transition-colors">
+            Read the FAQ
           </a>
         </p>
       </div>

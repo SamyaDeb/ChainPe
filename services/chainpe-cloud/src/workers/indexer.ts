@@ -6,13 +6,17 @@
  * transfers into the payTo address of any registered service.
  */
 import { eq, sql } from 'drizzle-orm'
-import { decodeEventLog, parseAbi, parseAbiItem, type AbiEvent } from 'viem'
+import { decodeEventLog, parseAbi, parseAbiItem, toEventSelector, type AbiEvent } from 'viem'
 import type { Db, Tx } from '../db.js'
 import { registryAbi } from '../registryAbi.js'
 import { feedback, indexerState, onchainTransfers, providers, services } from '../schema.js'
-import { derivePayments } from './payments.js'
+import { authKey, derivePayments } from './payments.js'
 
 export const TRANSFER_EVENT = parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 value)')
+/** FiatTokenV2 emits this for every EIP-3009 transferWithAuthorization, which is how x402 "exact" settles. */
+export const AUTHORIZATION_USED_EVENT = parseAbiItem('event AuthorizationUsed(address indexed authorizer, bytes32 indexed nonce)')
+export const AUTHORIZATION_USED_TOPIC = toEventSelector(AUTHORIZATION_USED_EVENT)
+export const ZERO_HASH = '0x0000000000000000000000000000000000000000000000000000000000000000'
 
 const REPUTATION_ABI = parseAbi([
   'event NewFeedback(uint256 indexed agentId, address indexed clientAddress, uint64 feedbackIndex, int128 value, uint8 valueDecimals, string indexed indexedTag1, string tag1, string tag2, string endpoint, string feedbackURI, bytes32 feedbackHash)',
@@ -26,6 +30,10 @@ export const REGISTRY_EVENTS = registryAbi.filter(
 ) as unknown as AbiEvent[]
 
 export const REPUTATION_EVENTS = REPUTATION_ABI as unknown as AbiEvent[]
+export const NEW_FEEDBACK_EVENT = parseAbiItem(
+  'event NewFeedback(uint256 indexed agentId, address indexed clientAddress, uint64 feedbackIndex, int128 value, uint8 valueDecimals, string indexed indexedTag1, string tag1, string tag2, string endpoint, string feedbackURI, bytes32 feedbackHash)'
+)
+export const NEW_FEEDBACK_TOPIC = toEventSelector(NEW_FEEDBACK_EVENT)
 
 export interface RawLog {
   address: string
@@ -55,7 +63,7 @@ export interface IndexerRpc {
     toBlock: bigint
   }): Promise<RawLog[]>
   blockTimestamp(block: bigint): Promise<bigint>
-  getTransactionReceipt(hash: `0x${string}`): Promise<{ blockNumber: bigint; logs: RawLog[] } | null>
+  getTransactionReceipt(hash: `0x${string}`): Promise<{ blockNumber: bigint; status?: 'success' | 'reverted'; logs: RawLog[] } | null>
   serviceMeta(key: `0x${string}`): Promise<ServiceMeta | null>
 }
 
@@ -171,6 +179,16 @@ export function createIndexer(options: IndexerOptions) {
       transferLogs.push(...batch)
     }
 
+    // One extra read per chunk, and only when a transfer could be a payment: which of those tx were EIP-3009 payments.
+    const authorizations = new Set<string>()
+    if (transferLogs.length > 0) {
+      const used = await rpc.getLogs({ address: usdc, events: [AUTHORIZATION_USED_EVENT as unknown as AbiEvent], fromBlock: from, toBlock: to })
+      for (const entry of used) {
+        if (entry.address.toLowerCase() !== usdc || entry.topics[0] !== AUTHORIZATION_USED_TOPIC || entry.topics.length !== 3) continue
+        authorizations.add(authKey(entry.transactionHash, `0x${entry.topics[1].slice(-40)}`))
+      }
+    }
+
     const cache = new Map<bigint, bigint>()
     const transfers: TransferRow[] = []
     for (const entry of transferLogs) {
@@ -201,7 +219,7 @@ export function createIndexer(options: IndexerOptions) {
         await applyReputationEvent(tx, entry, tsOf.get(entry)!)
       }
       await upsertTransfers(tx, transfers)
-      await derivePayments(tx, transfers, caip2)
+      await derivePayments(tx, transfers, caip2, authorizations)
       await tx
         .insert(indexerState)
         .values({ id: STATE_ID, lastBlock: to })
@@ -279,6 +297,7 @@ async function applyRegistryEvent(
         endpoint: String(args.endpoint),
         price: String(args.pricePerRequest),
         payTo: String(args.payTo).toLowerCase(),
+        agentId,
         // The Avalanche proxy settles x402 "exact" through the facilitator. There is no Gateway rail here.
         acceptsExact: true,
         acceptsGateway: false,
@@ -302,6 +321,13 @@ async function applyRegistryEvent(
             ...(details ? { description: details.description, tags: details.tags, network: details.network } : {}),
           },
         })
+      if (agentId) {
+        // Ratings that gave up waiting for this agent's service get another chance now that it is linked.
+        await tx
+          .update(feedback)
+          .set({ verifyAttempts: 0, nextVerifyAt: new Date(), verificationReason: null })
+          .where(sql`${feedback.agentId} = ${agentId} AND NOT ${feedback.verified} AND ${feedback.verificationReason} = 'service_unknown'`)
+      }
       return
     }
     case 'ServiceDeregistered':
@@ -321,6 +347,9 @@ async function applyReputationEvent(tx: Tx, entry: RawLog, ts: bigint): Promise<
     feedbackIndex: BigInt(String(args.feedbackIndex)),
   }
   if (entry.eventName === 'NewFeedback') {
+    // feedbackHash carries the x402 settlement tx the rater paid with. All zeros means no proof was attached.
+    const hash = String(args.feedbackHash ?? ZERO_HASH).toLowerCase()
+    const proof = hash === ZERO_HASH ? null : hash
     await tx
       .insert(feedback)
       .values({
@@ -334,6 +363,10 @@ async function applyReputationEvent(tx: Tx, entry: RawLog, ts: bigint): Promise<
         block: entry.blockNumber,
         blockTs: new Date(Number(ts) * 1000),
         txHash: entry.transactionHash.toLowerCase(),
+        feedbackHash: proof,
+        // A rating with no proof is settled at once; the rest wait for verifyFeedback.
+        verificationReason: proof ? null : 'no_proof',
+        nextVerifyAt: proof ? new Date() : null,
       })
       .onConflictDoNothing()
   } else if (entry.eventName === 'FeedbackRevoked') {
@@ -369,9 +402,11 @@ export function viemRpc(client: import('viem').PublicClient, registry: string, g
       return (await client.getBlock({ blockNumber: block })).timestamp
     },
     async getTransactionReceipt(hash) {
+      // Receipt reads share the public RPC budget with getLogs, so they wait their turn too.
+      await pace()
       try {
         const receipt = await client.getTransactionReceipt({ hash })
-        return { blockNumber: receipt.blockNumber, logs: receipt.logs as unknown as RawLog[] }
+        return { blockNumber: receipt.blockNumber, status: receipt.status, logs: receipt.logs as unknown as RawLog[] }
       } catch (err) {
         if ((err as Error).name === 'TransactionReceiptNotFoundError') return null
         throw err

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
 const navLinks = [
+  // The public explorer in the dashboard: live payments and paid-only scores, no wallet needed.
+  { name: "Explore", href: "/dashboard/explore" },
   { name: "Features", href: "#features" },
   { name: "How it works", href: "#how-it-works" },
   { name: "Developers", href: "#developers" },
@@ -44,7 +46,7 @@ export function Navigation() {
           }`}
         >
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2 group">
+          <a href="/" className="flex items-center gap-2 group">
             <span className={`font-[family-name:var(--font-poppins)] font-semibold tracking-normal transition-all duration-500 ${isScrolled ? "text-[20px]" : "text-[22px]"}`}>ChainPe</span>
           </a>
 

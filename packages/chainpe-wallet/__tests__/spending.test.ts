@@ -69,3 +69,32 @@ describe('SpendingTracker', () => {
     expect(summary.recentPayments).toHaveLength(10)
   })
 })
+
+describe('SpendingTracker limit parsing', () => {
+  it.each(['NaN', 'abc', '', '   ', '0', '-5'])(
+    'invalid MAX_PER_CALL/MAX_PER_DAY %j does not disable the limits',
+    bad => {
+      const tracker = new SpendingTracker({ maxPerCall: bad, maxPerDay: bad })
+      // safe defaults: 0.10 per call, 1.00 per day
+      expect(() => tracker.check('0.50')).toThrow(/per-call limit/)
+      expect(() => tracker.check('0.05')).not.toThrow()
+      for (let i = 0; i < 10; i++) tracker.record('0.10', '0xABC', 'fuji')
+      expect(() => tracker.check('0.05')).toThrow(/daily limit/)
+    }
+  )
+
+  it('rejects a NaN payment amount instead of letting it through', () => {
+    const tracker = new SpendingTracker({ maxPerCall: '1.00', maxPerDay: '10.00' })
+    expect(() => tracker.check('abc')).toThrow(/Invalid payment amount/)
+  })
+
+  it('enforces AVAX per-transfer and daily caps with safe defaults', () => {
+    const tracker = new SpendingTracker({ maxPerCall: '1', maxPerDay: '10' })
+    expect(() => tracker.checkAvax('0.5')).toThrow(/per-transfer/)
+    expect(() => tracker.checkAvax('NaN')).toThrow(/Invalid AVAX/)
+    const t2 = new SpendingTracker({ maxPerCall: '1', maxPerDay: '10', maxAvaxPerTransfer: '0.1', maxAvaxPerDay: '0.15' })
+    t2.checkAvax('0.1')
+    t2.recordAvax('0.1')
+    expect(() => t2.checkAvax('0.1')).toThrow(/daily AVAX/)
+  })
+})

@@ -27,7 +27,7 @@ export function registerPay(
       recipient: z.string().describe('Recipient EVM address (0x…)'),
       network: z
         .enum(['fuji', 'avalanche'])
-        .default('fuji')
+        .default(config.network)
         .describe('Avalanche payment network'),
       resource: z
         .string()

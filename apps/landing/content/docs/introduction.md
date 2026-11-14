@@ -1,7 +1,7 @@
 ---
 id: introduction
 title: Introduction
-description: ChainPe — decentralized x402 API marketplace on Avalanche
+description: ChainPe — x402 USDC payments and ERC-8004 reputation for AI agents on Avalanche
 sidebar_position: 1
 slug: /
 ---
@@ -42,7 +42,7 @@ const data = await res.json()
 | **x402 Proxy** | The `@chainpeavax/cli` package starts a payment-gated reverse proxy in front of any backend. No code changes to the backend. |
 | **Facilitator** | Non-custodial x402 `verify`/`settle` service that submits payer-signed USDC transfers and pays Avalanche gas. |
 | **Indexer** | Watches on-chain events → Postgres → O(1) REST discovery and reputation API. |
-| **Dashboard** | Next.js marketplace to browse reputation-ranked services and register via MetaMask. |
+| **Dashboard** | Provider dashboard at [/dashboard](/dashboard): sign in with your wallet to see your services, USDC payments, buyers and ERC-8004 reputation. |
 
 ## ChainPe vs traditional approaches
 
@@ -82,7 +82,7 @@ ChainPe is infrastructure. Claude/MCP is just one client. The same payment + rep
 | CLI | `@chainpeavax/cli` | Provider proxy + consumer `fetch`/`discover` commands |
 | Claude wallet | `chainpe-wallet-mcp` | MCP extension — Claude gets an Avalanche x402 wallet |
 | Agent SDK | `@chainpeavax/agent` | Standalone LLM agent loop that discovers and pays |
-| Dashboard | `apps/dashboard` | Next.js marketplace UI |
+| Dashboard | `apps/avalanche-dashboard` | Provider dashboard, served at `/dashboard` by chainpe-cloud |
 | Facilitator | `services/chainpe-facilitator` | Non-custodial x402 verify/settle (Railway-deployed) |
 | Indexer | `services/chainpe-indexer` | Events → Postgres → O(1) REST API |
 
@@ -90,11 +90,9 @@ ChainPe is infrastructure. Claude/MCP is just one client. The same payment + rep
 
 > **ChainPeRegistry:** [`0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E`](https://snowtrace.io/address/0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E#code) (verified, mainnet)
 >
-> **Marketplace:** [chainpe-dashboard-production.up.railway.app](https://chainpe-dashboard-production.up.railway.app)
+> **Provider dashboard:** [/dashboard](/dashboard)
 >
-> **Indexer API:** [chainpe-indexer-production.up.railway.app/services](https://chainpe-indexer-production.up.railway.app/services)
->
-> **Facilitator:** [chainpe-facilitator-production.up.railway.app/health](https://chainpe-facilitator-production.up.railway.app/health)
+> **Facilitator:** `https://chainpe-facilitator-production-000a.up.railway.app` (x402 `verify` / `settle`)
 
 ## Next steps
 

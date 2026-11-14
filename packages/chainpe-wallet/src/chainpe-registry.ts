@@ -127,8 +127,14 @@ function decodeService(raw: RawService): ChainPeService {
   }
 }
 
-function resolveAddress(explicit?: string): `0x${string}` {
-  const candidate = explicit ?? process.env.CHAINPE_REGISTRY_ADDRESS
+// Deployed ChainPeRegistry per network (override via config/env). Fuji has no default.
+const DEFAULT_REGISTRY: Partial<Record<ChainPeNetwork, string>> = {
+  avalanche: '0x2a589f1e4e3Cd0A3ee986cec5202aF3760E3170E'
+}
+
+function resolveAddress(network: ChainPeNetwork, explicit?: string): `0x${string}` {
+  const candidate =
+    explicit ?? process.env.CHAINPE_REGISTRY_ADDRESS ?? DEFAULT_REGISTRY[network]
   if (!candidate) {
     throw new Error(
       'ChainPe registry address not set. Provide CHAINPE_REGISTRY_ADDRESS or configure it in the extension.'
@@ -177,7 +183,7 @@ export class RegistryClient {
 
   constructor(network: ChainPeNetwork = 'fuji', registryAddress?: string) {
     this.network = network
-    this.address = resolveAddress(registryAddress)
+    this.address = resolveAddress(network, registryAddress)
   }
 
   getAddress(): string {

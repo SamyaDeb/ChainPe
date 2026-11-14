@@ -12,11 +12,19 @@ import * as os from "os";
 import type { RegistryClient } from "../registry.js";
 import type { ServiceInfo, Registry, ChainPeNetwork } from "../types.js";
 import { getReputation } from "../reputation.js";
+import { CloudClient, toPaidSummary, type CloudService } from "../cloud.js";
+import { planCheapestEligible } from "../planner.js";
 
 export interface DiscoverServiceToolOptions {
   registryClient: RegistryClient;
   network: ChainPeNetwork;
   reputationRegistry?: string;
+  /** Only recommend providers whose payment-verified score is at least this (0-100). 0 / unset = no minimum. */
+  minReputation?: number;
+  /** Verified paid reviews required before the minimum is trusted. Default 3. */
+  minPaidReviews?: number;
+  /** chainpe-cloud base URL for payment-verified scores. false disables it. */
+  cloudUrl?: string | false;
 }
 
 /**
@@ -115,6 +123,9 @@ function filterServices(
  */
 export function createDiscoverServiceTool(options: DiscoverServiceToolOptions) {
   const { registryClient, network, reputationRegistry } = options;
+  const minReputation = options.minReputation ?? 0;
+  const minPaidReviews = options.minPaidReviews ?? 3;
+  const cloud = new CloudClient({ baseUrl: options.cloudUrl });
 
   return tool({
     description:
@@ -189,28 +200,68 @@ export function createDiscoverServiceTool(options: DiscoverServiceToolOptions) {
           return 0;
         });
 
-        // Attach each provider's on-chain ERC-8004 reputation (best-effort).
-        const services = await Promise.all(
+        // Payment-verified scores from chainpe-cloud: only ratings backed by a verified x402 payment count. If it is
+        // unreachable, fall back to the plain on-chain average and label it "unverified" (anyone can post those).
+        let paid: CloudService[] | undefined;
+        try {
+          paid = await cloud.services();
+        } catch {
+          paid = undefined;
+        }
+        const withRep = await Promise.all(
           sorted.map(async (s) => {
-            const rep = s.agentId
-              ? await getReputation(network, s.agentId, reputationRegistry)
-              : null;
-            return {
-              name: s.name,
-              description: s.description,
-              price: `${s.pricePerRequest} ${s.paymentToken}`,
-              tags: s.tags,
-              endpoint: s.endpoint,
-              agentId: s.agentId,
-              reputation:
-                rep && rep.count > 0 && rep.score !== null
-                  ? { score: rep.score, reviews: rep.count }
-                  : s.agentId
-                    ? "no ratings yet"
-                    : "not registered for reputation",
-            };
+            const hit =
+              paid?.find((c) => c.payTo.toLowerCase() === s.walletAddress.toLowerCase() && !c.payToShared && c.endpoint === s.endpoint) ??
+              paid?.find((c) => c.payTo.toLowerCase() === s.walletAddress.toLowerCase() && !c.payToShared) ??
+              null;
+            const onchain = !paid && s.agentId ? await getReputation(network, s.agentId, reputationRegistry) : null;
+            return { s, hit, onchain };
           })
         );
+
+        const describe = (x: (typeof withRep)[number]) => {
+          if (paid) {
+            const p = toPaidSummary(x.hit);
+            return p.count > 0 && p.score !== null
+              ? { score: p.score, paidReviews: p.count, verified: true, unverifiedAverage: p.rawScore, unverifiedRatings: p.rawCount }
+              : { note: "no verified paid reviews yet", unverifiedAverage: p.rawScore, unverifiedRatings: p.rawCount };
+          }
+          return x.onchain && x.onchain.count > 0 && x.onchain.score !== null
+            ? { score: x.onchain.score, ratings: x.onchain.count, verified: false, warning: "UNVERIFIED: anyone can post these ratings; the reputation service was unreachable" }
+            : { note: x.s.agentId ? "no ratings (reputation service unreachable)" : "not registered for reputation" };
+        };
+
+        const toEntry = (x: (typeof withRep)[number]) => ({
+          name: x.s.name,
+          description: x.s.description,
+          price: `${x.s.pricePerRequest} ${x.s.paymentToken}`,
+          tags: x.s.tags,
+          endpoint: x.s.endpoint,
+          agentId: x.s.agentId,
+          reputation: describe(x),
+        });
+
+        // With a minimum, recommend the cheapest provider at or above it, and list the rest as refused.
+        if (minReputation > 0) {
+          const plan = planCheapestEligible(
+            withRep.map((x) => ({ name: x.s.name, price: x.s.pricePerRequest, payTo: x.s.walletAddress, paid: paid ? x.hit : null, x })),
+            minReputation,
+            minPaidReviews,
+            Boolean(paid)
+          );
+          return {
+            found: plan.eligible.length > 0,
+            message: plan.recommended
+              ? `Recommended: "${plan.recommended.name}", the cheapest of ${plan.eligible.length} service(s) with a payment-verified score of at least ${minReputation}. ${plan.refused.length} service(s) below the minimum will be refused.`
+              : `No service meets the minimum payment-verified reputation of ${minReputation}. Tell the user; do not call a refused service.`,
+            recommended: plan.recommended?.name,
+            minReputation,
+            services: plan.eligible.map((c) => toEntry(c.x)),
+            refused: plan.refused.map((r) => ({ ...toEntry(r.service.x), refusedBecause: r.reason })),
+          };
+        }
+
+        const services = withRep.map(toEntry);
 
         return {
           found: true,

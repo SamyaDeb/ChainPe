@@ -130,8 +130,7 @@ async function main() {
   console.log(`Found ${services.length} services under 0.05 USDC/call`)
 
   if (services.length === 0) {
-    console.log('No services found. Try the live indexer:')
-    console.log('https://chainpe-indexer-production.up.railway.app/services')
+    console.log('No services under 0.05 USDC. List everything on-chain with: npx @chainpeavax/cli list')
     return
   }
 
@@ -169,4 +168,4 @@ Increase `maxPerCall` in the constructor, or the endpoint is more expensive than
 Check that `CHAINPE_PRIVATE_KEY` is a valid 0x-prefixed 64-hex-character private key.
 
 **Response status 402 after payment**
-The facilitator could not settle. Check that you have USDC on Avalanche C-Chain at your wallet address. The hosted facilitator is at `https://chainpe-facilitator-production.up.railway.app`.
+The facilitator could not settle. Check that you have USDC on Avalanche C-Chain at your wallet address. The hosted facilitator is at `https://chainpe-facilitator-production-000a.up.railway.app`.

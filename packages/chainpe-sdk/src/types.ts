@@ -20,6 +20,52 @@ export class ChainPePaymentError extends Error {
   }
 }
 
+export type ReputationRefusal = 'unavailable' | 'unknown_service' | 'not_enough_reviews' | 'below_minimum'
+
+/**
+ * Thrown BEFORE a payment is signed when the provider's verified record does not meet `minReputation` /
+ * `minPaidReviews`. Nothing was signed and no money moved.
+ */
+export class ReputationTooLow extends Error {
+  readonly reason: ReputationRefusal
+  readonly payTo: string
+  readonly url: string
+  readonly paidScore: number | null
+  readonly paidReviews: number
+  readonly minReputation: number
+  readonly minPaidReviews: number
+
+  constructor(info: {
+    reason: ReputationRefusal
+    payTo: string
+    url: string
+    paidScore: number | null
+    paidReviews: number
+    minReputation: number
+    minPaidReviews: number
+  }) {
+    const record =
+      info.reason === 'unavailable'
+        ? 'the payment-verified reputation service could not be reached, so the record cannot be checked'
+        : info.reason === 'unknown_service'
+          ? 'it is not in the ChainPe registry'
+          : info.paidScore === null
+            ? 'it has no verified paid reviews yet'
+            : info.reason === 'not_enough_reviews'
+            ? `it has ${info.paidReviews} verified paid review(s), fewer than the ${info.minPaidReviews} required`
+            : `its verified paid score is ${info.paidScore}/100, below the minimum ${info.minReputation}`
+    super(`Refused to pay ${info.url} (${info.payTo}): ${record}. Nothing was signed and no money moved.`)
+    this.name = 'ReputationTooLow'
+    this.reason = info.reason
+    this.payTo = info.payTo
+    this.url = info.url
+    this.paidScore = info.paidScore
+    this.paidReviews = info.paidReviews
+    this.minReputation = info.minReputation
+    this.minPaidReviews = info.minPaidReviews
+  }
+}
+
 /** Options for constructing a {@link ChainPe} client. */
 export interface ChainPeOptions {
   /** EOA private key (0x-prefixed or bare hex) used to sign payments + feedback. */
@@ -51,6 +97,16 @@ export interface ChainPeOptions {
    * the feedback result; use `.giveFeedback()` for explicit control.
    */
   autoFeedback?: boolean
+  /**
+   * Refuse to pay a provider whose verified paid score is below this (0–100). The check runs BEFORE signing and throws
+   * {@link ReputationTooLow}. Based on chainpe-cloud's payment-verified score, never the raw on-chain average. If the
+   * score cannot be read the call is refused too. Defaults to 0 (no minimum).
+   */
+  minReputation?: number
+  /** Verified paid reviews a provider needs before `minReputation` is trusted. Defaults to 3. With 0, a provider still needs a verified paid score (at least one paid review) that meets `minReputation`; providers chainpe-cloud does not know are always refused. */
+  minPaidReviews?: number
+  /** chainpe-cloud base URL for payment-verified scores. `false` disables it. Defaults to the hosted service. */
+  cloudUrl?: string | false
 }
 
 /** Per-request options for {@link ChainPe.fetch} / {@link ChainPe.pay}. */
@@ -99,6 +155,14 @@ export interface ReputationSummary {
   count: number
   /** Aggregate score (typically 0–100), or null when unscored. */
   score: number | null
+  /**
+   * `paid`: only ratings backed by a verified x402 payment, weighted by USDC paid (chainpe-cloud).
+   * `unverified`: plain on-chain average of every rating, which anyone can post. Treat as a hint, not evidence.
+   */
+  source?: 'paid' | 'unverified'
+  /** Plain average of every rating, paid or not, for contrast (source `paid` only). */
+  rawScore?: number | null
+  rawCount?: number
 }
 
 /** A service annotated with its reputation (returned by {@link ChainPe.discover}). */

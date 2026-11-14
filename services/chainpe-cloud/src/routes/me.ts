@@ -10,6 +10,7 @@ import type { Db } from '../db.js'
 import type { Plan, ProviderViews } from '../plan.js'
 import { feedback, gatewayTransfers, heartbeats, myWallets, onchainTransfers, paymentEvents, services } from '../schema.js'
 import type { Sessions } from '../session.js'
+import { PAID_SCORE, RAW_SCORE } from '../reputation.js'
 import { checksum, formatUsdc, httpsOnly, HttpError, iso, parse, planRequired, priceToAtomic, zAddress } from '../util.js'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -315,6 +316,10 @@ export function meRoutes({ db, views, sessions, readLimit, now = Date.now }: MeO
       payerCount: 0,
       allAverage: null,
       allCount: 0,
+      paidScore: null,
+      paidReviews: 0,
+      rawScore: null,
+      rawReviews: 0,
       items: view.plan === 'pro' ? [] : null,
     }
     // Attributed only while the token is still this provider's (review L-1).
@@ -341,6 +346,21 @@ export function meRoutes({ db, views, sessions, readLimit, now = Date.now }: MeO
         FROM ${feedback} f WHERE f.agent_id = ${agentId} AND NOT f.revoked
       `)
     ).rows
+    // Payment-gated score (Phase 3): only ratings whose x402 payment the indexer verified, weighted by USDC paid.
+    // This provider's payTo addresses scope it, so a shared agent id cannot borrow another service's payments.
+    const [paid] = (
+      await db.execute<{ paid_score: string | null; paid_reviews: string }>(sql`
+        SELECT ${PAID_SCORE}::text AS paid_score, COUNT(*)::text AS paid_reviews
+        FROM ${feedback} f
+        WHERE f.agent_id = ${agentId} AND f.verified AND NOT f.revoked
+          AND f.paid_to IN (SELECT pay_to FROM ${services} WHERE provider = ${req.provider!} AND agent_id = ${agentId})
+      `)
+    ).rows
+    const [raw] = (
+      await db.execute<{ raw_score: string | null; raw_reviews: string }>(sql`
+        SELECT ${RAW_SCORE}::text AS raw_score, COUNT(*)::text AS raw_reviews FROM ${feedback} f WHERE f.agent_id = ${agentId} AND NOT f.revoked
+      `)
+    ).rows
     let items = null
     if (view.plan === 'pro') {
       const rows = await db.execute<{
@@ -355,9 +375,14 @@ export function meRoutes({ db, views, sessions, readLimit, now = Date.now }: MeO
         block_ts: Date | string
         tx_hash: string
         from_payer: boolean
+        verified: boolean
+        verification_reason: string | null
+        payment_tx: string | null
+        paid_atomic: string | null
       }>(sql`
         SELECT f.client, f.feedback_index::text AS feedback_index, f.value::text AS value, f.value_decimals, f.tag1, f.tag2,
-          f.endpoint, f.feedback_uri, f.block_ts, f.tx_hash, ${fromPayer} AS from_payer
+          f.endpoint, f.feedback_uri, f.block_ts, f.tx_hash, ${fromPayer} AS from_payer,
+          f.verified, f.verification_reason, f.payment_tx, f.paid_atomic::text AS paid_atomic
         FROM ${feedback} f WHERE f.agent_id = ${agentId} AND NOT f.revoked
         ORDER BY f.block DESC, f.feedback_index DESC
         LIMIT 200
@@ -374,6 +399,10 @@ export function meRoutes({ db, views, sessions, readLimit, now = Date.now }: MeO
         blockTs: new Date(f.block_ts).toISOString(),
         txHash: f.tx_hash,
         fromPayer: f.from_payer,
+        verified: f.verified,
+        verificationReason: f.verification_reason,
+        paymentTx: f.payment_tx,
+        paidAtomic: f.paid_atomic,
       }))
     }
     res.json({
@@ -383,6 +412,10 @@ export function meRoutes({ db, views, sessions, readLimit, now = Date.now }: MeO
       payerCount: Number(stats.payer_count),
       allAverage: stats.all_average,
       allCount: Number(stats.all_count),
+      paidScore: paid.paid_score,
+      paidReviews: Number(paid.paid_reviews),
+      rawScore: raw.raw_score,
+      rawReviews: Number(raw.raw_reviews),
       items,
     })
   })
