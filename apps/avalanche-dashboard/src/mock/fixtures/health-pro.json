@@ -1,0 +1,25 @@
+{
+  "history": [
+    {
+      "serviceKey": "0xccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3e8",
+      "ts": "2026-11-14T06:26:08.380Z",
+      "version": "2.0.1",
+      "network": "eip155:43114",
+      "rails": [
+        "exact"
+      ],
+      "gatewayBalanceAtomic": null,
+      "doctor": {
+        "ok": true,
+        "score": {
+          "total": 10,
+          "passed": 10
+        },
+        "checks": [],
+        "version": 1,
+        "allGreen": true
+      }
+    }
+  ],
+  "latestOnly": false
+}

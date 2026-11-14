@@ -1,0 +1,36 @@
+{
+  "range": "24h",
+  "since": "2026-11-13T06:26:08.479Z",
+  "revenue": {
+    "totalVerifiedAtomic": "20000",
+    "exactAtomic": "20000",
+    "gateway": {
+      "settledAtomic": "0",
+      "pendingBatchAtomic": "0"
+    }
+  },
+  "notRevenue": {
+    "unverifiedAtomic": "10000",
+    "failedAtomic": "0",
+    "selfPayAtomic": "0",
+    "unattributedInflowAtomic": "0"
+  },
+  "calls": {
+    "total": 4,
+    "completed": 3,
+    "failed": 1,
+    "verified": 2,
+    "successRate": 0.75
+  },
+  "uniqueBuyers": 2,
+  "series": {
+    "unit": "hour",
+    "points": [
+      {
+        "t": "2026-11-14T06:00:00Z",
+        "revenueAtomic": "20000",
+        "calls": 4
+      }
+    ]
+  }
+}

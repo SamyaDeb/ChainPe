@@ -1,0 +1,6 @@
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9.EXAMPLE.EXAMPLE",
+  "tokenType": "Bearer",
+  "address": "0x6E52d9001A34031D6A016a2AD8dc86ae611F2060",
+  "expiresAt": "2026-11-14T18:26:08.000Z"
+}

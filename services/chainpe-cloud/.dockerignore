@@ -1,0 +1,6 @@
+node_modules
+dist
+.env
+.env.*
+__tests__
+fixtures

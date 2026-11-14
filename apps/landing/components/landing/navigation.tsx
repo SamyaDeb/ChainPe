@@ -68,10 +68,11 @@ export function Navigation() {
               Docs
             </a>
             <Button
+              asChild
               size="sm"
               className={`bg-foreground hover:bg-foreground/90 text-background rounded-full transition-all duration-500 ${isScrolled ? "px-4 h-8 text-xs" : "px-6"}`}
             >
-              Get started
+              <a href="/dashboard">Dashboard</a>
             </Button>
           </div>
 
@@ -139,10 +140,10 @@ export function Navigation() {
               Docs
             </Button>
             <Button 
+              asChild
               className="flex-1 bg-foreground text-background rounded-full h-14 text-base"
-              onClick={() => setIsMobileMenuOpen(false)}
             >
-              Get started
+              <a href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>Dashboard</a>
             </Button>
           </div>
         </div>

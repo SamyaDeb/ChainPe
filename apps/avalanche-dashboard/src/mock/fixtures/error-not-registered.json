@@ -1,0 +1,4 @@
+{
+  "error": "not_registered",
+  "message": "This wallet has no service in the ChainPe registry on Avalanche. Run `chainpe register` with this wallet first."
+}

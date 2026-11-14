@@ -1,0 +1,21 @@
+{
+  "range": "all",
+  "buyers": [
+    {
+      "address": "0x24BC730c658201bC51873f7aeAaDE65A545c7A11",
+      "spendAtomic": "10000",
+      "calls": 1,
+      "firstSeen": "2026-11-14T06:25:38.354Z",
+      "lastSeen": "2026-11-14T06:25:38.354Z"
+    },
+    {
+      "address": "0xBbBBBBBBbbbbBBBBBBbbbbBBbbBbBBbbBBBbB3e8",
+      "spendAtomic": "10000",
+      "calls": 1,
+      "firstSeen": "2026-11-14T06:25:08.354Z",
+      "lastSeen": "2026-11-14T06:25:08.354Z"
+    }
+  ],
+  "totalBuyers": 2,
+  "truncated": false
+}

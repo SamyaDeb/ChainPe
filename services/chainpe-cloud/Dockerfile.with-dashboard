@@ -1,0 +1,28 @@
+# chainpe-cloud plus the provider dashboard in one image, served at /dashboard.
+# Build context: the repository root (it needs apps/avalanche-dashboard and services/chainpe-cloud).
+# On Railway set RAILWAY_DOCKERFILE_PATH=services/chainpe-cloud/Dockerfile.with-dashboard.
+# VITE_ values are public and baked in at build time; Railway passes service variables as build args.
+
+FROM node:22-slim AS dashboard
+WORKDIR /dashboard
+COPY apps/avalanche-dashboard/package.json apps/avalanche-dashboard/package-lock.json ./
+# Only the native WebSocket add-ons (bufferutil, utf-8-validate) have install scripts, and a browser build needs neither.
+RUN npm ci --legacy-peer-deps --ignore-scripts
+COPY apps/avalanche-dashboard/ ./
+ARG VITE_CHAINPE_CLOUD_URL
+ARG VITE_WALLETCONNECT_PROJECT_ID
+ENV VITE_CHAINPE_CLOUD_URL=$VITE_CHAINPE_CLOUD_URL VITE_BASE_PATH=/dashboard/
+RUN if [ -z "$VITE_CHAINPE_CLOUD_URL" ]; then echo "VITE_CHAINPE_CLOUD_URL is required" >&2; exit 1; fi
+RUN if [ -n "$VITE_WALLETCONNECT_PROJECT_ID" ]; then export VITE_WALLETCONNECT_PROJECT_ID; fi; npx tsc --noEmit && npx vite build
+
+FROM node:22-slim
+WORKDIR /app
+COPY services/chainpe-cloud/package.json services/chainpe-cloud/package-lock.json services/chainpe-cloud/tsconfig.json ./
+RUN npm ci
+COPY services/chainpe-cloud/src ./src
+COPY services/chainpe-cloud/drizzle ./drizzle
+RUN npm run build && npm prune --omit=dev
+# vite writes a /dashboard/ base build to dist/dashboard.
+COPY --from=dashboard /dashboard/dist/dashboard ./dashboard
+ENV NODE_ENV=production DASHBOARD_DIR=/app/dashboard
+CMD ["node", "dist/server.js"]

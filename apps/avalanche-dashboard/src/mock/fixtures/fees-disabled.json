@@ -1,0 +1,17 @@
+{
+  "enabled": false,
+  "contract": null,
+  "status": "not_enrolled",
+  "enrolledAt": null,
+  "rateBps": 0,
+  "rates": {
+    "freeBps": 0,
+    "proBps": 0
+  },
+  "owedAtomic": "0",
+  "collectedAtomic": "0",
+  "allowanceAtomic": null,
+  "lockAtAtomic": "0",
+  "locked": false,
+  "batches": []
+}
