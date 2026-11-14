@@ -42,8 +42,10 @@ pause cannot trap user funds.
   promptly; a held authorization is recovered by re-signing with a fresh
   `deadline`.
 - **Owner** controls UUPS upgrades. The deployer key currently owns the mainnet contracts and MUST be rotated to a `ChainPeTimelock` behind a multisig before significant TVL accumulates (see checklist).
-- **ICM trusted senders** default to open until configured; the receiver only
-  logs intents (no funds move) but should still be locked down.
+- **ICM trusted senders** fail closed (since the Speedrun build): `ChainPeICMReceiver` and
+  `ChainPeReputationMirror` reject any source chain without a registered trusted sender.
+  The mainnet `ChainPeICMReceiver` at `0xc8aB…6D33` was deployed from the older
+  open-by-default source; only its C-Chain source is locked to the trusted sender.
 
 ## Post-deploy checklist (mainnet)
 
