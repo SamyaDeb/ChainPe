@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { REGISTRATION_FEE_USDC } from "@/lib/proof";
 
 function AnimatedCounter({ end, suffix = "", prefix = "" }: { end: number; suffix?: string; prefix?: string }) {
   const [count, setCount] = useState(0);
@@ -52,10 +53,10 @@ const metrics = [
     label: "Contract tests passing",
   },
   { 
-    value: 99, 
-    suffix: ".99%", 
+    value: REGISTRATION_FEE_USDC, 
+    suffix: " USDC", 
     prefix: "",
-    label: "Uptime on mainnet",
+    label: "One-time fee to list a service",
   },
   { 
     value: 3, 
@@ -101,7 +102,7 @@ export function MetricsSection() {
           <div>
             <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground mb-6">
               <span className="w-8 h-px bg-foreground/30" />
-              Live metrics
+              By the numbers
             </span>
             <h2
               className={`text-4xl lg:text-6xl font-display tracking-tight transition-all duration-700 ${

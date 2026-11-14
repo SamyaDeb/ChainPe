@@ -18,7 +18,7 @@ pnpm add @chainpeavax/sdk`,
 
 const cp = new ChainPe({
   privateKey: process.env.KEY!,
-  network: 'mainnet'
+  network: 'avalanche'
 })
 
 const res = await cp.fetch(url)
@@ -221,7 +221,7 @@ export function DevelopersSection() {
             
             {/* Links */}
             <div className="mt-6 flex items-center gap-6 text-sm">
-              <a href="https://chainpe.xyz/docs" className="text-foreground hover:underline underline-offset-4">
+              <a href="/docs" className="text-foreground hover:underline underline-offset-4">
                 Read the docs
               </a>
               <span className="text-foreground/20">|</span>

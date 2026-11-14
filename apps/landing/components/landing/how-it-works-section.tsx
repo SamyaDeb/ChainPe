@@ -11,7 +11,7 @@ const steps = [
 
 const cp = new ChainPe({
   privateKey: process.env.KEY!,
-  network: 'mainnet'
+  network: 'avalanche'
 })`,
   },
   {
